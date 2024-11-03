@@ -1,0 +1,314 @@
+/* Reset margins and paddings for all elements */
+* {
+    margin: 0;
+    padding: 0;
+    font-family: Georgia;
+}
+
+/* Global styles */
+body {
+    font-family: inter;
+    background-color: #f9f9f9; 
+    justify-content: center;
+}
+
+/* Navigation bar styles */
+.logo-navbar {
+    list-style: none;
+    display: flex;
+    height: 80px;
+    position: fixed;
+    z-index: 999;
+    width: 200px;
+    background-color: transparent; 
+}
+
+.logo-navbar-in-left {
+    list-style: none;
+    display: flex;
+    height: 80px;
+    width: 400px;
+}
+
+.logo-nav {
+    border: none;
+    font-weight: bolder;
+    font-size: x-large;
+    display: flex;
+    padding: 10px;
+    cursor: pointer;
+    background-color: transparent;
+}
+
+.logo-left-nav {
+    border: none;
+    font-weight: bolder;
+    display: flex;
+    padding: 10px;
+    cursor: pointer;
+    background-color: transparent;
+}
+
+.logo-nav p {
+    text-decoration: none;
+    align-self: center;
+    margin: 5px;
+    padding: 12px;
+    color: #0056b3;
+}
+
+.logo-navbar li a {
+    text-decoration: none;
+}
+
+.toggle-icon {
+    padding: 15px;
+    height: 30px;
+    width: 30px;
+}
+
+/* Main container styles */
+.container {
+    margin-top: 100px; /* Adjust as needed based on navbar height */
+    width: 1024px;
+    margin: 0 auto;
+    padding: 10px;
+    background-color: #ffffff;
+    border-radius: 10px;
+}
+
+h1 {
+    color: #007bff; 
+    padding: 10px;
+    margin-bottom: 100px;
+}
+
+/* Profile picture styles */
+.profile_pic {
+    height: 250px; 
+    width: 250px; 
+    border-radius: 150px; 
+    background-color: transparent;
+}
+
+/* Form and button styles */
+form {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.logout {
+    margin: 10px;
+    height: 30px;
+    width: 30px;
+}
+
+#bio {
+    width: 96%;
+    padding: 10px;
+    margin: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: none;
+    font-family: inter;
+    font-size: 16px;
+}
+
+.savebio {
+    width: fit-content; /* Set width to fit content */
+    padding: 10px;
+    background-color: #007bff;
+    margin: 10px auto; /* Set margin to auto to horizontally center */
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: block; /* Ensure the button is displayed as a block element */
+}
+
+#editBioBtn:hover {
+    background-color: #0056b3;
+}
+
+.btn-container {
+    display: flex;
+    justify-content: right;
+    margin-top: 20px;
+}
+
+.edit-btn {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.edit-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Profile picture change button styles */
+.pfp-elements {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+}
+
+.change-pfp-btn {
+    border: none;
+    cursor: pointer;
+    background-color: transparent;
+}
+
+.change-pfp-input {
+    align-self: center;
+}
+
+.change-pfp-btn-upload {
+    padding: 10px;
+    height: 30px;
+    width: 30px;
+}
+
+.change-pfp-btn-icon {
+    background-color: transparent;
+    padding: 10px;
+    height: 20px;
+    width: 20px;
+}
+
+.choose-pfp-file {
+    display: flex;
+    padding: 10px;
+}
+
+.save-bio-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    
+}
+
+.save-bio-btn-icon {
+    padding: 10px;
+    height: 20px;
+    width: 20px;
+    border-radius: 20px;
+}
+
+/* Username and email styles */
+.uname-elements {
+    width: 100%;
+}
+
+.uname-elem {
+    display: flex;
+}
+
+.Profile-uname {
+    color: #007bff;
+    padding-top: 40px;
+    padding-bottom: 20px;
+    font-size: xx-large;
+}
+
+.Profile-email {
+    font-size: medium;
+    color: #007bff;
+}
+
+.choose-pfp {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Form styles */
+.forms {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.profile-form {
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.profile-form label {
+    color: #007bff;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.profile-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.profile-btn {
+    width: 100%;
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.profile-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Icon styles */
+.non-nav-icon {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.non-nav-icon-img {
+    padding: 10px;
+    height: 25px;
+    width: 25px;
+    border-radius: 20px;
+}
+
+/* User posts styles */
+.user-posts {
+    display: flex;
+    width: 100%;
+}
+
+.user-posts b {
+    padding: 35px;
+}
+
+.options-post {
+    display: flex;
+}
+
+/* Responsive design */
+@media screen and (max-width: 768px) {
+    .container {
+        width: 90%;
+    }
+
+    .navbar {
+        width: 90%;
+    }
+}

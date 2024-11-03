@@ -1,0 +1,390 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Georgia;
+    line-height: 1.6;
+}
+
+/* Navbar Styles */
+.navbar {
+    background-color: #007bff;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 10;
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar .logo {
+    color: white;
+    font-size: 1.5rem;
+    text-decoration: none;
+}
+
+.navbar .nav-links {
+    list-style: none;
+    display: flex;
+}
+
+.navbar .nav-links li {
+    margin-left: 20px;
+}
+
+.navbar .nav-links li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1rem;
+    padding: 5px 10px;
+    transition: background-color 0.3s;
+}
+
+.navbar .nav-links li a:hover {
+    background-color: #0056b3;
+    border-radius: 5px;
+}
+
+
+
+
+.hero-section {
+    background: linear-gradient(rgba(0, 123, 255, 0.7), rgba(0, 123, 255, 0.7)), url('hero-bg.jpg') no-repeat center center/cover;
+    color: white;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.hero-text h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.hero-text p {
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+}
+
+.cta-btn {
+    padding: 10px 30px;
+    background-color: #fff;
+    color: #007bff;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: background-color 0.3s;
+}
+
+.cta-btn:hover {
+    background-color: #f0f0f0;
+}
+
+
+
+.analytics-section, .user-stats-section {
+    padding: 50px 20px;
+    text-align: center;
+}
+
+.analytics-section h2, .user-stats-section h2 {
+    margin-bottom: 40px;
+    font-size: 2.5rem;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.analytics-cards {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.card {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 10px;
+    width: 200px;
+    text-align: center;
+}
+
+.card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 2rem;
+    color: #007bff;
+}
+
+.user-stats {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.stat-list {
+    margin: 20px;
+    width: 250px;
+}
+
+.stat-list h3 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    color: #007bff;
+}
+
+.stat-list ul {
+    list-style: none;
+    text-align: left;
+}
+
+.stat-list ul li {
+    font-size: 1rem;
+    margin-bottom: 8px; 
+    padding: 8px; 
+    background-color: #f1f1f1; 
+    border-radius: 5px; 
+}
+
+/* Features Section Styling */
+.features-section {
+    background-color: #f9f9f9;
+    padding: 50px 0;
+    text-align: center;
+}
+
+.features-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.feature-item {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.feature-item:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.feature-item h3 {
+    font-size: 1.8rem;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.feature-item h3::before {
+    content: '';
+    width: 50px;
+    height: 4px;
+    background-color: #2980b9;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 50px;
+    border-radius: 2px;
+}
+
+.feature-item p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #666;
+    margin-bottom: 0;
+}
+
+
+
+.glimpse-section {
+    padding: 50px 0;
+    background-color: #f9f9f9;
+    text-align: center;
+}
+
+.glimpse-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(900px, 1fr));
+    gap: 30px;
+    padding: 0 50px;
+}
+
+.glimpse-item {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transform: translateY(50px);
+    transition: all 0.6s ease-out;
+    position: relative;
+}
+
+.glimpse-item.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.glimpse-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glimpse-item:hover img {
+    transform: scale(1.05); /* Slightly enlarges the image */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* More pronounced shadow on hover */
+}
+
+.glimpse-description {
+    margin-top: 15px;
+    font-size: 16px;
+    color: #555;
+    transition: color 0.3s ease;
+}
+
+.glimpse-item:hover .glimpse-description {
+    color: #333; /* Darker color on hover for better readability */
+}
+
+.footer {
+    background-color: #333;
+    color: #fff;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links li {
+    display: inline;
+    margin-right: 15px;
+}
+
+.footer-links a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.footer-links a:hover {
+    text-decoration: underline;
+}
+
+
+/* Footer Styles */
+.footer {
+    background-color: #007bff;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.footer .footer-content p {
+    margin: 10px 0;
+}
+
+.footer .social-icons a {
+    margin-left: 10px;
+}
+
+.footer .social-icons img {
+    width: 24px;
+    height: 24px;
+    filter: invert(100%);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar .container {
+        flex-direction: column;
+    }
+
+    .navbar .nav-links {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .navbar .nav-links li {
+        margin-left: 0;
+        margin-bottom: 10px;
+    }
+
+    .footer .container {
+        flex-direction: column;
+    }
+
+    .feature-item {
+        padding: 15px;
+    }
+    
+    .features-section h2 {
+        font-size: 2rem;
+    }
+    
+    .feature-item h3 {
+        font-size: 1.6rem;
+    }
+    
+    .feature-item p {
+        font-size: 1rem;
+    }
+
+    .glimpse-section {
+        width: 100%;
+    }
+    
+    .glimpse-gallery {
+        width: 100%;
+    }
+
+    .glimpse-item {
+        width:100%;
+    }
+    
+    .glimpse-item.show {
+        width: 100%;
+    }
+    
+    .glimpse-item img {
+        width: 100%;
+    }
+}
+
+

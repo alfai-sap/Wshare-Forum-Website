@@ -1,0 +1,66 @@
+/* styles.css */
+
+/* General body styling */
+body {
+    font-family: Georgia;
+    margin: 0;
+    padding: 0;
+    background-color: #e1ebed;
+}
+
+/* Container styling */
+.container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #f0f1f1;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Heading styling */
+h1 {
+    text-align: center;
+    color: #007bff;
+}
+
+/* Form styling */
+form {
+    margin-top: 20px;
+}
+
+/* Label styling */
+label {
+    padding-top: 30px;
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #007bff;
+}
+
+/* Input and textarea styling */
+input[type="text"],
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+/* Submit button styling */
+input[type="submit"] {
+    width: 100%;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 10px;
+}
+
+/* Submit button hover effect */
+input[type="submit"]:hover {
+    background-color: #0056b3;
+}

@@ -1,0 +1,150 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Georgia;
+    background-color: #f9f9f9;
+    justify-content: center;
+}
+
+/* Container styling */
+.container {
+    height: 100%;
+    width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+}
+
+/* Headings and text styling */
+h1 {
+    padding-bottom: 30px;
+    color: #007bff;
+    margin: 10px;
+}
+
+.username {
+    font-size: xx-large;
+    color: #007bff;
+    margin: 10px;
+}
+
+h3 {
+    color: #007bff;
+    margin: 10px;
+}
+
+.email {
+    color: #007bff;
+    margin: 10px;
+}
+
+.bio {
+    margin: 10px;
+}
+
+/* Form and image styling */
+form {
+    padding: 10px;
+}
+
+.photo {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.profile_pic {
+    height: 250px;
+    width: 250px;
+    border-radius: 150px;
+    background-color: transparent;
+}
+
+.non-nav-icon {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.non-nav-icon-img {
+    background-color: transparent;
+    height: 25px;
+    width: 25px;
+    border-radius: 20px;
+}
+
+/* List styling */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    margin: 10px;
+    text-align: left;
+    color: #2b2e4a;
+    padding-top: 20px;
+}
+
+.view-post {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.view-post b {
+    padding: 10px;
+}
+
+/* General button styles */
+.follow-btn {
+    background-color: #007bff; /* Primary color */
+    color: white; /* Text color */
+    border: none;
+    padding: 10px 20px;
+    margin-top: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+    
+}
+
+/* Hover effect for button */
+.follow-btn:hover {
+    background-color: #0056b3; /* Darker shade for hover */
+    color: #e9ecef; /* Lighter text color */
+}
+
+/* Unfollow button styles */
+.follow-btn.unfollow {
+    background-color: #dc3545; /* Danger color for unfollow */
+}
+
+.follow-btn.unfollow:hover {
+    background-color: #c82333; /* Darker shade for unfollow hover */
+}
+
+/* Responsive design */
+@media (min-width: 768px) {
+    .container {
+        width: 750px;
+    }
+}
+
+@media (min-width: 992px) {
+    .container {
+        width: 970px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .container {
+        width: 1170px;
+    }
+}

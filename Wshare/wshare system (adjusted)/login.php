@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,6 +14,15 @@
 
     <div class="container">
         <h1>Login</h1><br><br>
+
+        <?php
+            session_start();
+            if (isset($_SESSION['login_error'])) {
+                echo '<div class="error">' . $_SESSION['login_error'] . '</div><br>';
+                unset($_SESSION['login_error']);
+            }
+        ?>
+
         <form action="login_process.php" method="POST">
             <input type="text" id="username" name="username" placeholder="username..." required><br><br>
             <input type="password" id="password" name="password" placeholder="password..." required><br><br>

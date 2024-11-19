@@ -58,8 +58,6 @@
     $uid = $id;
 
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -89,36 +87,60 @@
                 <?php endif; ?>
             </div>
 
-            
+        </div>
+
+        <div class="choose-pfp">
+            <form class = "change_pfp" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post" enctype="multipart/form-data" id = "change_pfp">
+                <div class="choose-pfp-file">
+                    <input type="file" class = "change-pfp-input" name="profile_picture" id="profile_picture" accept="image/*" required>
+                    <button type="submit" class = "change-pfp-btn" name="submit" onclick = "toggleShowChangePfp()"><img class = "change-pfp-btn-upload" src = "upload.svg"></button>
+                </div>
+            </form>
         </div>
         
         
-
         <div class = "uname-elements">
             <div class="uname-elem">
                 <p class = "Profile-uname"><b><?php echo $user['Username']; ?></b></p>
+                <button class = "save-bio-btn" id="editBtn" onclick="toggleEdituname()" ><img class = "save-bio-btn-icon" src = "edit.svg"></button>
             </div>
 
             <p class = "Profile-email"><b><?php echo $user['Email']; ?></p><br>
             <p class = "Profile-email" style = "font-size:small;"><b><?php echo "Joined at: ". $user['JoinedAt']; ?></p>
-            
-            
         </div>
 
         
-        <br><button class="update-profile-btn">
-            <a href="edit_profile.php">Edit Profile</a>    
-            </button>
+        
+        
+        <div class="forms">
+            <form action="new_uname_email.php" method="post" class="profile-form" id="username">
+
+                <label for="new_username">New Username:</label>
+                <input type="text" id="new_username" name="new_username" class="profile-input" required>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" class="profile-input" required>
+
+                <button type="submit" name="submit" class="profile-btn">Update Username</button>
+            </form>
+        </div>
+
         
         <h3  class = "pfp-label" style="color: #007bff; text-align: left; padding-top:50px;">Bio</h3>       
 
-        <?php
-        if($user['Bio']) { 
-        ?> <p class="bio"><?php echo htmlspecialchars($user['Bio']); ?></p>
-        <?php
-        }else { 
-            echo '<p style="color: #000000; text-align: left; margin-top:20px;">Hello! new member here.</p>';  // Display message if bio is empty.
-        }?>
+        <form class = "bioForm" id="bioForm" action="functions.php" method="POST">
+
+            <input type="hidden" name="userID" value="<?php echo $uid; ?>">
+
+            <textarea id="bio" name="bio" rows="4" cols="50" style = "background-color:#f0f1f1;"><?php echo htmlspecialchars($user['Bio']); ?></textarea>
+
+            <div class="btn-container">
+
+            <button class="save-bio-btn" type="submit" name="submit" style="width: 100%; background-color:#007bff; height: 35px; color:#f0f1f1; ">Update Bio</button>
+
+            </div>
+
+        </form>
 
         
 
@@ -128,59 +150,38 @@
             <?php foreach ($user_posts as $post): ?>
                 
 
-                    <li style="list-style: none;">
+                    <li style="list-style: none; width:100%; color: #2b2e4a; display: flex; align-items:center;">
                     
-                        <div class="post">
-
-                            <div class="pic_user" style = "display:flex;">
-
-                                <div class="user_post_info">
-                                    <div style="display: flex;">
-                                        
-                                        <p class="post_time" style = "font-size:smaller; padding-top:9px; margin-left:2px;"><?php echo timeAgo($post['CreatedAt']); ?></p>
-                                    </div>
-                                </div>
-
-                                
-
-                            </div>
+                        <div class="user-posts">
 
 
-                            <h3 class="post_title"><?php echo $post['Title']; ?></h3>
+                            <b class = "post_title"><?php echo $post['Title']; ?></b>
 
+                            <div class="options-post">
 
-                            <p class="post_content"><?php echo $post['Content']; ?></p>
-
-                            <div class="lik" style = "display:flex; padding:10px;">
-
-                                <form class="like" action="like_post.php" method="POST" style = "margin:0;">
-                                    <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
-                                    <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="bulb.svg" style = "height:30px; width:30px;"></button>
+                                <form action="view_post.php" method="GET">
+                                    <input type="hidden" name="id" value="<?php echo $post['PostID']; ?>">
+                                    <button class = "non-nav-icon" type="submit"><img class = "non-nav-icon-img" src="view.svg"></button>
                                 </form>
 
-                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
-
-                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="comment.svg" style = "height:30px; width:30px; background-color:transparent; outline:none; border:none;"></button>
-
-                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo countComments($post['PostID']); ?> Comments</span>
-
-                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:30px; width:30px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;"> See disscussion</p></a> </button>
-
-                                <form class="like" action="edit_post.php" method="GET" style = "margin:0;">
+                                <form action="edit_post.php" method="GET">
                                     <input type="hidden" name="post_id" value="<?php echo $post['PostID']; ?>">
-                                    <button class = "like-btn" type="submit" style = "display:flex; background-color:transparent; border:none; padding: 10px;"><img class = "bulb" src="edit.svg" style = "height:30px; width:30px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;">Edit post</p></button>
+                                    <button class = "non-nav-icon" type="submit"><img class = "non-nav-icon-img" src="edit.svg"></button>
                                 </form>
                                 
-                                <button class = "non-nav-icon" onclick="confirmDelete(<?php echo $post['PostID']; ?>)"><img class = "non-nav-icon-img" src="delete.svg">
-                                <p class="like-count" style = "display:flex; align-self:center; color:red; margin-left:5px;">Delete post</p></button>
+                                <button class = "non-nav-icon" onclick="confirmDelete(<?php echo $post['PostID']; ?>)"><img class = "non-nav-icon-img" src="delete.svg"></button>
+
                             </div>
-                            
 
                         </div>
                     </li>
                
             <?php endforeach; ?>
         </ul>
+        <br>
+        <br>
+        <br>
+        <br>
 
 
     </div>

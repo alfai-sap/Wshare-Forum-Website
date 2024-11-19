@@ -85,8 +85,8 @@ h1 {
 
 /* Profile picture styles */
 .profile_pic {
-    height: 250px; 
-    width: 250px; 
+    height: 150px; 
+    width: 150px; 
     border-radius: 150px; 
     background-color: transparent;
 }
@@ -114,6 +114,11 @@ form {
     font-size: 16px;
 }
 
+
+.bio {
+    margin: 10px;
+}
+
 .savebio {
     width: fit-content; /* Set width to fit content */
     padding: 10px;
@@ -129,6 +134,30 @@ form {
 
 #editBioBtn:hover {
     background-color: #0056b3;
+}
+
+/* Add this to your CSS file */
+.update-profile-btn {
+    background-color: #ffffff;
+    color: #000000;
+    
+    
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    height: 40px;
+    width: 100px;
+
+    a{
+        display: flex;
+        align-self: center;
+        margin: 10px;
+        text-decoration: none;
+        color: #007bff;
+        font-size: 16px;
+    }
 }
 
 .btn-container {
@@ -276,6 +305,7 @@ form {
 
 /* Icon styles */
 .non-nav-icon {
+    display: flex;
     background-color: transparent;
     border: none;
     cursor: pointer;
@@ -283,24 +313,118 @@ form {
 
 .non-nav-icon-img {
     padding: 10px;
-    height: 25px;
-    width: 25px;
+    height: 30px;
+    width: 30px;
     border-radius: 20px;
 }
 
 /* User posts styles */
-.user-posts {
-    display: flex;
-    width: 100%;
+
+.post_time {
+    font-size: smaller;
+    padding-left: 10px;
+    margin-top: 2px;
+    margin-right: 10px;
+    transition: 0.4s ease;
+    margin-bottom: 2px;
+    color: #0056b3;
+    opacity: 50%;
 }
 
-.user-posts b {
-    padding: 35px;
+.post {
+    height: 100%;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
 }
 
-.options-post {
-    display: flex;
+.post h3 {
+    margin: 0px;
+    cursor: pointer;
+    padding: 20px 10px;
+    text-align: left;
+    color: #007bff;
 }
+
+.post_content {
+    margin-left: 10px;
+    margin-top: 20px;
+    text-align: justify;
+    margin-right: 10px;
+    margin-bottom: 20px;
+    color: black;
+    display: none;
+    transition: 0.4s ease;
+}
+
+hr {
+    border: 1px solid #007bff;
+    opacity: 20%;
+}
+
+.comments {
+    height: 100%;
+}
+
+.like-count{
+    font-size: small;
+}
+.count_comm {
+    color: #007bff;
+    text-align: center;
+    font-size: medium;
+    padding: 10px;
+    opacity: 80%;
+}
+
+.comments h4 {
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.comments p {
+    margin: 5px 0;
+}
+
+.post-comments {
+    margin: 5px 0;
+    padding-left: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    color: black;
+    opacity: 60%;
+    display: none;
+}
+
+/* edit_profile.css */
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+input[type="text"], textarea {
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button.save-btn {
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button.save-btn:hover {
+    background-color: #0056b3;
+}
+
 
 /* Responsive design */
 @media screen and (max-width: 768px) {

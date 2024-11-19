@@ -66,6 +66,31 @@ function verifyUser($username, $password) {
 
     return false;
 }
+//check username uniqueness
+function isUsernameUnique($username) {
+    global $conn;
+    $sql = "SELECT COUNT(*) FROM Users WHERE Username = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $stmt->bind_result($count);
+    $stmt->fetch();
+    $stmt->close();
+    return $count == 0;
+}
+
+function isEmailUnique($email) {
+    global $conn;
+    $sql = "SELECT COUNT(*) FROM Users WHERE Email = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $stmt->bind_result($count);
+    $stmt->fetch();
+    $stmt->close();
+    return $count == 0;
+}
+
 
 
 //search posts
@@ -188,7 +213,7 @@ function getUserProfilePic($userId) {
 function getUserPosts($username) {
     global $conn; 
 
-    $sql = "SELECT * FROM Posts WHERE UserID = (SELECT UserID FROM Users WHERE Username = ?)";
+    $sql = "SELECT * FROM Posts WHERE UserID = (SELECT UserID FROM Users WHERE Username = ?) ORDER BY PostID DESC";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
     $stmt->execute();

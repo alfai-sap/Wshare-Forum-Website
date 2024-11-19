@@ -46,8 +46,8 @@ session_start();
                 }
                 echo '<div class="unametime" style="display:flex; flex-direction: column;">';
                     echo '<p class="authorname">' . $post['Username'] . '</p>';
-                    echo '<p class="timestamp" style="margin-top:5px;">Posted at: ' . $post['CreatedAt'] . '</p>';
-                    echo '<p class="timestamp" style="margin-top:5px;">Edited on: ' . $post['updatedAt'] . '</p>';
+                    echo '<p class="timestamp" style="margin-top:5px;">' . timeAgo($post['CreatedAt']) . '</p>';
+                    echo '<p class="timestamp" style="margin-top:5px;">edited ' . timeAgo($post['updatedAt']) . '</p>';
                 echo '</div>';
             echo '</div>';
             echo '<h3>' . $post['Title'] . '</h3>';

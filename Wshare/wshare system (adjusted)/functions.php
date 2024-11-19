@@ -109,9 +109,6 @@ function createPost($title, $content, $username, $photoPath) {
     return $stmt->execute();
 }
 
-
-//with image
-
 //automatic to siya para i-display ang mga posts sa homepage
 function getRecentPosts() {
     global $conn; 
@@ -1121,5 +1118,42 @@ function trackPostReply($commentID, $userID) {
 }
 
 
+
+// HELPER FUNCTIONS
+//
+
+function timeAgo($timestamp) {
+    $time = strtotime($timestamp);
+    $diff = time() - $time;
+
+    if ($diff < 60) {
+        // Less than 1 minute ago
+        return ($diff <= 1) ? 'just now' : $diff . ' seconds ago';
+    } elseif ($diff < 3600) {
+        // Less than 1 hour ago
+        $minutes = floor($diff / 60);
+        return ($minutes == 1) ? '1 minute ago' : $minutes . ' minutes ago';
+    } elseif ($diff < 86400) {
+        // Less than 1 day ago
+        $hours = floor($diff / 3600);
+        return ($hours == 1) ? '1 hour ago' : $hours . ' hours ago';
+    } elseif ($diff < 604800) {
+        // Less than 1 week ago
+        $days = floor($diff / 86400);
+        return ($days == 1) ? '1 day ago' : $days . ' days ago';
+    } elseif ($diff < 2419200) {
+        // Less than 1 month ago (4 weeks approximation)
+        $weeks = floor($diff / 604800);
+        return ($weeks == 1) ? '1 week ago' : $weeks . ' weeks ago';
+    } elseif ($diff < 29030400) {
+        // Less than 1 year ago (12 months approximation)
+        $months = floor($diff / 2419200);
+        return ($months == 1) ? '1 month ago' : $months . ' months ago';
+    } else {
+        // More than 1 year ago
+        $years = floor($diff / 29030400);
+        return ($years == 1) ? '1 year ago' : $years . ' years ago';
+    }
+}
 
 ?>

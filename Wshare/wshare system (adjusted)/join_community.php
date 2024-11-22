@@ -1,5 +1,4 @@
 <?php
-
 require_once 'functions.php'; // Assuming this file handles the database connection
 session_start();
 
@@ -9,41 +8,58 @@ if (!isset($_SESSION['username'])) {
     exit;
 }
 
+// Fetch user ID
+$username = $_SESSION['username'];
+$userID = getUserIdByUsername($username); // You should define this function in `functions.php`
+
 // Get the community ID from the URL
-$communityID = isset($_GET['community_id']) ? (int)$_GET['community_id'] : 0;
+if (!isset($_GET['community_id'])) {
+    header('Location: communities.php'); // Redirect to communities page if no community ID is provided
+    exit;
+}
+$communityID = $_GET['community_id'];
 
-// Get the user ID from the session
-$userID = getUserIdByUsername($_SESSION['username']);
+// Check if the community exists and its visibility status
+$query = "SELECT Visibility FROM communities WHERE CommunityID = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param('i', $communityID);
+$stmt->execute();
+$stmt->store_result();
+$stmt->bind_result($visibility);
+$stmt->fetch();
+$stmt->close();
 
-// Check if the community ID and user ID are valid
+// If the community is private, add the user to the join requests table
+if ($visibility === 'private') {
+    // Check if the user has already requested to join this community
+    $checkQuery = "SELECT COUNT(*) FROM community_join_requests WHERE CommunityID = ? AND UserID = ?";
+    $checkStmt = $conn->prepare($checkQuery);
+    $checkStmt->bind_param('ii', $communityID, $userID);
+    $checkStmt->execute();
+    $checkStmt->bind_result($existingRequest);
+    $checkStmt->fetch();
+    $checkStmt->close();
 
-if ($communityID > 0 && $userID > 0) {
-
-    // Check if member na sya daan
-    $query = "SELECT * FROM community_members WHERE CommunityID = ? AND UserID = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param('ii', $communityID, $userID);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        // User is already a member
-        echo "You are already a member of this community.";
-
+    if ($existingRequest > 0) {
+        echo "Your join request is already pending.";
     } else {
-        // Add the user to the community if di pa member
-        $query = "INSERT INTO community_members (CommunityID, UserID, Role) VALUES (?, ?, 'member')";
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param('ii', $communityID, $userID);
-
-        if ($stmt->execute()) {
-            echo "You have successfully joined the community!";
-            header('location: Communities.php');
-        } else {
-            echo "Error: " . $stmt->error;
-        }
+        // Add a new join request
+        $insertQuery = "INSERT INTO community_join_requests (CommunityID, UserID) VALUES (?, ?)";
+        $insertStmt = $conn->prepare($insertQuery);
+        $insertStmt->bind_param('ii', $communityID, $userID);
+        $insertStmt->execute();
+        $insertStmt->close();
+        header('Location: Communities.php');
     }
 } else {
-    echo "Invalid community ID.";
+    // If the community is public, add the user as a member directly
+    $joinQuery = "INSERT INTO community_members (CommunityID, UserID, Role) VALUES (?, ?, 'member')";
+    $joinStmt = $conn->prepare($joinQuery);
+    $joinStmt->bind_param('ii', $communityID, $userID);
+    $joinStmt->execute();
+    $joinStmt->close();
+
+    header('Location: community_page.php?community_id='.$communityID);
+    exit;
 }
 ?>

@@ -67,6 +67,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Profile</title>
+    <link rel="stylesheet" href="./css/navbar.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/left-navbar.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/user_profile.css ?v=<?php echo time(); ?>">
 </head>
@@ -99,16 +100,15 @@
                 <p class = "Profile-uname"><b><?php echo $user['Username']; ?></b></p>
             </div>
 
-            <p class = "Profile-email"><b><?php echo $user['Email']; ?></p><br>
-            <p class = "Profile-email" style = "font-size:small;"><b><?php echo "Joined at: ". $user['JoinedAt']; ?></p>
+            <p class = "Profile-email"><b><?php echo $user['Email']; ?></p>
+            <p class = "Profile-joined"><b><?php echo "Joined ". timeAgo($user['JoinedAt']); ?></p>
             
             
         </div>
 
         
-        <br><button class="update-profile-btn">
-            <a href="edit_profile.php">Edit Profile</a>    
-            </button>
+        <br>
+        <button class="update-profile-btn"><a href="edit_profile.php">Edit Profile</a></button>
         
         <h3  class = "pfp-label" style="color: #007bff; text-align: left; padding-top:50px;">Bio</h3>       
 
@@ -120,6 +120,9 @@
             echo '<p style="color: #000000; text-align: left; margin-top:20px;">Hello! new member here.</p>';  // Display message if bio is empty.
         }?>
 
+        <br>
+        <hr />
+        <br>
         
 
         <h3  class = "pfp-label" style="color: #007bff; text-align: left; padding-bottom:40px; padding-top:20px;">Your Posts</h3>
@@ -137,7 +140,7 @@
                                 <div class="user_post_info">
                                     <div style="display: flex;">
                                         
-                                        <p class="post_time" style = "font-size:smaller; padding-top:9px; margin-left:2px;"><?php echo timeAgo($post['CreatedAt']); ?></p>
+                                        <p class="post_time" style = "font-size:smaller;"><?php echo timeAgo($post['CreatedAt']); ?></p>
                                     </div>
                                 </div>
 
@@ -151,7 +154,7 @@
 
                             <p class="post_content"><?php echo $post['Content']; ?></p>
 
-                            <div class="lik" style = "display:flex; padding:10px;">
+                            <div class="lik" style = "display:flex;">
 
                                 <form class="like" action="like_post.php" method="POST" style = "margin:0;">
                                     <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
@@ -166,6 +169,7 @@
 
                                 <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:30px; width:30px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;"> See disscussion</p></a> </button>
 
+                                <p class = "divider" style="color: #007bff; font-weight:bold; padding:15px;"> | </p>
                                 <form class="like" action="edit_post.php" method="GET" style = "margin:0;">
                                     <input type="hidden" name="post_id" value="<?php echo $post['PostID']; ?>">
                                     <button class = "like-btn" type="submit" style = "display:flex; background-color:transparent; border:none; padding: 10px;"><img class = "bulb" src="edit.svg" style = "height:30px; width:30px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;">Edit post</p></button>
@@ -259,6 +263,8 @@
         );                    
     </script>
 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="./javascripts/index.js"></script>
 </body>
 
 </html>

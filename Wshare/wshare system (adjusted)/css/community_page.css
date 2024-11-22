@@ -1,0 +1,319 @@
+        *{
+            margin: 0;
+            padding: 0;
+            font-family: Poppins;
+        }
+
+        body {
+            
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            background-color: #007BFF; /* Your primary color */
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin: 0;
+        }
+
+        h2 {
+            color: #007BFF;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .community-thumbnail {
+            width: 100%;
+            height: 300px; /* Fixed height */
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .community-description {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /*form {
+        
+        }*/
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 1em;
+            color: #333;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        input[type="submit"] {
+            width:100%;
+            background-color: #007BFF; /* Your primary color */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3; /* Darker shade of your primary color */
+        }
+
+        .post-container {
+            margin-bottom: 20px;
+        }
+
+        .post {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            padding: 15px;
+        }
+
+        .pic_user {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .author_pic {
+            height: 50px;
+            width: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .user_post_info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .post_username a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .post_username a:hover {
+            text-decoration: underline;
+        }
+
+        .post_time {
+            font-size: smaller;
+            color: #666;
+        }
+
+        .post_title {
+            color: #007BFF;
+            margin-top: 0;
+        }
+
+        .post_content {
+            margin: 10px 0;
+            color: #333;
+        }
+
+        /* Like button styling */
+        .like-btn {
+            background-color: transparent;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            transition: 0.4s ease;
+        }
+
+        .like-count {
+            opacity: 70%;
+            color: #007bff;
+        }
+
+        .lik {
+            display: flex;
+            align-items: center;
+        }
+
+        .bulb:hover {
+            height: 30px;
+            width: 30px;
+        }
+
+        .bulb {
+            width: 25px;
+            height: 25px;
+            padding: 10px;
+            transition: 0.4s ease;
+        }
+
+        .profile-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .profile-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+
+        .profile-details {
+            flex-grow: 1;
+        }
+
+        .profile-username {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .profile-username:hover {
+            text-decoration: underline;
+        }
+
+        .profile-email {
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .top-menu-btn {
+            background-color: #ffffff;
+            color: #000000;
+            
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            height: 30px;
+            width: 100px;
+
+            a{
+                display: flex;
+                align-self: center;
+                margin: 10px;
+                text-decoration: none;
+                font-size: 16px;
+            }
+        }
+
+        .top-menu-btn:hover {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+
+
+                
+        .join-button{
+            background-color: #ffffff;
+            color: #000000;
+            padding:10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            height: 40px;
+            width: 80px;
+
+            font-size: small;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            a{
+                text-decoration: none;
+                color: #000000;
+                
+                
+            }
+        }
+
+        .join-button:hover {
+            background-color: #0056b3;
+            a{
+            color: #ffffff;
+            }
+        }
+        .admin-text, .member-text {
+            font-size: small;
+            padding: 0;
+            background-color: transparent;
+            color: #0056b3;
+            cursor: default;
+        }
+
+        .leave-button {
+            background-color: #dc3545;
+            color: #ffffff;
+            padding:10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            height: 40px;
+            width: 80px;
+
+            font-size: small;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            a{
+                text-decoration: none;
+                color: #ffffff;
+            }
+        }
+        .leave-button:hover {
+            background-color: #c82333;
+        }
+
+        .join-button, .leave-button{
+            align-self: flex-end;
+        }
+        
+        .message{
+            padding-top: 20px;
+            padding-bottom: 20px;
+            font-size: medium;
+        }
+        @media screen and (max-width: 768px){
+            .container{
+                width: 95%;
+                padding: 10px;
+            }
+            
+        }

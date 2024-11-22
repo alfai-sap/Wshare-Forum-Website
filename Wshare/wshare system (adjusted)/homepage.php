@@ -142,16 +142,16 @@ require_once 'functions.php';
 
                                 <form class="like" action="like_post.php" method="POST" style = "margin:0;">
                                     <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
-                                    <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="bulb.svg" style = "height:30px; width:30px;"></button>
+                                    <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="bulb.svg" style = "height:20px; width:20px;"></button>
                                 </form>
 
                                 <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
 
-                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="comment.svg" style = "height:30px; width:30px; background-color:transparent; outline:none; border:none;"></button>
+                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="comment.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"></button>
 
                                 <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo countComments($post['PostID']); ?> Comments</span>
 
-                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:30px; width:30px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;"> See disscussion</p></a> </button>
+                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;"> See discussion</p></a> </button>
 
                                 <!--<span class="like-count" >see thread</span>-->
 

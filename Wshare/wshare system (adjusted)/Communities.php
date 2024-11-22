@@ -67,6 +67,8 @@ if ($filterOption === 'created') {
 // Execute the query
 $stmt->execute();
 $result = $stmt->get_result();
+
+
 ?>
 
 <!DOCTYPE html>
@@ -105,20 +107,38 @@ $result = $stmt->get_result();
         <div class="communities-list">
             <?php if ($result->num_rows > 0) { ?>
                 <?php while ($row = $result->fetch_assoc()) { 
+
                     $isAdmin = $row['user_role'] === 'admin';
-                    $isMember = $row['is_member'] > 0; ?>
+                    $isMember = $row['is_member'] > 0; 
+                    
+                    // Check if the user has a pending request for this community
+                    $communityID = $row['CommunityID'];
+                    $pendingQuery = "SELECT COUNT(*) AS request_count FROM community_join_requests 
+                                    WHERE CommunityID = $communityID 
+                                    AND UserID = $userID 
+                                    AND status = 'pending'";
+                                    
+                    $pendingResult = $conn->query($pendingQuery);
+                    $pendingRequest = $pendingResult->fetch_assoc();
+                    $hasPendingRequest = $pendingRequest['request_count'] > 0;
+                    ?>
+
                     <div class="community">
                         <a href="community_page.php?community_id=<?php echo $row['CommunityID']; ?>">
                             <img src="<?php echo htmlspecialchars($row['Thumbnail']); ?>" alt="Thumbnail" class="community-thumbnail">
                             <div class="community-content">
-                                <h2 class="community-title"><?php echo htmlspecialchars($row['Title']); ?></h2>
+                                <h2 class="community-title">
+                                    <?php echo htmlspecialchars($row['Title']); ?>
+                                    <span class="community-visibility"><?php echo htmlspecialchars($row['Visibility']); ?></span> <!-- Display visibility -->
+                                </h2>
                                 <p class="community-description"><?php echo htmlspecialchars($row['Description']); ?></p>
                                 <p class="community-members"><?php echo $row['member_count']; ?> Members</p>
                                 <?php if ($isAdmin) { ?>
                                     <span class="admin-text">You're an Admin</span>
                                 <?php } elseif ($isMember) { ?>
                                     <span class="member-text">You're a Member</span>
-                                    <a href="leave_community.php?community_id=<?php echo $row['CommunityID']; ?>" class="leave-button">Leave</a>
+                                <?php } elseif ($hasPendingRequest) { ?>
+                                    <span class="member-text">Join request pending</span>
                                 <?php } else { ?>
                                     <a href="join_community.php?community_id=<?php echo $row['CommunityID']; ?>" class="join-button">Join</a>
                                 <?php } ?>
@@ -151,5 +171,7 @@ $result = $stmt->get_result();
             }
         });
     </script>
+
+
 </body>
 </html>

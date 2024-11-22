@@ -27,5 +27,5 @@ $stmt->bind_param('ii', $communityID, $userID);
 $stmt->execute();
 
 // Redirect back to the communities page
-header('Location: Communities.php');
+header('Location: community_page.php?community_id='.$communityID);
 exit;

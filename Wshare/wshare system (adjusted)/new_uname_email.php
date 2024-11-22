@@ -13,17 +13,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
             $newUsername = $_POST['new_username'];
             updateUsername($username, $newUsername);
             $_SESSION['username'] = $newUsername; // Update session variable
-            header('Location: user_profile.php');
+            header('Location: edit_profile.php');
             exit;
         } elseif (isset($_POST['new_email'])) {
             // Update email
             $newEmail = $_POST['new_email'];
             updateEmail($username, $newEmail);
-            header('Location: user_profile.php');
+            header('Location: edit_profile.php');
             exit;
         }
     } else {
-        echo "Incorrect password. Username or email not updated.";
+        echo "Incorrect password. Username not updated.";
     }
 }
 ?>

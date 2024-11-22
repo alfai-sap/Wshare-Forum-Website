@@ -125,12 +125,12 @@ function searchPosts($search) {
 }
 
 //without image
-function createPost($title, $content, $username, $photoPath) {
+function createPost($title, $content, $username, $thumbnail) {
     global $conn;
     // Assuming 'UserID' in the 'Users' table corresponds to 'UserID' in the 'Posts' table
     $sql = "INSERT INTO posts (Title, Content, UserID, PhotoPath) VALUES (?, ?, (SELECT UserID FROM users WHERE Username = ?), ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssss", $title, $content, $username, $photoPath);
+    $stmt->bind_param("ssss", $title, $content, $username, $thumbnail);
     return $stmt->execute();
 }
 
@@ -295,7 +295,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         updateOrInsertUserBio($userID, $bio);
 
         // Redirect back to profile page
-        header('Location: user_profile.php');
+        header('Location: edit_profile.php');
         exit;
     } else {
         // Handle invalid or missing userID
@@ -1146,6 +1146,7 @@ function trackPostReply($commentID, $userID) {
 
 // HELPER FUNCTIONS
 //
+
 
 function timeAgo($timestamp) {
     $time = strtotime($timestamp);

@@ -18,7 +18,7 @@ if (!isset($_GET['username'])) {
 $username = $_GET['username'];
 
 // Get user profile information
-$user = getUserByUsername($username);
+$userview = getUserByUsername($username);
 
 // Get posts created by the user
 $user_posts = getUserPosts($username);
@@ -27,7 +27,7 @@ $user_posts = getUserPosts($username);
 $loggedInUserID = getUserByUsername($_SESSION['username'])['UserID'];
 
 // Check if the logged-in user is following the profile owner
-$isFollowing = isFollowing($loggedInUserID, $user['UserID']);
+$isFollowing = isFollowing($loggedInUserID, $userview['UserID']);
 
 // Determine button text and action
 $buttonText = $isFollowing ? 'Unfollow' : 'Follow';
@@ -35,11 +35,11 @@ $buttonAction = $isFollowing ? 'unfollow' : 'follow';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($_POST['action'] === 'follow') {
-        followUser($loggedInUserID, $user['UserID']);
+        followUser($loggedInUserID, $userview['UserID']);
         header("Location: view_user.php?username=$username");
         exit;
     } elseif ($_POST['action'] === 'unfollow') {
-        unfollowUser($loggedInUserID, $user['UserID']);
+        unfollowUser($loggedInUserID, $userview['UserID']);
         header("Location: view_user.php?username=$username");
         exit;
     }
@@ -53,28 +53,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $user['Username']; ?>'s Profile</title>
+    <title><?php echo $userview['Username']; ?>'s Profile</title>
+    <link rel="stylesheet" href="./css/navbar.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/left-navbar.css  ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/view_user.css  ?v=<?php echo time(); ?>">
 </head>
 <body>
 
 
+<?php include 'navbar.php';?>
 
 <div class="container">
 
-    <a class="backButton" id="backButton">
-        <div class="back" style="display:flex; margin-bottom:30px;">
-            <img class="icons" src="signoff.svg">
-            <p class="back-label" style="padding-top: 15px;color:#007bff">Back</p>
-        </div>
-    </a>
+    
 
     <h1>Profile</h1>
     <?php
-        if ($user['ProfilePic']) {
+        if ($userview['ProfilePic']) {
             echo '<div class="photo">';
-            echo '<img class="profile_pic" src="' . $user['ProfilePic'] . '">';
+            echo '<img class="profile_pic" src="' . $userview['ProfilePic'] . '">';
             echo '</div>';
         } else {
             echo '<div class="photo">';
@@ -83,40 +80,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     ?>
 
-    <p class="username"><b><?php echo $user['Username']; ?></b></p>
-    <p class="email"><b><?php echo $user['Email']; ?></b></p>
+    <p class="username"><b><?php echo $userview['Username']; ?></b></p>
+    <p class="email"><b><?php echo $userview['Email']; ?></b></p>
+    <p class = "Profile-joined" style = "font-size:small; margin-left:10px;"><b><?php echo "Joined ". timeAgo($userview['JoinedAt']); ?></p>
     
-    <br>
-    <h3>Bio</h3>
-    <p class="bio" id="bio"><?php echo htmlspecialchars($user['Bio']); ?></p>
-    <form action="" method="POST" style="margin-top:20px;">
+    <?php if($_SESSION['username'] != $userview['Username']){ ?>
+    <form action="" method="POST">
         <input type="hidden" name="action" value="<?php echo $buttonAction; ?>">
         <button type="submit" class="<?php echo $isFollowing ? 'follow-btn unfollow' : 'follow-btn'; ?>">
             <?php echo $buttonText; ?>
         </button>
     </form>
+    <?php }?>
+
     <br>
     <br>
-    <h3 style="text-align:left;"><?php echo $user['Username']; ?>'s Posts</h3>
+    <h3 class="headers">Bio</h3>
+    <p class="bio" id="bio"><?php echo htmlspecialchars($userview['Bio']); ?></p>
+    
+    <br>
+    <hr />
+    <br>
+    <h3 class="headers" style="text-align:left; padding-bottom:40px;"><?php echo $userview['Username']; ?>'s Posts</h3>
     <ul>
-        <?php 
-            if ($user_posts) {
-                foreach ($user_posts as $post) {
-                    echo '<li>';   
-                    echo '<div class="view-post">';
-                    echo '<b>'.$post['Title'].'</b>';
-                    echo '<form action="view_post.php" method="GET">
-                              <input type="hidden" name="id" value="'.$post['PostID'].'">
-                              <button class="non-nav-icon" type="submit"><img class="non-nav-icon-img" src="view.svg"></button>
-                          </form>';
-                    echo '</div>';
-                    echo '</li>';
-                }
-            } else {
-                echo '<p class="no-post-yet" style="color: #007bff; margin: 20px; text-align:center;"><b>No post yet.<b></p>';
-            }
-        ?>
-    </ul>
+            <?php foreach ($user_posts as $post): ?>
+                
+
+                    <li style="list-style: none;">
+                    
+                        <div class="post">
+
+                            <div class="pic_user" style = "display:flex;">
+
+                                <div class="user_post_info">
+                                    <div style="display: flex;">
+                                        
+                                        <p class="post_time" style = "font-size:smaller;"><?php echo timeAgo($post['CreatedAt']); ?></p>
+                                    </div>
+                                </div>
+
+                                
+
+                            </div>
+
+
+                            <h3 class="post_title"><?php echo $post['Title']; ?></h3>
+
+
+                            <p class="post_content"><?php echo $post['Content']; ?></p>
+
+                            <div class="lik" style = "display:flex;">
+
+                                <form class="like" action="like_post.php" method="POST" style = "margin:0;">
+                                    <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
+                                    <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 5px;"><img class="bulb" src="bulb.svg" style = "height:25px; width:25px;"></button>
+                                </form>
+
+                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
+
+                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 5px;"><img class="bulb" src="comment.svg" style = "height:25px; width:25px; background-color:transparent; outline:none; border:none;"></button>
+
+                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo countComments($post['PostID']); ?> Comments</span>
+
+                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 5px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:25px; width:25px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;"> See disscussion</p></a> </button>
+
+                            </div>
+                            
+
+                        </div>
+                    </li>
+               
+            <?php endforeach; ?>
+        </ul>
 
     <!-- Follow/Unfollow button -->
     
@@ -130,5 +165,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         window.history.back();
     });
 </script>
+
+<script>
+        document.getElementById('logo-nav').addEventListener('click', function() {
+            var element = document.getElementById('left-navbar');
+                if (element.style.display === 'none') {
+                        element.style.display = 'block';
+                        
+                } else {
+                        element.style.display = 'none';
+                }
+            }
+        );                    
+</script>
+<script>
+        document.getElementById('logo-left-nav').addEventListener('click', function() {
+            var element = document.getElementById('left-navbar');
+                if (element.style.display === 'none') {
+                        element.style.display = 'block';
+                        
+                } else {
+                        element.style.display = 'none';
+                }
+            }
+        );                    
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="./javascripts/index.js"></script>
 </body>
 </html>

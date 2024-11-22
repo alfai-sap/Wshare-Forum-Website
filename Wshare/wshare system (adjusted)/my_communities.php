@@ -98,19 +98,22 @@ $result = $stmt->get_result();
                     <div class="community">
                         <a href="community_page.php?community_id=<?php echo $row['CommunityID']; ?>">
                             <img src="<?php echo htmlspecialchars($row['Thumbnail']); ?>" alt="Thumbnail" class="community-thumbnail">
+                            <div class="community-content">
+                                <h2 class="community-title">
+                                    <?php echo htmlspecialchars($row['Title']); ?>
+                                    <span class="community-visibility"><?php echo htmlspecialchars($row['Visibility']); ?></span> <!-- Display visibility -->
+                                </h2>
+                                <p class="community-description"><?php echo htmlspecialchars($row['Description']); ?></p>
+                                <p class="community-members"><?php echo $row['member_count']; ?> Members</p>
+                                <?php if ($isAdmin) { ?>
+                                    <span class="admin-text">You're an Admin</span>
+                                <?php } elseif ($isMember) { ?>
+                                    <span class="member-text">You're a Member</span>
+                                <?php } else { ?>
+                                    <a href="join_community.php?community_id=<?php echo $row['CommunityID']; ?>" class="join-button">Join</a>
+                                <?php } ?>
+                            </div>
                         </a>
-                        <div class="community-content">
-                            <h2><?php echo htmlspecialchars($row['Title']); ?></h2>
-                            <p><?php echo htmlspecialchars($row['Description']); ?></p>
-                            <br>
-                            <p><?php echo $row['member_count']; ?> Members</p>
-                            <br>
-                            <?php if ($isAdmin) { ?>
-                                <span>You're an Admin</span>
-                            <?php } elseif ($isMember) { ?>
-                                <span>You're a Member</span>
-                            <?php } ?>
-                        </div>
                     </div>
                 <?php } ?>
             <?php } else { ?>

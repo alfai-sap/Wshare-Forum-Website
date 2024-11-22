@@ -56,6 +56,7 @@
             <div id="strengthBar"></div>
         </div>
         <br>
+        <br>
 
             <?php if (isset($errors['confirmPassword'])): ?>
                 <span class="error"><?php echo $errors['confirmPassword']; ?></span>
@@ -136,6 +137,7 @@
                     strengthBar.style.backgroundColor = "green";
                     break;
             }
+
         }
     </script>
 </body>

@@ -33,7 +33,7 @@
                     updateUserProfilePicture($username, $target_file);
 
                     // Redirect back to profile page
-                    header('Location: user_profile.php');
+                    header('Location: edit_profile.php');
                     exit;
                     
                 } else {
@@ -66,7 +66,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Profile</title>
     <link rel="stylesheet" href="./css/left-navbar.css ?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="./css/user_profile.css ?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="./css/edit_profile.css ?v=<?php echo time(); ?>">
 </head>
 
 <body>
@@ -74,9 +74,14 @@
 
     <div class="container">
 
-        <h1>Your Profile</h1>
+        <h1>Update Your Profile</h1>
         
-        
+        <br>
+        <br>
+        <h1 style="text-align: center;">Profile Picture</h1>
+        <br>
+
+
         <div class = "pfp-elements">
 
             <div class = "pfp-elements-child">
@@ -89,6 +94,8 @@
 
         </div>
 
+
+
         <div class="choose-pfp">
             <form class = "change_pfp" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post" enctype="multipart/form-data" id = "change_pfp">
                 <div class="choose-pfp-file">
@@ -98,15 +105,16 @@
             </form>
         </div>
         
+        <hr />
+
+        <br>
+
+        <h1 style="text-align: center;">Username</h1>
         
         <div class = "uname-elements">
             <div class="uname-elem">
                 <p class = "Profile-uname"><b><?php echo $user['Username']; ?></b></p>
-                <button class = "save-bio-btn" id="editBtn" onclick="toggleEdituname()" ><img class = "save-bio-btn-icon" src = "edit.svg"></button>
             </div>
-
-            <p class = "Profile-email"><b><?php echo $user['Email']; ?></p><br>
-            <p class = "Profile-email" style = "font-size:small;"><b><?php echo "Joined at: ". $user['JoinedAt']; ?></p>
         </div>
 
         
@@ -125,8 +133,14 @@
             </form>
         </div>
 
-        
-        <h3  class = "pfp-label" style="color: #007bff; text-align: left; padding-top:50px;">Bio</h3>       
+        <br>
+        <br>
+
+        <hr />
+
+        <br>
+
+        <h1 style="text-align: center;">Bio</h1>       
 
         <form class = "bioForm" id="bioForm" action="functions.php" method="POST">
 
@@ -136,103 +150,17 @@
 
             <div class="btn-container">
 
-            <button class="save-bio-btn" type="submit" name="submit" style="width: 100%; background-color:#007bff; height: 35px; color:#f0f1f1; ">Update Bio</button>
+            <button class="save-bio-btn" type="submit" name="submit" style="width: 100%; background-color:#007bff; height: 35px; color:#f0f1f1; margin:10px; ">Update Bio</button>
 
             </div>
 
         </form>
-
         
-
-        <h3  class = "pfp-label" style="color: #007bff; text-align: left; padding-bottom:40px; padding-top:20px;">Your Posts</h3>
-
-        <ul>
-            <?php foreach ($user_posts as $post): ?>
-                
-
-                    <li style="list-style: none; width:100%; color: #2b2e4a; display: flex; align-items:center;">
-                    
-                        <div class="user-posts">
-
-
-                            <b class = "post_title"><?php echo $post['Title']; ?></b>
-
-                            <div class="options-post">
-
-                                <form action="view_post.php" method="GET">
-                                    <input type="hidden" name="id" value="<?php echo $post['PostID']; ?>">
-                                    <button class = "non-nav-icon" type="submit"><img class = "non-nav-icon-img" src="view.svg"></button>
-                                </form>
-
-                                <form action="edit_post.php" method="GET">
-                                    <input type="hidden" name="post_id" value="<?php echo $post['PostID']; ?>">
-                                    <button class = "non-nav-icon" type="submit"><img class = "non-nav-icon-img" src="edit.svg"></button>
-                                </form>
-                                
-                                <button class = "non-nav-icon" onclick="confirmDelete(<?php echo $post['PostID']; ?>)"><img class = "non-nav-icon-img" src="delete.svg"></button>
-
-                            </div>
-
-                        </div>
-                    </li>
-               
-            <?php endforeach; ?>
-        </ul>
         <br>
+        <hr />
         <br>
-        <br>
-        <br>
-
-
+        <button class="save-bio-btn" style="width: 100%; background-color:#ffffff; height: 35px; color:#f0f1f1; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); "><a href = "user_profile.php" style="text-decoration: none; color:#007bff;;">Back to profile</a></button>
     </div>
-
-
-    <script>
-    
-        function confirmDelete(postId) {
-            if (confirm("Are you sure you want to delete this post?")) {
-                window.location.href = "delete_post.php?id=" + postId;
-            }
-        }
-
-    
-        function toggleEdituname() {
-            var formsContainer = document.getElementById("username");
-            if (formsContainer.style.display === "none") {
-                formsContainer.style.display = "flex";
-            } else {
-                formsContainer.style.display = "none";
-            }
-        }
-    
-
-    
-            function toggleEditPhoto() {
-
-                var formsContainer = document.getElementById("change_pfp");
-                if (formsContainer.style.display === "none") {
-                    formsContainer.style.display = "block";
-                    
-                } else {
-                    formsContainer.style.display = "none";
-                }
-        }
-
-
-        function toggleShowChangePfp() {
-               
-
-                var formsContainer = document.getElementById("change_pfp");
-                if (formsContainer.style.display === "none") {
-                    formsContainer.style.display = "block";
-                    editbtn.style.display = "none";
-                } else {
-                    formsContainer.style.display = "none";
-                    editbtn.style.display = "block";
-
-                }
-        }
-    </script>
 
     <script>
         document.getElementById('logo-nav').addEventListener('click', function() {

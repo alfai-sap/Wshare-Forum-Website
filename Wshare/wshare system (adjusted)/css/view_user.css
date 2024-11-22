@@ -11,19 +11,19 @@ body {
 
 /* Container styling */
 .container {
-    height: 100%;
-    width: 900px;
+    margin-top: 100px; /* Adjust as needed based on navbar height */
+    width: 1024px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 10px;
     background-color: #ffffff;
     border-radius: 10px;
 }
 
 /* Headings and text styling */
 h1 {
-    padding-bottom: 30px;
-    color: #007bff;
-    margin: 10px;
+    color: #007bff; 
+    padding: 10px;
+    margin-bottom: 100px;
 }
 
 .username {
@@ -32,7 +32,19 @@ h1 {
     margin: 10px;
 }
 
-h3 {
+
+.Profile-email {
+    font-size: medium;
+    color: #007bff;
+}
+
+.Profile-joined {
+    font-size: small;
+    color: #007bff;
+    margin-left: 10px;
+}
+
+.headers {
     color: #007bff;
     margin: 10px;
 }
@@ -43,6 +55,8 @@ h3 {
 }
 
 .bio {
+    font-size: medium;
+    color: #0056b3;
     margin: 10px;
 }
 
@@ -57,13 +71,20 @@ form {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+
 }
 
 .profile_pic {
-    height: 250px;
-    width: 250px;
-    border-radius: 150px;
+    height: 150px; 
+    width: 150px; 
+    border-radius: 50%; 
     background-color: transparent;
+
+    
+
+    border: 3px solid #0056b3;
+    border-radius: 50%;
+
 }
 
 .non-nav-icon {
@@ -78,40 +99,78 @@ form {
     width: 25px;
     border-radius: 20px;
 }
+/* User posts styles */
 
-/* List styling */
-ul {
-    list-style: none;
-    padding: 0;
+.post_time {
+    font-size: smaller;
+    padding-left: 10px;
+    margin-top: 2px;
+    margin-right: 10px;
+    transition: 0.4s ease;
+    margin-bottom: 2px;
+    color: #0056b3;
+    opacity: 50%;
 }
 
-li {
-    margin: 10px;
-    text-align: left;
-    color: #2b2e4a;
-    padding-top: 20px;
-}
-
-.view-post {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.view-post b {
+.post {
+    height: 100%;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
     padding: 10px;
+    margin-bottom: 10px;
+}
+
+.post h3 {
+    margin: 0px;
+    cursor: pointer;
+    padding: 20px 10px;
+    text-align: left;
+    color: #007bff;
+}
+
+.post_content {
+    margin-left: 10px;
+    margin-top: 20px;
+    text-align: justify;
+    margin-right: 10px;
+    margin-bottom: 20px;
+    color: black;
+    display: none;
+    transition: 0.4s ease;
+    font-weight: normal;
+}
+
+hr {
+    border: 1px solid #007bff;
+    opacity: 20%;
+}
+
+.like-count{
+    font-size: small;
+}
+.count_comm {
+    color: #007bff;
+    text-align: center;
+    font-size: medium;
+    padding: 10px;
+    opacity: 80%;
 }
 
 /* General button styles */
 .follow-btn {
-    background-color: #007bff; /* Primary color */
-    color: white; /* Text color */
+    background-color: #ffffff;
     border: none;
-    padding: 10px 20px;
-    margin-top: 10px;
-    font-size: 14px;
     cursor: pointer;
     border-radius: 5px;
-    transition: background-color 0.3s, color 0.3s;
+
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    height: 40px;
+    width: 100px;
+
+    color: #007bff;
+    font-size: 16px;
+    text-decoration: none;
     
 }
 
@@ -123,28 +182,29 @@ li {
 
 /* Unfollow button styles */
 .follow-btn.unfollow {
-    background-color: #dc3545; /* Danger color for unfollow */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    height: 40px;
+    width: 100px;
+
+    color: #c82333;
+    font-size: 16px;
+    text-decoration: none;
 }
 
 .follow-btn.unfollow:hover {
     background-color: #c82333; /* Darker shade for unfollow hover */
+    text-decoration: none;
+    color: #ffffff; 
 }
+
 
 /* Responsive design */
-@media (min-width: 768px) {
+@media screen and (max-width: 768px) {
     .container {
-        width: 750px;
+        width: 90%;
     }
-}
 
-@media (min-width: 992px) {
-    .container {
-        width: 970px;
-    }
-}
-
-@media (min-width: 1200px) {
-    .container {
-        width: 1170px;
+    .navbar {
+        width: 90%;
     }
 }

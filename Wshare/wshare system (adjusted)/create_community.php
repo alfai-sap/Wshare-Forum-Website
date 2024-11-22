@@ -6,6 +6,7 @@ $creatorID = getUserIdByUsername($_SESSION['username']);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $title = $_POST['title'];
     $description = $_POST['description'];
+    $visibility = $_POST['visibility'];  // Capture the visibility setting
     
     // Handle file upload
     $thumbnail = '';
@@ -29,18 +30,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // Insert muna values sa community
-    $query = "INSERT INTO communities (CreatorID, Title, Description, Thumbnail) VALUES (?, ?, ?, ?)";
+    // Insert values into the community, including visibility
+    $query = "INSERT INTO communities (CreatorID, Title, Description, Thumbnail, Visibility) VALUES (?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param('isss', $creatorID, $title, $description, $thumbnail);
+    $stmt->bind_param('issss', $creatorID, $title, $description, $thumbnail, $visibility);
 
     if ($stmt->execute()) {
-        // if successful ang pag add, kunin ang community id
+        // if successful, get the community id
         $communityID = $stmt->insert_id;
 
-        //gamitin ang community id para ma reference saang community belong ang user
-        //kunin ang community id pati yung creator id at gamitin siya as value na i-bind
-        //pero yung admin is i set mo na agad instead na maghingi ng parameter 
+        // Use the community ID to reference the community the user belongs to
         $query = "INSERT INTO community_members (CommunityID, UserID, Role) VALUES (?, ?, 'admin')";
         $stmt = $conn->prepare($query);
         $stmt->bind_param('ii', $communityID, $creatorID);
@@ -56,7 +55,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin: 10px 0 5px;
             color: #333;
         }
-        input[type="text"], textarea, input[type="file"] {
+        input[type="text"], textarea, input[type="file"], select {
             width: 100%;
             padding: 10px;
             margin-bottom: 15px;
@@ -138,6 +136,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             <label for="thumbnail">Thumbnail:</label>
             <input type="file" id="thumbnail" name="thumbnail" accept="image/*">
+
+            <label for="visibility">Community Visibility:</label>
+            <select id="visibility" name="visibility" required>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+            </select>
             
             <input type="hidden" name="id" value="<?php echo htmlspecialchars($creatorID); ?>">
             <input type="submit" value="Create">

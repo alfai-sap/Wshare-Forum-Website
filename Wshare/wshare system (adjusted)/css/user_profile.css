@@ -7,64 +7,8 @@
 
 /* Global styles */
 body {
-    font-family: inter;
     background-color: #f9f9f9; 
     justify-content: center;
-}
-
-/* Navigation bar styles */
-.logo-navbar {
-    list-style: none;
-    display: flex;
-    height: 80px;
-    position: fixed;
-    z-index: 999;
-    width: 200px;
-    background-color: transparent; 
-}
-
-.logo-navbar-in-left {
-    list-style: none;
-    display: flex;
-    height: 80px;
-    width: 400px;
-}
-
-.logo-nav {
-    border: none;
-    font-weight: bolder;
-    font-size: x-large;
-    display: flex;
-    padding: 10px;
-    cursor: pointer;
-    background-color: transparent;
-}
-
-.logo-left-nav {
-    border: none;
-    font-weight: bolder;
-    display: flex;
-    padding: 10px;
-    cursor: pointer;
-    background-color: transparent;
-}
-
-.logo-nav p {
-    text-decoration: none;
-    align-self: center;
-    margin: 5px;
-    padding: 12px;
-    color: #0056b3;
-}
-
-.logo-navbar li a {
-    text-decoration: none;
-}
-
-.toggle-icon {
-    padding: 15px;
-    height: 30px;
-    width: 30px;
 }
 
 /* Main container styles */
@@ -89,6 +33,9 @@ h1 {
     width: 150px; 
     border-radius: 150px; 
     background-color: transparent;
+
+    border: 3px solid #0056b3;
+    border-radius: 50%;
 }
 
 /* Form and button styles */
@@ -97,50 +44,19 @@ form {
     margin-bottom: 20px;
 }
 
-.logout {
-    margin: 10px;
-    height: 30px;
-    width: 30px;
-}
-
-#bio {
-    width: 96%;
-    padding: 10px;
-    margin: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    resize: none;
-    font-family: inter;
-    font-size: 16px;
-}
-
 
 .bio {
+    color: #0056b3;
     margin: 10px;
-}
-
-.savebio {
-    width: fit-content; /* Set width to fit content */
-    padding: 10px;
-    background-color: #007bff;
-    margin: 10px auto; /* Set margin to auto to horizontally center */
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    display: block; /* Ensure the button is displayed as a block element */
-}
-
-#editBioBtn:hover {
-    background-color: #0056b3;
+    font-size: medium;
+    
 }
 
 /* Add this to your CSS file */
 .update-profile-btn {
     background-color: #ffffff;
     color: #000000;
-    
+    margin-left: 10px;
     
     border: none;
     cursor: pointer;
@@ -160,76 +76,21 @@ form {
     }
 }
 
-.btn-container {
-    display: flex;
-    justify-content: right;
-    margin-top: 20px;
-}
-
-.edit-btn {
-    background-color: #007bff;
-    color: #fff;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.edit-btn:hover {
-    background-color: #0056b3;
-}
-
 /* Profile picture change button styles */
 .pfp-elements {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     width: 100%;
-}
-
-.change-pfp-btn {
-    border: none;
-    cursor: pointer;
-    background-color: transparent;
-}
-
-.change-pfp-input {
-    align-self: center;
-}
-
-.change-pfp-btn-upload {
-    padding: 10px;
-    height: 30px;
-    width: 30px;
-}
-
-.change-pfp-btn-icon {
-    background-color: transparent;
-    padding: 10px;
-    height: 20px;
-    width: 20px;
-}
-
-.choose-pfp-file {
-    display: flex;
-    padding: 10px;
-}
-
-.save-bio-btn {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
+    padding-bottom: 5px;
     
 }
 
-.save-bio-btn-icon {
-    padding: 10px;
-    height: 20px;
-    width: 20px;
-    border-radius: 20px;
+.pfp-label{
+    margin-left: 10px;
 }
 
+   
 /* Username and email styles */
 .uname-elements {
     width: 100%;
@@ -237,71 +98,30 @@ form {
 
 .uname-elem {
     display: flex;
+    margin-left: 10px;
 }
 
 .Profile-uname {
     color: #007bff;
-    padding-top: 40px;
-    padding-bottom: 20px;
     font-size: xx-large;
+
 }
 
 .Profile-email {
     font-size: medium;
     color: #007bff;
+    margin-left: 10px;
+    padding-top: 10px;
 }
 
-.choose-pfp {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-}
 
-/* Form styles */
-.forms {
-    margin-top: 30px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.profile-form {
-    width: 400px;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
-}
-
-.profile-form label {
+.Profile-joined {
+    font-size: small;
     color: #007bff;
-    font-weight: bold;
-    margin-bottom: 5px;
+    margin-left: 10px;
+    padding-top: 10px;
 }
 
-.profile-input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-}
-
-.profile-btn {
-    width: 100%;
-    background-color: #007bff;
-    color: #fff;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.profile-btn:hover {
-    background-color: #0056b3;
-}
 
 /* Icon styles */
 .non-nav-icon {
@@ -357,15 +177,12 @@ form {
     color: black;
     display: none;
     transition: 0.4s ease;
+    font-weight: normal;
 }
 
 hr {
     border: 1px solid #007bff;
     opacity: 20%;
-}
-
-.comments {
-    height: 100%;
 }
 
 .like-count{
@@ -378,53 +195,6 @@ hr {
     padding: 10px;
     opacity: 80%;
 }
-
-.comments h4 {
-    margin-top: 0;
-    margin-bottom: 5px;
-}
-
-.comments p {
-    margin: 5px 0;
-}
-
-.post-comments {
-    margin: 5px 0;
-    padding-left: 20px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    color: black;
-    opacity: 60%;
-    display: none;
-}
-
-/* edit_profile.css */
-
-form {
-    display: flex;
-    flex-direction: column;
-}
-
-input[type="text"], textarea {
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-button.save-btn {
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-button.save-btn:hover {
-    background-color: #0056b3;
-}
-
 
 /* Responsive design */
 @media screen and (max-width: 768px) {

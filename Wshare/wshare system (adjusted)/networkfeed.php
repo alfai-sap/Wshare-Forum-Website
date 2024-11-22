@@ -21,6 +21,10 @@ if ($sort_option == 'followers') {
     $posts = getPostsFromFollowedUsers($user_id, $conn);
 }
 
+// Handle search query
+$searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
+
+
 ?>
 
 <!DOCTYPE html>
@@ -36,10 +40,14 @@ if ($sort_option == 'followers') {
 </head>
 <body>
 
-    <ul class="navbar">
-       
+<ul class="navbar">
+        <form action="" method="GET" class="search-bar">
+            <input type="text" name="search" placeholder="I'm looking for..." value="<?php echo htmlspecialchars($searchQuery); ?>" class="search-input">
+            <button type="submit" class="search-button">Search</button>
+        </form>
     </ul>
-<?php include 'navbar.php';?><br>
+
+    <?php include 'navbar.php';?><br>
 
     <div class = "container">
     <h1>Posts from Your Network</h1>
@@ -65,56 +73,45 @@ if ($sort_option == 'followers') {
 
                 <div class="post">
 
-                    <div class="pic_user" style="display:flex;">
+                    <div class="pic_user" style = "display:flex;">
+
                         <?php if (!empty($profilePic)): ?>
-                            <img class="author_pic" src="<?php echo $profilePic; ?>" alt="Profile Picture" style="height:50px; width:50px; border-radius:50%;">
+                            <img class="author_pic" src="<?php echo $profilePic; ?>" alt="Profile Picture">
                         <?php else: ?>
-                            <img class="author_pic" src="default_pic.svg" alt="Profile Picture" style="height:50px; width:50px; border-radius:50%;">
+                            <img class="author_pic" src="default_pic.svg" alt="Profile Picture">
                         <?php endif; ?>
 
                         <div class="user_post_info">
-                            <p class="post_username">
-                                <a class="post_uname" href="view_user.php?username=<?php echo urlencode($post['Username']); ?>">
-                                    <?php echo htmlspecialchars($post['Username']); ?>
-                                </a>
-                            </p>
-                            <p class="post_time" style="font-size:smaller;">posted at: <?php echo htmlspecialchars($post['CreatedAt']); ?></p>
-                            <p class="post_time">updated at: <?php echo htmlspecialchars($post['UpdatedAt']); ?></p>
+                            <div style="display: flex;">
+                                <p class="post_username"><a class="post_uname" href="view_user.php?username=<?php echo urlencode($post['Username']); ?>"><?php echo $post['Username']; ?></a></p>
+                                <p class="post_time" style = "font-size:smaller; padding-top:9px; margin-left:2px;"><?php echo timeAgo($post['CreatedAt']); ?></p>
+                            </div>
                         </div>
+
                     </div>
 
-                    <hr/>
-                    <h3 class="post_title" style = "text-align:center;"><?php echo htmlspecialchars($post['Title']); ?></h3>
-                    <hr/>
+                    
+                    <h3 class="post_title"><?php echo $post['Title']; ?></h3>
+                    
 
-                    <p class="post_content" style = "display:none;"><?php echo htmlspecialchars($post['Content']); ?></p>
+                    <p class="post_content"><?php echo $post['Content']; ?></p>
 
-                    <div class="lik" style="display:flex; padding:10px;">
+                    <div class="lik" style = "display:flex; padding:10px;">
 
-                        <form class="like" action="like_post.php" method="POST" style="margin:0;">
+                        <form class="like" action="like_post.php" method="POST" style = "margin:0;">
                             <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
-                            <button type="submit" class="like-btn" name="like" style="background-color:transparent; border:none; padding: 10px;">
-                                <img class="bulb" src="bulb.svg" style="height:30px; width:30px;">
-                            </button>
+                            <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="bulb.svg" style = "height:20px; width:20px;"></button>
                         </form>
 
-                        <span class="like-count" style="display:flex; align-self:center; color:#007bff;">
-                            <?php echo getLikeCount($post['PostID']); ?>
-                        </span>
+                        <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
 
-                        <button class="like-btn" style="background-color:transparent; border:none; padding: 10px;">
-                            <img class="bulb" src="comment.svg" style="height:30px; width:30px; background-color:transparent; outline:none; background-color:transparent; border:none;">
-                        </button>
+                        <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="comment.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"></button>
 
-                        <span class="like-count" style="display:flex; align-self:center; color:#007bff;">
-                            <?php echo countComments($post['PostID']); ?>
-                        </span>
+                        <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo countComments($post['PostID']); ?> Comments</span>
 
-                        <button class="like-btn" style="background-color:transparent; border:none; padding: 10px;">
-                            <a href="view_post.php?id=<?php echo $post['PostID']; ?>">
-                                <img class="bulb" src="view.svg" style="height:30px; width:30px; background-color:transparent; outline:none; background-color:transparent; border:none;">
-                            </a>
-                        </button>
+                        <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;"> See disscussion</p></a> </button>
+
+                        <!--<span class="like-count" >see thread</span>-->
 
                     </div>
 

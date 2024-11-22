@@ -117,10 +117,21 @@ $result = $stmt->get_result();
                                     WHERE CommunityID = $communityID 
                                     AND UserID = $userID 
                                     AND status = 'pending'";
-                                    
+
                     $pendingResult = $conn->query($pendingQuery);
                     $pendingRequest = $pendingResult->fetch_assoc();
                     $hasPendingRequest = $pendingRequest['request_count'] > 0;
+
+                    // Check if the user's join request was rejected for this community
+                    $rejectedQuery = "SELECT COUNT(*) AS request_count FROM community_join_requests 
+                                    WHERE CommunityID = $communityID 
+                                    AND UserID = $userID 
+                                    AND status = 'rejected'";
+
+                    $rejectedResult = $conn->query($rejectedQuery);
+                    $rejectedRequest = $rejectedResult->fetch_assoc();
+                    $hasRejectedRequest = $rejectedRequest['request_count'] > 0;
+
                     ?>
 
                     <div class="community">
@@ -137,9 +148,11 @@ $result = $stmt->get_result();
                                     <span class="admin-text">You're an Admin</span>
                                 <?php } elseif ($isMember) { ?>
                                     <span class="member-text">You're a Member</span>
-                                <?php } elseif ($hasPendingRequest) { ?>
+                                <?php }elseif ($hasPendingRequest) { ?>
                                     <span class="member-text">Join request pending</span>
-                                <?php } else { ?>
+                                <?php } elseif ($hasRejectedRequest) { ?>
+                                    <span class="member-text">Your join request was rejected</span>
+                                <?php }else { ?>
                                     <a href="join_community.php?community_id=<?php echo $row['CommunityID']; ?>" class="join-button">Join</a>
                                 <?php } ?>
                             </div>

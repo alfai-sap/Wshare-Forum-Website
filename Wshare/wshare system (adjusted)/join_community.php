@@ -32,7 +32,7 @@ $stmt->close();
 // If the community is private, add the user to the join requests table
 if ($visibility === 'private') {
     // Check if the user has already requested to join this community
-    $checkQuery = "SELECT COUNT(*) FROM community_join_requests WHERE CommunityID = ? AND UserID = ?";
+    $checkQuery = "SELECT COUNT(*) FROM community_join_requests WHERE CommunityID = ? AND UserID = ? AND status = 'pending';";
     $checkStmt = $conn->prepare($checkQuery);
     $checkStmt->bind_param('ii', $communityID, $userID);
     $checkStmt->execute();

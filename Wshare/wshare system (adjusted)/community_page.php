@@ -43,6 +43,18 @@ if ($membershipResult->num_rows > 0) {
     $currentUserRole = null;
 }
 
+// Fetch community join request
+$pendingQuery = "
+    SELECT cj.RequestID, u.UserID, u.Username, u.Email, up.ProfilePic 
+    FROM community_join_requests cj
+    JOIN users u ON cj.UserID = u.UserID
+    LEFT JOIN userprofiles up ON u.UserID = up.UserID
+    WHERE cj.CommunityID = ? AND cj.status = 'pending'";
+$stmt = $conn->prepare($pendingQuery);
+$stmt->bind_param('i' , $communityID);
+$stmt->execute();
+$pendingRequests = $stmt->get_result();
+
 // Fetch posts
 $query = "SELECT p.*, up.ProfilePic, u.Username FROM community_posts p 
           JOIN users u ON p.UserID = u.UserID 
@@ -101,7 +113,10 @@ while ($member = $membersResult->fetch_assoc()) {
             <button class="top-menu-btn" onclick="toggleCreatePost()">Create Post</button>
             <button class="top-menu-btn" onclick="toggleMembers()">Members</button>
             <button class="top-menu-btn" onclick="toggleAdmins()">Admins</button>
+
+            <?php if ($isMember && $currentUserRole === 'admin'): ?>
             <button class="top-menu-btn" onclick="toggleRequests()">Requests</button>
+            <?php endif;?>
         </div>
 
         <div id="membersList" style="display:none;">
@@ -139,7 +154,7 @@ while ($member = $membersResult->fetch_assoc()) {
             </ul>
         </div>
 
-        <div id="pendingRequestsList">
+        <div id="pendingRequestsList" style="display:none;">
             <h2>Pending Requests</h2>
             <ul class="profile-list">
                 <?php foreach ($pendingRequests as $request) { ?>
@@ -168,6 +183,7 @@ while ($member = $membersResult->fetch_assoc()) {
             </ul>
         </div>
 
+        
         
 
         <!-- Admins list -->
@@ -283,14 +299,29 @@ while ($member = $membersResult->fetch_assoc()) {
     <script>
         function toggleMembers() {
             var membersList = document.getElementById('membersList');
+
+            
             membersList.style.display = membersList.style.display === 'none' ? 'block' : 'none';
             document.getElementById('adminsList').style.display = 'none'; // Hide admins if showing members
             document.getElementById('create_post_form').style.display = 'none';
+            document.getElementById('pendingRequestList').style.display = 'none';
         }
 
         function toggleAdmins() {
             var adminsList = document.getElementById('adminsList');
+
+            
             adminsList.style.display = adminsList.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('membersList').style.display = 'none'; // Hide members if showing admins
+            document.getElementById('create_post_form').style.display = 'none';
+            document.getElementById('pendingRequestList').style.display = 'none';
+        }
+
+        function toggleRequests() {
+            var requestList = document.getElementById('pendingRequestsList');
+
+            requestList.style.display = requestList.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('adminList').style.display = 'none';
             document.getElementById('membersList').style.display = 'none'; // Hide members if showing admins
             document.getElementById('create_post_form').style.display = 'none';
         }
@@ -299,9 +330,11 @@ while ($member = $membersResult->fetch_assoc()) {
 
         function toggleCreatePost() {
             var postForm = document.getElementById('create_post_form');
+
             postForm.style.display = postForm.style.display === 'none'? 'block' : 'none';
             document.getElementById('adminsList').style.display = 'none';
             document.getElementById('membersList').style.display = 'none';
+            document.getElementById('pendingRequestList').style.display = 'none';
         }
     </script>
 </body>

@@ -117,7 +117,7 @@
         ?> <p class="bio"><?php echo htmlspecialchars($user['Bio']); ?></p>
         <?php
         }else { 
-            echo '<p style="color: #000000; text-align: left; margin-top:20px;">Hello! new member here.</p>';  // Display message if bio is empty.
+            echo '<p class = "bio">Hello! new member here.</p>';  // Display message if bio is empty.
         }?>
 
         <br>

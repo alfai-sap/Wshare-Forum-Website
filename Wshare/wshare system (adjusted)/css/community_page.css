@@ -219,15 +219,13 @@
             width: 100px;
 
             a{
-                display: flex;
-                align-self: center;
-                margin: 10px;
                 text-decoration: none;
-                font-size: 16px;
+                font-size: small;
+                color: #000000;
             }
         }
 
-        .top-menu-btn:hover {
+        .top-menu-btn:hover, a:hover {
             background-color: #007bff;
             color: #ffffff;
         }
@@ -310,6 +308,7 @@
             padding-bottom: 20px;
             font-size: medium;
         }
+
         @media screen and (max-width: 768px){
             .container{
                 width: 95%;

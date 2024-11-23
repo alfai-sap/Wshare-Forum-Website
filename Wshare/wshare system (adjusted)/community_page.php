@@ -115,9 +115,13 @@ while ($member = $membersResult->fetch_assoc()) {
             <button class="top-menu-btn" onclick="toggleAdmins()">Admins</button>
 
             <?php if ($isMember && $currentUserRole === 'admin'): ?>
-            <button class="top-menu-btn" onclick="toggleRequests()">Requests</button>
+                <button class="top-menu-btn" onclick="toggleRequests()">Requests</button>
+                <button class="top-menu-btn" >
+                    <a href="community_edit.php?community_id=<?php echo $communityID; ?>">Update details</a>
+                </button>
             <?php endif;?>
         </div>
+
 
         <div id="membersList" style="display:none;">
             <h2>Members</h2>
@@ -129,23 +133,23 @@ while ($member = $membersResult->fetch_assoc()) {
                             <a class="profile-username" href="view_user.php?username=<?php echo urlencode($member['Username']); ?>"><?php echo htmlspecialchars($member['Username']); ?></a>
                             <p class="profile-email"><?php echo htmlspecialchars($member['Email']); ?></p>
                             <?php if ($member['UserID'] == $userID) { ?>
-                                <span style="color: #007bff; padding-top:10px;">(You)</span>
+                                <span style="color: #007bff; padding-top:10px; font-size:small;">(You)</span>
                             <?php } ?>
                         </div>
                         <?php if ($isMember && $currentUserRole === 'admin') { ?>
                             <!-- Admin-only actions -->
-                            <form method="POST" action="community_manage_member.php" class="admin-actions">
+                            <form method="POST" action="community_manage_member.php" class="admin-actions" style="display: flex;">
                                 <input type="hidden" name="community_id" value="<?php echo $communityID; ?>">
                                 <input type="hidden" name="member_id" value="<?php echo $member['UserID']; ?>">
                                 
                                 <!-- Set as Admin button (only if the member is not already an admin) -->
                                 <?php if ($member['Role'] !== 'admin') { ?>
-                                    <button type="submit" name="action" value="set_admin" class="action-btn" onclick="return confirm('Are you sure you want to promote this user to admin?');">Set as Admin</button>
+                                    <button type="submit" name="action" value="set_admin" class="top-menu-btn" onclick="return confirm('Are you sure you want to promote this user to admin?');">Set as Admin</button>
                                 <?php } ?>
                                 
                                 <!-- Remove Member button (prevent removing self) -->
                                 <?php if ($member['UserID'] != $userID) { ?>
-                                    <button type="submit" name="action" value="remove_member" class="action-btn remove" onclick="return confirm('Are you sure you want to remove this member from the community?');">Remove Member</button>
+                                    <button type="submit" name="action" value="remove_member" class="top-menu-btn" onclick="return confirm('Are you sure you want to remove this member from the community?');">Remove</button>
                                 <?php } ?>
                             </form>
                         <?php } ?>
@@ -304,7 +308,8 @@ while ($member = $membersResult->fetch_assoc()) {
             membersList.style.display = membersList.style.display === 'none' ? 'block' : 'none';
             document.getElementById('adminsList').style.display = 'none'; // Hide admins if showing members
             document.getElementById('create_post_form').style.display = 'none';
-            document.getElementById('pendingRequestList').style.display = 'none';
+            document.getElementById('pendingRequestsList').style.display = 'none';
+            document.getElementById('edit-community').style.display = 'none';
         }
 
         function toggleAdmins() {
@@ -314,19 +319,28 @@ while ($member = $membersResult->fetch_assoc()) {
             adminsList.style.display = adminsList.style.display === 'none' ? 'block' : 'none';
             document.getElementById('membersList').style.display = 'none'; // Hide members if showing admins
             document.getElementById('create_post_form').style.display = 'none';
-            document.getElementById('pendingRequestList').style.display = 'none';
+            document.getElementById('pendingRequestsList').style.display = 'none';
+            document.getElementById('edit-community').style.display = 'none';
         }
 
         function toggleRequests() {
             var requestList = document.getElementById('pendingRequestsList');
 
             requestList.style.display = requestList.style.display === 'none' ? 'block' : 'none';
-            document.getElementById('adminList').style.display = 'none';
+            document.getElementById('adminsList').style.display = 'none';
             document.getElementById('membersList').style.display = 'none'; // Hide members if showing admins
             document.getElementById('create_post_form').style.display = 'none';
+            document.getElementById('edit-community').style.display = 'none';
         }
         
-        
+        function toggleEditForm() {
+            var editForm = document.getElementById('edit-community');
+
+            editForm.style.display = editForm.style.display === 'none'? 'block' : 'none';
+            document.getElementById('adminsList').style.display = 'none';
+            document.getElementById('membersList').style.display = 'none';
+            document.getElementById('pendingRequestsList').style.display = 'none';
+        }
 
         function toggleCreatePost() {
             var postForm = document.getElementById('create_post_form');
@@ -334,7 +348,8 @@ while ($member = $membersResult->fetch_assoc()) {
             postForm.style.display = postForm.style.display === 'none'? 'block' : 'none';
             document.getElementById('adminsList').style.display = 'none';
             document.getElementById('membersList').style.display = 'none';
-            document.getElementById('pendingRequestList').style.display = 'none';
+            document.getElementById('pendingRequestsList').style.display = 'none';
+            document.getElementById('edit-community').style.display = 'none';
         }
     </script>
 </body>

@@ -701,12 +701,12 @@ function getPostsSortedByComments() {
 function getPostsSortedByBPTS() {
     global $conn;
 
+    // Use LEFT JOIN for Likes to include posts even if they have no likes
     $sql = "SELECT Username, Posts.*, COUNT(Likes.LikeID) AS like_count 
             FROM Posts 
-            JOIN Likes ON Posts.PostID = Likes.PostID
+            LEFT JOIN Likes ON Posts.PostID = Likes.PostID
             JOIN Users ON Posts.UserID = Users.UserID
-            JOIN Comments ON Posts.PostID = Comments.PostID
-            GROUP BY Posts.PostID 
+            GROUP BY Posts.PostID
             ORDER BY like_count DESC";
 
     $result = $conn->query($sql);
@@ -720,6 +720,7 @@ function getPostsSortedByBPTS() {
 
     return $posts;
 }
+
 
 // Function to handle like/unlike actions
 function toggleLike($postID, $userID){
@@ -1143,11 +1144,99 @@ function trackPostReply($commentID, $userID) {
 }
 
 
+//SIDEBAR FUNCTIONS
+// Query to get top users (most likes collected)
+function getTopUsers() {
+    global $conn;
+    $sql = "SELECT u.Username, COUNT(l.LikeID) AS total_likes
+            FROM users u
+            LEFT JOIN likes l ON u.UserID = l.UserID
+            GROUP BY u.UserID
+            ORDER BY total_likes DESC
+            LIMIT 5"; // Get the top 5 users
+    $result = mysqli_query($conn, $sql);
+
+    // Fetch and return the data as an associative array
+    $topUsers = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $topUsers[] = $row;
+    }
+
+    return $topUsers;
+}
+
+function getTopUsersByTotalLikes() {
+    global $conn;
+    $sql = "SELECT u.Username, COUNT(l.LikeID) AS total_likes
+            FROM users u
+            INNER JOIN posts p ON u.UserID = p.UserID
+            LEFT JOIN likes l ON p.PostID = l.PostID
+            GROUP BY u.UserID
+            ORDER BY total_likes DESC
+            LIMIT 5"; // Get the top 5 users by total accumulated likes
+    $result = mysqli_query($conn, $sql);
+
+    // Fetch and return the data as an associative array
+    $topUsers = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $topUsers[] = $row;
+    }
+
+    return $topUsers;
+}
+
+
+// Query to get top communities (most number of members)
+function getTopCommunities() {
+    global $conn;
+    $sql = "SELECT c.Title, COUNT(cm.UserID) AS member_count
+            FROM communities c
+            LEFT JOIN community_members cm ON c.CommunityID = cm.CommunityID
+            GROUP BY c.CommunityID
+            ORDER BY member_count DESC
+            LIMIT 5"; // Get the top 5 communities
+    $result = mysqli_query($conn, $sql);
+
+    // Fetch and return the data as an associative array
+    $topCommunities = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $topCommunities[] = $row;
+    }
+
+    return $topCommunities;
+}
+
+// Query to get notifications
+function getNotifications($username = null) {
+    // Ensure the $username is set and not empty
+    if (empty($username)) {
+        // If no username is provided, return early or set a default value
+        return []; // Or fetch notifications for guests/unauthenticated users if applicable
+    }
+
+    // Construct the query
+    $query = "SELECT * FROM notifications n JOIN users u ON n.UserID = u.UserID WHERE Username = ? AND Seen = 0 ORDER BY CreatedAt DESC LIMIT 5";
+
+    // Execute the query
+    $stmt = $GLOBALS['conn']->prepare($query);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    // Fetch notifications
+    $notifications = [];
+    while ($row = $result->fetch_assoc()) {
+        $notifications[] = $row;
+    }
+
+    return $notifications;
+}
+
+
+
 
 // HELPER FUNCTIONS
 //
-
-
 function timeAgo($timestamp) {
     $time = strtotime($timestamp);
     $diff = time() - $time;
@@ -1181,5 +1270,31 @@ function timeAgo($timestamp) {
         return ($years == 1) ? '1 year ago' : $years . ' years ago';
     }
 }
+
+function formatParagraph($text, $maxLength = 300, $maxWords = 300) {
+    // Trim leading and trailing spaces
+    $cleanText = trim($text);
+
+    // Replace multiple spaces with a single space
+    $cleanText = preg_replace('/\s+/', ' ', $cleanText);
+
+    // Truncate the text to the specified number of words
+    $words = explode(' ', $cleanText); // Split the text into words
+    if (count($words) > $maxWords) {
+        $cleanText = implode(' ', array_slice($words, 0, $maxWords)) . '...'; // Take only the first $maxWords
+    }
+
+    // Or, truncate the text based on a character limit (if the word limit isn't enough)
+    if (strlen($cleanText) > $maxLength) {
+        $cleanText = substr($cleanText, 0, $maxLength) . '...'; // Truncate at $maxLength
+    }
+
+    // Sanitize the text to prevent HTML injection
+    $cleanText = htmlspecialchars($cleanText, ENT_QUOTES, 'UTF-8');
+
+    // Convert newlines to <br> tags
+    return nl2br($cleanText);
+}
+
 
 ?>

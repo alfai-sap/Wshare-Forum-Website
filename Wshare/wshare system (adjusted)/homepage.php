@@ -2,6 +2,12 @@
 session_start();
 require_once 'functions.php';
 
+// Fetch the data
+$topUsers = getTopUsersByTotalLikes();
+$topCommunities = getTopCommunities();
+$userID = getUserIdByUsername($_SESSION['username']); // Assuming user ID is stored in the session
+$notifications = getNotifications($userID);
+
 ?>
 
 <!DOCTYPE html>
@@ -15,6 +21,7 @@ require_once 'functions.php';
     <link rel="stylesheet" href="./css/left-navbar.css ?v=<?php echo time(); ?>" >
     <link rel="stylesheet" href="./css/homepage.css ?v=<?php echo time(); ?>" >
     <link rel="stylesheet" href="./css/navbar.css ?v=<?php echo time(); ?>" >
+    <link rel="stylesheet" href="./css/right-sidebar.css ?v=<?php echo time(); ?>" >
 </head>
 
 <body>
@@ -29,8 +36,7 @@ require_once 'functions.php';
     
     <!-- Logo Navigation Bar -->
     <?php include 'navbar.php';?>
-    
-
+    <?php include 'right-sidebar.php';?>
     <!-- Main Content -->
     <div class="container">
         
@@ -136,13 +142,15 @@ require_once 'functions.php';
                             <h3 class="post_title"><?php echo $post['Title']; ?></h3>
                             
 
-                            <p class="post_content"><?php echo $post['Content']; ?></p>
+                            <p class="post_content"><?php echo formatParagraph($post['Content'] , 1000, 50); ?></p>
 
                             <div class="lik" style = "display:flex; padding:10px;">
 
                                 <form class="like" action="like_post.php" method="POST" style = "margin:0;">
                                     <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
-                                    <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="bulb.svg" style = "height:20px; width:20px;"></button>
+                                    <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="bulb.svg" style="height: 20px; width: 20px; border-radius: 50%; transition: all 0.3s ease;"
+                                    onmouseover="this.style.height='30px'; this.style.width='30px';" 
+                                    onmouseout="this.style.height='20px'; this.style.width='20px';"></button>
                                 </form>
 
                                 <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
@@ -179,6 +187,8 @@ require_once 'functions.php';
         <?php endif; ?>
 
     </div>
+
+    
 
     <!-- JavaScript -->
     <script>

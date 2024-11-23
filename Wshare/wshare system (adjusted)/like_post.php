@@ -14,26 +14,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $likeCount = toggleLike($postID, $id);
 
         if ($likeCount !== false) {
-            // Return the updated like count
-            header('location: index.php');
+            // Reload the current page after a successful like/unlike
+            header('Location: ' . $_SERVER['HTTP_REFERER']);
             exit;
-            echo json_encode(['success' => true, 'likeCount' => $likeCount]);
         } else {
             // Return an error message if the like action failed
-
             echo json_encode(['success' => false, 'message' => 'Failed to toggle like status.']);
         }
     } else {
-
         // Return an error message if post ID or like action is missing
-        header('location: login.php');
+        header('Location: login.php');
         exit;
         echo json_encode(['success' => false, 'message' => 'Missing post ID or like action.']);
     }
-}
-else {
-    header('location: login.php');
+} else {
+    header('Location: login.php');
     exit;
 }
+
 
 ?>

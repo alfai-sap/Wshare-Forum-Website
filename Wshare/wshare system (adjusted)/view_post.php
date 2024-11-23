@@ -59,8 +59,41 @@ session_start();
             </div>
     
             <h3><?php echo $post['Title']; ?></h3>
+            <?php                                                                  
+                $postID = $post['PostID'];
+
+                // Query to get tags associated with the post
+                $tagsQuery = "SELECT t.TagName FROM post_tags pt
+                            INNER JOIN tags t ON pt.TagID = t.TagID
+                            WHERE pt.PostID = ?";
+                $tagsStmt = $conn->prepare($tagsQuery);
+                $tagsStmt->bind_param('i', $postID);
+                $tagsStmt->execute();
+                $tagsResult = $tagsStmt->get_result();
+
+                $tags = [];
+                while ($row = $tagsResult->fetch_assoc()) {
+                    $tags[] = $row['TagName'];
+                }
+
+                $tagsStmt->close();
+
+                if (!empty($tags)): ?>
+                    <div class="post-tags">
+                        <?php foreach ($tags as $tag): ?>
+                            <span class="tag-label"><?php echo htmlspecialchars($tag); ?></span>
+                        <?php endforeach; ?>
+                    </div>
+            <?php endif; ?>
             <p class="post-content"><?php echo $post['Content']; ?></p>
     
+                  
+            <?php if (!empty($post['PhotoPath'])): ?>
+                <div class="post-image">
+                    <img class = "post-image-img" src="<?php echo $post['PhotoPath']; ?>" alt="Post Image">
+                </div>
+            <?php endif; ?>
+
             <div class="lik">
                 <form class="like" action="like_post.php" method="POST">
                     <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">

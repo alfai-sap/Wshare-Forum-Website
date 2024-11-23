@@ -55,9 +55,10 @@ form {
 
 .dropdown-content a {
     color: #000000;
-    padding: 12px 16px;
+    padding: 10px;
     text-decoration: none;
     display: block;
+    font-size: small;
 
     transition: 0.4s ease;
 }
@@ -73,7 +74,7 @@ form {
 /* Content */
 .container {
     margin-top: 100px; /* Adjust as needed based on navbar height */
-    width: 900px;
+    width: 1024px;
     margin: 0 auto;
     padding-top: 100px;
     background-color: transparent;
@@ -101,6 +102,7 @@ h2 {
 .post_title {
     color: #007bff;
     text-align: center;
+    font-size:x-large;
 }
 
 p {
@@ -123,7 +125,9 @@ p {
 .post_uname {
     color: #0056b3;
     text-decoration: none;
-    padding: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 10px;
 }
 
 form {
@@ -137,66 +141,7 @@ label {
     
 }
 
-.create-label {
-    font-size: large;
-    padding: 10px;
-    text-align: center;
-    color: #0056b3;
-}
 
-.post-title-in {
-    width: 95%;
-    margin: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-}
-
-.post-content-in {
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-    height: 100%;
-    width: 95%;
-    margin: 10px;
-    resize: none;
-}
-
-.post-image-in {
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-    height: 100%;
-    width: 95%;
-    margin: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f9f9f9;
-}
-
-.post-postbtn-in {
-    margin: 10px;
-    width: 95%;
-    background-color: #007bff;
-    color: #fff;
-    padding: 10px 20px;
-    padding-bottom: 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-
-.post-postbtn-in:hover {
-    background-color: #0056b3;
-    color: #fff;
-}
 
 .post-container {
     background-color: #e1ebed;
@@ -353,6 +298,48 @@ hr {
     transition: 0.4s ease;
 }
 
+.post-image {
+    height: 60%;
+}
+
+.post-image-img{
+    width: 100%;       /* Make the image fill the container's width */
+    height: 500px;       /* Limit the max width to 900px */
+    border-radius: 8px; /* Rounded corners for a cleaner look */ 
+}
+
+.post-tags {
+    margin-top: 20px;
+}
+
+.tag-label {
+    display: inline-block;
+    background-color: #ffffff;
+    color: #000000;
+    padding: 6px;
+    margin-left: 10px;
+    border-radius: 20px;
+    font-size: smaller;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+
+.backButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%; 
+    background-color:#ffffff; 
+    height: 35px; 
+    color: #007bff; 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    margin-bottom: 10px;
+
+    p{
+        color: #007bff;
+    }
+}
+
 .pic_style {
     height: 500px;
 }
@@ -383,32 +370,6 @@ hr {
     text-align: center;
 }
 
-/* Form Styles */
-form {
-    display: flex;
-    flex-direction: column;
-    margin: 20px;
-}
-
-input[type="text"],
-input[type="password"] {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-}
-
-input[type="submit"] {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-input[type="submit"]:hover {
-    background-color: #0056b3;
-}
 
 .pic_user{
     display:flex;
@@ -420,6 +381,8 @@ input[type="submit"]:hover {
     margin: 0;
 }
 
+/*
+
 /* Media Queries */
 @media (max-width: 768px) {
     .navbar,
@@ -428,6 +391,10 @@ input[type="submit"]:hover {
         width: 100%;
     }
 
+    
+.post-image-img {
+    height: 40%;
+}
     .left-navbar {
         width: 100%;
         height: auto;

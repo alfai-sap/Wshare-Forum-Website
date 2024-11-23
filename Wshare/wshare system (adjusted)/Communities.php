@@ -99,7 +99,7 @@ $result = $stmt->get_result();
     <div class="container">
         <h1>Join a Community</h1>
         <div class="sort-options">
-        <a class="create" href="create_community.php">Create Hub</a> |
+        <a class="createhub" href="create_community.php">Create Hub</a> |
         <a class="create" href="my_communities.php">My Hubs</a>
         </div>
         

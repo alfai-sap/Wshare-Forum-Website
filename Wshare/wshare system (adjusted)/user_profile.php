@@ -156,23 +156,24 @@
 
                             <div class="lik" style = "display:flex;">
 
-                                <form class="like" action="like_post.php" method="POST" style = "margin:0;">
+                                <form action="like_post.php" method="POST">
                                     <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
-                                    <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="bulb.svg" style = "height:30px; width:30px;"></button>
+                                    <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="bulb.svg" style = "height:20px; width:20px;"></button>
                                 </form>
 
-                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
+                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff; font-weight: normal;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
 
-                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="comment.svg" style = "height:30px; width:30px; background-color:transparent; outline:none; border:none;"></button>
+                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="comment.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"></button>
 
-                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo countComments($post['PostID']); ?> Comments</span>
+                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff; font-weight: normal;"><?php echo countComments($post['PostID']); ?> Comments</span>
 
-                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:30px; width:30px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;"> See disscussion</p></a> </button>
+                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;"> See disscussion</p></a> </button>
 
-                                <p class = "divider" style="color: #007bff; font-weight:bold; padding:15px;"> | </p>
-                                <form class="like" action="edit_post.php" method="GET" style = "margin:0;">
+                                <p class = "divider" style="display:flex; color: #007bff; font-weight:bold; align-self:center;"> | </p>
+
+                                <form action="edit_post.php" method="GET">
                                     <input type="hidden" name="post_id" value="<?php echo $post['PostID']; ?>">
-                                    <button class = "like-btn" type="submit" style = "display:flex; background-color:transparent; border:none; padding: 10px;"><img class = "bulb" src="edit.svg" style = "height:30px; width:30px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;">Edit post</p></button>
+                                    <button class = "like-btn" type="submit" style = "display:flex; background-color:transparent; border:none; padding: 10px;"><img class = "bulb" src="edit.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;">Edit post</p></button>
                                 </form>
                                 
                                 <button class = "non-nav-icon" onclick="confirmDelete(<?php echo $post['PostID']; ?>)"><img class = "non-nav-icon-img" src="delete.svg">

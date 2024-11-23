@@ -7,7 +7,7 @@
 
 /* Global styles */
 body {
-    background-color: #f9f9f9; 
+    background-color: #f9f9f9;
     justify-content: center;
 }
 
@@ -22,18 +22,17 @@ body {
 }
 
 h1 {
-    color: #007bff; 
+    color: #007bff;
     padding: 10px;
     margin-bottom: 100px;
 }
 
 /* Profile picture styles */
 .profile_pic {
-    height: 150px; 
-    width: 150px; 
-    border-radius: 150px; 
+    height: 150px;
+    width: 150px;
+    border-radius: 150px;
     background-color: transparent;
-
     border: 3px solid #0056b3;
     border-radius: 50%;
 }
@@ -44,12 +43,10 @@ form {
     margin-bottom: 20px;
 }
 
-
 .bio {
     color: #0056b3;
     margin: 10px;
     font-size: medium;
-    
 }
 
 /* Add this to your CSS file */
@@ -57,23 +54,21 @@ form {
     background-color: #ffffff;
     color: #000000;
     margin-left: 10px;
-    
     border: none;
     cursor: pointer;
     border-radius: 5px;
-
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
     height: 40px;
     width: 100px;
+}
 
-    a{
-        display: flex;
-        align-self: center;
-        margin: 10px;
-        text-decoration: none;
-        color: #007bff;
-        font-size: 16px;
-    }
+.update-profile-btn a {
+    display: flex;
+    align-self: center;
+    margin: 10px;
+    text-decoration: none;
+    color: #007bff;
+    font-size: 16px;
 }
 
 /* Profile picture change button styles */
@@ -83,14 +78,12 @@ form {
     justify-content: center;
     width: 100%;
     padding-bottom: 5px;
-    
 }
 
-.pfp-label{
+.pfp-label {
     margin-left: 10px;
 }
 
-   
 /* Username and email styles */
 .uname-elements {
     width: 100%;
@@ -104,7 +97,6 @@ form {
 .Profile-uname {
     color: #007bff;
     font-size: xx-large;
-
 }
 
 .Profile-email {
@@ -114,7 +106,6 @@ form {
     padding-top: 10px;
 }
 
-
 .Profile-joined {
     font-size: small;
     color: #007bff;
@@ -122,24 +113,23 @@ form {
     padding-top: 10px;
 }
 
-
 /* Icon styles */
 .non-nav-icon {
     display: flex;
     background-color: transparent;
     border: none;
     cursor: pointer;
+    align-items: center;
 }
 
 .non-nav-icon-img {
     padding: 10px;
-    height: 30px;
-    width: 30px;
+    height: 20px;
+    width: 20px;
     border-radius: 20px;
 }
 
 /* User posts styles */
-
 .post_time {
     font-size: smaller;
     padding-left: 10px;
@@ -185,9 +175,10 @@ hr {
     opacity: 20%;
 }
 
-.like-count{
+.like-count {
     font-size: small;
 }
+
 .count_comm {
     color: #007bff;
     text-align: center;
@@ -197,12 +188,76 @@ hr {
 }
 
 /* Responsive design */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1024px) {
     .container {
         width: 90%;
     }
+}
 
-    .navbar {
-        width: 90%;
+@media screen and (max-width: 768px) {
+    .container {
+        width: 95%;
+    }
+
+    .profile_pic {
+        height: 120px;
+        width: 120px;
+    }
+
+    .Profile-uname {
+        font-size: x-large;
+    }
+
+    .Profile-email,
+    .Profile-joined {
+        font-size: small;
+    }
+
+    .update-profile-btn {
+        width: 80px;
+        height: 35px;
+    }
+
+    .update-profile-btn a {
+        font-size: 14px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .container {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .profile_pic {
+        height: 100px;
+        width: 100px;
+    }
+
+    .Profile-uname {
+        font-size: large;
+    }
+
+    .Profile-email,
+    .Profile-joined {
+        font-size: smaller;
+    }
+
+    .update-profile-btn {
+        width: 70px;
+        height: 30px;
+    }
+
+    .update-profile-btn a {
+        font-size: 12px;
+    }
+
+    .post h3 {
+        padding: 15px 10px;
+    }
+
+    .post_content {
+        margin-left: 5px;
+        margin-right: 5px;
     }
 }

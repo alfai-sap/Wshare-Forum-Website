@@ -33,6 +33,16 @@ body {
     margin-bottom: 10px;
 }
 
+.post-image {
+    height: 600px;
+}
+
+.post-image-img{
+    width: 100%;       /* Make the image fill the container's width */
+    max-height: 600px;       /* Limit the max width to 900px */
+    border-radius: 8px; /* Rounded corners for a cleaner look */ 
+}
+
 
 .icons {
     height: 20px;
@@ -45,6 +55,21 @@ body {
     color: #007bff;
 }
 
+
+.post-tags {
+    margin-bottom: 20px;
+}
+
+.tag-label {
+    display: inline-block;
+    background-color: #ffffff;
+    color: #000000;
+    padding: 6px;
+    margin-left: 10px;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    font-size: small;
+}
 /* Post styling */
 .post {
     background-color: transparent;
@@ -63,7 +88,7 @@ body {
 .post-content {
     margin-top: 30px;
     color: #000000;
-    margin-bottom: 50px;
+    margin-bottom: 10px;
     text-align: justify;
 }
 
@@ -323,6 +348,9 @@ body {
 .replylabels {
     display: flex;
 }
+
+/*TAGS FILTER*/
+
 
 @media (max-width: 768px) {
     .container {

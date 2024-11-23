@@ -124,15 +124,41 @@ function searchPosts($search) {
     }
 }
 
+function getPostsByTags($tags) {
+    global $conn;
+    $query = "SELECT p.* FROM posts p
+              INNER JOIN post_tags pt ON p.PostID = pt.PostID
+              INNER JOIN tags t ON pt.TagID = t.TagID
+              WHERE t.TagName IN ('$tags')
+              GROUP BY p.PostID";
+    $result = $conn->query($query);
+    return $result;
+}
+
+
 //without image
 function createPost($title, $content, $username, $thumbnail) {
     global $conn;
-    // Assuming 'UserID' in the 'Users' table corresponds to 'UserID' in the 'Posts' table
+
+    // Prepare SQL to insert post into database
     $sql = "INSERT INTO posts (Title, Content, UserID, PhotoPath) VALUES (?, ?, (SELECT UserID FROM users WHERE Username = ?), ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssss", $title, $content, $username, $thumbnail);
-    return $stmt->execute();
+    if ($stmt = $conn->prepare($sql)) {
+        $stmt->bind_param("ssss", $title, $content, $username, $thumbnail);
+        if ($stmt->execute()) {
+            return true;
+        } else {
+            // Log the error for debugging
+            error_log("Error executing query: " . $stmt->error);
+            return false;
+        }
+    } else {
+        // Log the error for debugging
+        error_log("Error preparing query: " . $conn->error);
+        return false;
+    }
 }
+
+
 
 //automatic to siya para i-display ang mga posts sa homepage
 function getRecentPosts() {
@@ -140,6 +166,41 @@ function getRecentPosts() {
     $sql = "SELECT Posts.*, Users.Username FROM Posts JOIN Users ON Posts.UserID = Users.UserID ORDER BY CreatedAt DESC LIMIT 25"; //nakalimit lang sa 25, from latest to oldest. pwede pa i-increase para marami pang post na makita 
     $result = $conn->query($sql);
     return ($result->num_rows > 0) ? $result->fetch_all(MYSQLI_ASSOC) : array();
+}
+
+function searchAndFilterPosts($search, $tag) {
+    global $conn;
+    $query = "SELECT p.*, u.Username FROM posts p JOIN users u ON p.UserID = u.UserID
+              LEFT JOIN post_tags pt ON p.PostID = pt.PostID
+              LEFT JOIN tags t ON pt.TagID = t.TagID
+              WHERE 1=1";
+
+    if (!empty($search)) {
+        $query .= " AND (p.Title LIKE ? OR p.Content LIKE ?)";
+    }
+
+    if (!empty($tag)) {
+        $query .= " AND t.TagName = ?";
+    }
+
+    $stmt = $conn->prepare($query);
+
+    if (!empty($search) && !empty($tag)) {
+        $searchParam = '%' . $search . '%';
+        $stmt->bind_param('sss', $searchParam, $searchParam, $tag);
+    } elseif (!empty($search)) {
+        $searchParam = '%' . $search . '%';
+        $stmt->bind_param('ss', $searchParam, $searchParam);
+    } elseif (!empty($tag)) {
+        $stmt->bind_param('s', $tag);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $posts = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+
+    return $posts;
 }
 
 //for getting the comm id
@@ -348,20 +409,6 @@ function getUserProfileById($userID) {
 }
 
 
-//UD POSTS, pag mag edit ng post ang user
-function updatePost($postId, $title, $content) {
-    global $conn;
-    
-    $title = mysqli_real_escape_string($conn, $title);
-    $content = mysqli_real_escape_string($conn, $content);
-    
-    $sql = "UPDATE Posts SET Title='$title', Content='$content' WHERE PostID=$postId";
-    if (mysqli_query($conn, $sql)) {
-        return true;
-    } else {
-        return false;
-    }
-}
 
 // Function to edit a post
 function editPost($postID, $title, $content, $userID) {
@@ -404,6 +451,71 @@ function editPost($postID, $title, $content, $userID) {
     }
 
     return true; // Post updated successfully
+}
+
+
+// Function to get post by ID
+function getPostById($post_id) {
+    global $conn;
+    $sql = "SELECT p.*, u.Username FROM Posts p INNER JOIN Users u ON p.UserID = u.UserID WHERE PostID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $post_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_assoc();
+}
+
+// Function to update a post
+function updatePost($postId, $title, $content, $photoPath = null) {
+    global $conn;
+    $title = mysqli_real_escape_string($conn, $title);
+    $content = mysqli_real_escape_string($conn, $content);
+    if ($photoPath) {
+        $sql = "UPDATE Posts SET Title = ?, Content = ?, PhotoPath = ? WHERE PostID = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssi", $title, $content, $photoPath, $postId);
+    } else {
+        $sql = "UPDATE Posts SET Title = ?, Content = ? WHERE PostID = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssi", $title, $content, $postId);
+    }
+    return $stmt->execute();
+}
+
+// Function to get tags by post ID
+function getTagsByPostId($postId) {
+    global $conn;
+    $sql = "SELECT t.TagName FROM tags t INNER JOIN post_tags pt ON t.TagID = pt.TagID WHERE pt.PostID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $postId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $tags = [];
+    while ($row = $result->fetch_assoc()) {
+        $tags[] = $row['TagName'];
+    }
+    return $tags;
+}
+
+// Function to update post tags
+function updatePostTags($postId, $selectedTags) {
+    global $conn;
+    // Delete existing tags
+    $sql = "DELETE FROM post_tags WHERE PostID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $postId);
+    $stmt->execute();
+
+    // Insert new tags
+    if (!empty($selectedTags)) {
+        $tagsArray = explode(',', $selectedTags);
+        $stmt = $conn->prepare("INSERT INTO post_tags (PostID, TagID) VALUES (?, (SELECT TagID FROM tags WHERE TagName = ?))");
+        foreach ($tagsArray as $tagName) {
+            $stmt->bind_param("is", $postId, $tagName);
+            $stmt->execute();
+        }
+        $stmt->close();
+    }
 }
 
 //verification of owner-post
@@ -491,36 +603,6 @@ function deletePost($postID, $userID) {
     return true; // Post deleted successfully
 }
 
-
-//kuha ng post based sa id, magagamit for editing post or deleting
-function getPostById($post_id) {
-    global $conn; 
-
-    
-    $sql = "SELECT * FROM Posts p INNER JOIN Users u ON p.UserID = u.UserID WHERE PostID = ?";
-
-   
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $post_id);
-
-   
-    $stmt->execute();
-
-   
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-
-        // Fetch the post details
-        $post = $result->fetch_assoc();
-
-        return $post;
-
-    } else {
-
-        return null;
-    }
-}
 
 function getCommunityPostById($post_id) {
     global $conn; 

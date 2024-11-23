@@ -22,6 +22,20 @@ a {
     font-size: 1em;
     transition: 0.3s ease;
 }
+
+.createhub{
+    background-color: #007BFF;
+    color: #ffffff;
+    font-size: small;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    height: 30px;
+    width: 100px;
+    text-decoration: none;
+}
 .create:hover {
     color: #0056b3;
 }

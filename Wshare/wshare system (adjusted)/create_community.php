@@ -88,7 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             display: block;
             font-size: 1em;
             margin: 10px 0 5px;
-            color: #333;
+            color: #0056b3;
         }
         input[type="text"], textarea, input[type="file"], select {
             width: 100%;

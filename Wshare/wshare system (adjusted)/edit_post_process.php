@@ -1,80 +1,53 @@
 <?php
-
 require_once 'functions.php';
-
 session_start();
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    // Redirect the user to the login page or display an error message
-    echo "Error: You must be logged in to edit a post.";
+// Ensure the user is logged in
+if (!isset($_SESSION['username'])) {
+    header('Location: login.php');
     exit;
 }
 
 // Check if the form is submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['post_id'])) 
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $postID = $_POST['post_id'];
+    $title = trim($_POST['title']);
+    $content = trim($_POST['content']);
+    $selectedTags = isset($_POST['selected_tags']) ? $_POST['selected_tags'] : '';
+    $currentPhoto = $_POST['current_photo'];
 
-{
-    $post_id = $_POST['post_id'];
-
-    // Fetch post details from the database
-    $post = getPostById($post_id);
-
-    // Check if the post exists
-    if ($post) 
-    
-    {
-        // Check if the logged-in user is the author of the post
-        if ($post['UserID'] == $_SESSION['user_id']) 
-
-            {
-                   // Retrieve updated post data from the form
-                    $title = $_POST['title'];
-                    $content = $_POST['content'];
-
-                    // Update the post in the database
-                    if (updatePost($post_id, $title, $content)) 
-                    
-                    {
-                        // Post updated successfully
-                        header('Location: user_profile.php');
-                        exit;
-
-                    } 
-                    
-                    else 
-                    
-                    {
-                        // Error updating post
-                        echo "Error: Unable to update post.";
-                    }
-            } 
-            
-            else 
-            
-            {
-            // User is not authorized to edit the post
-            echo "Error: You are not authorized to edit this post.";
-
-            }
-    }
-    
-    else 
-    
-    {
-        // Post not found
-        echo "Error: Post not found.";
+    // Handle file upload
+    if (isset($_FILES['photo']) && $_FILES['photo']['error'] == UPLOAD_ERR_OK) {
+        $photo = $_FILES['photo'];
+        $photoPath = 'uploads/' . basename($photo['name']);
+        move_uploaded_file($photo['tmp_name'], $photoPath);
+    } else {
+        $photoPath = $currentPhoto; // Retain the current photo if no new photo is uploaded
     }
 
+    // Update the post in the database
+    $sql = "UPDATE posts SET Title = ?, Content = ?, PhotoPath = ? WHERE PostID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('sssi', $title, $content, $photoPath, $postID);
+    $stmt->execute();
 
-} 
+    // Update the tags for the post
+    $sql = "DELETE FROM post_tags WHERE PostID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $postID);
+    $stmt->execute();
 
-else 
+    if (!empty($selectedTags)) {
+        $tagsArray = explode(',', $selectedTags);
+        $stmt = $conn->prepare("INSERT INTO post_tags (PostID, TagID) VALUES (?, (SELECT TagID FROM tags WHERE TagName = ?))");
+        foreach ($tagsArray as $tagName) {
+            $stmt->bind_param('is', $postID, $tagName);
+            $stmt->execute();
+        }
+    }
 
-{
-    // Redirect to profile page if the form is not submitted
-    header('Location: user_profile.php');
+    // Redirect to the post page or another appropriate page
+    header('Location: view_post.php?post_id=' . $postID);
     exit;
 }
-
 ?>

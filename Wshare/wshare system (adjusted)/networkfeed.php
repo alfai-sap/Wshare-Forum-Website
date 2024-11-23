@@ -50,9 +50,13 @@ $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
     <?php include 'navbar.php';?><br>
 
     <div class = "container">
-    <h1>Posts from Your Network</h1>
+    <!--<h1>Posts from Your Network</h1>-->
 
+    <br>
+    <br>
+    <br>
     <div class="sort-options">
+
     <form method="GET" action="networkfeed.php">
         
         <select name="sort" id="sort" class="sort-select" onchange="this.form.submit()">
@@ -61,8 +65,10 @@ $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
             <option value="followers" <?php if ($sort_option == 'followers') echo 'selected'; ?>>From Followers</option>
         </select>
     </form>
+    
     </div>
     <!--<h2>Posts <?php echo $sort_option == 'followers' ? "from Your Followers" : "from People You Follow"; ?>:</h2>-->
+    
     <?php if ($posts->num_rows > 0): ?>
         <?php while ($post = $posts->fetch_assoc()): ?>
             <?php 

@@ -849,6 +849,48 @@ function getLikeCount($postID) {
     return $row['LikeCount'];
 }
 
+function getCommunityLikeCount($postID) {
+    // Access the global database connection
+    global $conn;
+
+    // Prepare and execute the query to count likes for the given post
+    $query = "SELECT COUNT(*) AS likeCount FROM community_likes WHERE PostID = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $postID);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    // Fetch the like count
+    $row = $result->fetch_assoc();
+    $likeCount = $row['likeCount'];
+
+    // Close the statement
+    $stmt->close();
+
+    return $likeCount;
+}
+
+function getCommunityCountComment($postID) {
+    // Access the global database connection
+    global $conn;
+
+    // Prepare and execute the query to count comments for the given post
+    $query = "SELECT COUNT(*) AS commentCount FROM community_comments WHERE PostID = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $postID);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    // Fetch the comment count
+    $row = $result->fetch_assoc();
+    $commentCount = $row['commentCount'];
+
+    // Close the statement
+    $stmt->close();
+
+    return $commentCount;
+}
+
 
 //comment replies
 function getRepliesByCommentId($commentId) {

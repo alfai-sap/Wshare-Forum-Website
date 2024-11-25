@@ -80,9 +80,6 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="./css/navbar.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/left-navbar.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/communities.css ?v=<?php echo time(); ?>">
-    <style>
-        
-    </style>
 </head>
 <body>
     <ul class="navbar">

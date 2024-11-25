@@ -8,7 +8,7 @@
             
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color:#f9f9f9;
         }
 
         h1 {
@@ -31,7 +31,7 @@
             padding: 20px;
             background-color: white;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            /*box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);*/
         }
 
         .community-thumbnail {
@@ -56,7 +56,7 @@
             display: block;
             margin: 10px 0 5px;
             font-size: 1em;
-            color: #333;
+            color: #0056b3;
         }
 
         input[type="text"], textarea {
@@ -94,14 +94,39 @@
             padding: 15px;
         }
 
+                
+        .post-image {
+            height: 60%;
+        }
+
+        .post-image-img{
+            width: 100%;       /* Make the image fill the container's width */
+            height: 500px;       /* Limit the max width to 900px */
+            border-radius: 8px; /* Rounded corners for a cleaner look */ 
+        }
+
+        .post-tags {
+            margin-bottom: 20px;
+        }
+
+        .tag-label {
+            display: inline-block;
+            background-color: #ffffff;
+            color: #000000;
+            padding: 6px;
+            margin-right: 10px;
+            border-radius: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            font-size: small;
+        }
         .pic_user {
             display: flex;
             margin-bottom: 10px;
         }
 
         .author_pic {
-            height: 50px;
-            width: 50px;
+            height: 35px;
+            width: 35px;
             border-radius: 50%;
             margin-right: 10px;
         }
@@ -116,13 +141,14 @@
             text-decoration: none;
         }
 
-        .post_username a:hover {
-            text-decoration: underline;
+        .post_uname{
+            text-decoration: none;
         }
 
         .post_time {
             font-size: smaller;
-            color: #666;
+            color: #0056b3;
+            opacity: 60%;
         }
 
         .post_title {
@@ -154,14 +180,9 @@
             align-items: center;
         }
 
-        .bulb:hover {
-            height: 30px;
-            width: 30px;
-        }
-
         .bulb {
-            width: 25px;
-            height: 25px;
+            width: 20px;
+            height: 20px;
             padding: 10px;
             transition: 0.4s ease;
         }
@@ -195,10 +216,6 @@
             font-weight: bold;
             color: #007BFF;
             text-decoration: none;
-        }
-
-        .profile-username:hover {
-            text-decoration: underline;
         }
 
         .profile-email {
@@ -307,6 +324,68 @@
             padding-top: 20px;
             padding-bottom: 20px;
             font-size: medium;
+        }
+
+        /*tags*/
+        .tag-dropdown-container {
+            position: relative;
+            width: 98%;
+            margin-bottom: 10px;
+        }
+
+        .tag-dropdown {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+
+        .tag-dropdown-menu {
+            display: none;
+            position: absolute;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            z-index: 10;
+        }
+
+        .tag-search {
+            width: 95%;
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .tag-dropdown-item {
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .tag-dropdown-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .selected-tags {
+            margin-top: 10px;
+        }
+
+        .selected-tag {
+            display: inline-block;
+            background-color: #007BFF;
+            color: #fff;
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        .selected-tag-remove {
+            margin-left: 5px;
+            cursor: pointer;
         }
 
         @media screen and (max-width: 768px){

@@ -28,7 +28,7 @@ $notifications = getNotifications($userID);
 <body>
     <ul class="navbar">
         <form class="nav" action="" method="GET" id="searchForm" style="display: flex;">
-            <input class="search-input" type="text" id="search" name="search" placeholder="Search a topic...">
+            <input class="search-input" type="text" id="search" name="search" placeholder="Search a topic..." style="width: 670px;">
             <select name="tag" id="tag">
                 <option value="">Select Tag</option>
                 <?php

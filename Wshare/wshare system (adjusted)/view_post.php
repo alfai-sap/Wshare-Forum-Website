@@ -57,8 +57,7 @@ session_start();
                     <p class="timestamp-update">edited <?php echo timeAgo($post['updatedAt']); ?></p>
                 </div>
             </div>
-    
-            <h3><?php echo $post['Title']; ?></h3>
+                    
             <?php                                                                  
                 $postID = $post['PostID'];
 
@@ -85,6 +84,8 @@ session_start();
                         <?php endforeach; ?>
                     </div>
             <?php endif; ?>
+            <h3><?php echo $post['Title']; ?></h3>
+            
             <p class="post-content"><?php echo $post['Content']; ?></p>
     
                   

@@ -88,6 +88,18 @@ while ($member = $membersResult->fetch_assoc()) {
     }
 }
 
+
+// Fetch tags from the database
+$tags = [];
+$sql = "SELECT TagName FROM tags ORDER BY TagName ASC";
+$result = $conn->query($sql);
+
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $tags[] = $row['TagName'];
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -109,6 +121,7 @@ while ($member = $membersResult->fetch_assoc()) {
         <p class="community-description"><?php echo htmlspecialchars($community['Description']); ?></p>
         <br><br>
 
+        
         <div>
             <button class="top-menu-btn" onclick="toggleCreatePost()">Create Post</button>
             <button class="top-menu-btn" onclick="toggleMembers()">Members</button>
@@ -123,6 +136,7 @@ while ($member = $membersResult->fetch_assoc()) {
         </div>
 
 
+        <p class="message">Welcome <?php echo $username ?>! Share your story with the community.</p>
         <div id="membersList" style="display:none;">
             <h2>Members</h2>
             <ul class="profile-list">
@@ -217,19 +231,47 @@ while ($member = $membersResult->fetch_assoc()) {
 
         <!-- Only show the post form if the user is a member -->
         <?php if ($isMember) { ?>
-            
-            <p class="message">Welcome <?php echo $username ?>! share your story to the community.</p>
 
-            <form id = "create_post_form" action="community_create_post.php" method="POST" style = "display:none;">
-                <input type="hidden" name="community_id" value="<?php echo $communityID; ?>">
-                <label for="title">Post Title:</label>
-                <input type="text" id="title" name="title" required>
-                
-                <label for="content">Content:</label>
-                <textarea id="content" name="content" required></textarea>
-                
-                <input type="submit" value="Create Post">
-            </form>
+            <div class="community-form" id = "create_post_form" style="margin: 10px;">
+                <form id="post-form" action="community_create_post.php" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="community_id" value="<?php echo $communityID; ?>">
+
+                    <label for="title">Title:</label>
+                    <input class="post-title-in" type="text" id="title" name="title" placeholder="Title..." required>
+
+                    <label for="content">Content:</label>
+                    <textarea class="post-content-in" id="content" name="content" placeholder="What am I thinking?..." required></textarea>
+
+                    <label for="photo">Photo:</label>
+                    <input class="post-image-in" type="file" id="photo" name="photo" accept="image/*">
+
+                    <label for="tags">Tags:</label>
+                    <!-- Tag Selection Dropdown -->
+                    <div class="tag-dropdown-container">
+                        <input type="text" class="tag-dropdown" placeholder="Select tags" readonly onclick="toggleDropdown()">
+                        <div class="tag-dropdown-menu">
+                            <input type="text" class="tag-search" placeholder="Search Tags..." onkeyup="filterTags()">
+                            <div id="tag-list">
+                                <?php foreach ($tags as $tag): ?>
+                                    <div class="tag-dropdown-item">
+                                        <input type="checkbox" value="<?php echo $tag; ?>" onchange="toggleTag(this)">
+                                        <?php echo htmlspecialchars($tag); ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden input to store selected tags -->
+                    <input type="hidden" name="selected_tags" id="selected-tags">
+
+                    <!-- Display selected tags -->
+                    <div class="selected-tags" id="selected-tags-display"></div>
+
+                    <input type="submit" class="post-postbtn-in" value="Post">
+                </form>
+            </div>
+
             <br>
             <br>
 
@@ -246,6 +288,8 @@ while ($member = $membersResult->fetch_assoc()) {
         <br><br>
         <h2>Posts</h2><br><br>
         <?php while ($post = $postsResult->fetch_assoc()) { ?>
+
+
             <div class="post-container">
                 <div class="post">
                     <div class="pic_user">
@@ -254,26 +298,77 @@ while ($member = $membersResult->fetch_assoc()) {
                         <?php else: ?>
                             <img class="author_pic" src="default_pic.svg" alt="Profile Picture">
                         <?php endif; ?>
-                        <div class="user_post_info">
+                        <div class="user_post_info" style="display: flex;">
                             <p class="post_username"><a class="post_uname" href="view_user.php?username=<?php echo urlencode($post['Username']); ?>"><?php echo $post['Username']; ?></a></p>
-                            <p class="post_time">posted at: <?php echo $post['CreatedAt']; ?></p>
-                            <p class="post_time">updated at: <?php echo $post['UpdatedAt']; ?></p>
+                            <p class="post_time"><?php echo timeAgo($post['CreatedAt']); ?></p>
                         </div>
                     </div>
-                    <hr/><br>
-                    <h3 class="post_title"><?php echo htmlspecialchars($post['Title']); ?></h3><br>
-                    <hr/><br>
-                    <p class="post_content"><?php echo htmlspecialchars($post['Content']); ?></p>
                     <br>
-                    <div class="lik">
+                    <!-- Display tags associated with the post -->
+                    <?php                                                          
+                        $postID = $post['PostID'];
+
+                        // Query to get tags associated with the post
+                        $tagsQuery = "SELECT t.TagName FROM community_post_tags pt
+                                    INNER JOIN tags t ON pt.TagID = t.TagID
+                                    WHERE pt.PostID = ?";
+                        $tagsStmt = $conn->prepare($tagsQuery);
+                        $tagsStmt->bind_param('i', $postID);
+                        $tagsStmt->execute();
+                        $tagsResult = $tagsStmt->get_result();
+
+                        $tags = [];
+                        while ($row = $tagsResult->fetch_assoc()) {
+                            $tags[] = $row['TagName'];
+                        }
+
+                        $tagsStmt->close();
+
+                        if (!empty($tags)): ?>
+                            <div class="post-tags">
+                                <?php foreach ($tags as $tag): ?>
+                                    <span class="tag-label"><?php echo htmlspecialchars($tag); ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                    <?php endif; ?>
+                    <h3 class="post_title"><?php echo htmlspecialchars($post['Title']); ?></h3><br>
+                    
+                    <p class="post_content"><?php echo htmlspecialchars($post['Content']); ?></p>
+                    <?php if (!empty($post['PhotoPath'])): ?>
+                        <div class="post-image">
+                            <img class = "post-image-img" src="<?php echo $post['PhotoPath']; ?>" alt="Post Image">
+                        </div>
+                    <?php endif; ?>
+                    <br>
+                    <div class="lik" style="display:flex;">
                         <form class="like" action="like_post.php" method="POST">
                             <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
-                            <button type="submit" class="like-btn" name="like"><img class="bulb" src="bulb.svg"></button>
+                            <button type="submit" class="like-btn" name="like" style="background-color:transparent; border:none; padding: 10px;">
+                                <img class="bulb" src="bulb.svg" style="height: 20px; width: 20px; border-radius: 50%; transition: all 0.3s ease;"
+                                onmouseover="this.style.height='30px'; this.style.width='30px';"
+                                onmouseout="this.style.height='20px'; this.style.width='20px';">
+                            </button>
                         </form>
-                        <span class="like-count"><?php echo getLikeCount($post['PostID']); ?></span>
-                        <button class="like-btn"><img class="bulb" src="comment.svg"></button>
-                        <span class="like-count"><?php echo countComments($post['PostID']); ?></span>
-                        <button class="like-btn"><a href="view_community_post.php?id=<?php echo $post['PostID']; ?>"><img class="bulb" src="view.svg"></a></button>
+
+                        <span class="like-count" style="display:flex; align-self:center; color:#007bff;">
+                            <?php echo getCommunityLikeCount($post['PostID']); ?> Brilliant Points
+                        </span>
+
+                        <button class="like-btn" style="background-color:transparent; border:none; padding: 10px;">
+                            <img class="bulb" src="comment.svg" style="height:20px; width:20px; background-color:transparent; outline:none; border:none;">
+                        </button>
+
+                        <span class="like-count" style="display:flex; align-self:center; color:#007bff;">
+                            <?php echo getCommunityCountComment($post['PostID']); ?> Comments
+                        </span>
+
+                        <button class="like-btn" style="background-color:transparent; border:none; padding: 10px;">
+                            <a href="view_community_post.php?id=<?php echo $post['PostID']; ?>" style="display:flex; align-self:center; text-decoration:none;">
+                                <img class="bulb" src="view.svg" style="height:20px; width:20px; background-color:transparent; outline:none; border:none;">
+                                <p class="like-count" style="display:flex; align-self:center; color:#007bff; margin-left:5px;">See discussion</p>
+                            </a>
+                        </button>
+
                     </div>
                 </div>
             </div>
@@ -351,6 +446,65 @@ while ($member = $membersResult->fetch_assoc()) {
             document.getElementById('pendingRequestsList').style.display = 'none';
             document.getElementById('edit-community').style.display = 'none';
         }
+    </script>
+
+    <script>
+        // JavaScript for handling the tag dropdown functionality
+        const dropdownMenu = document.querySelector('.tag-dropdown-menu');
+        const tagDropdown = document.querySelector('.tag-dropdown');
+        const selectedTagsInput = document.getElementById('selected-tags');
+        const selectedTagsDisplay = document.getElementById('selected-tags-display');
+        let selectedTags = [];
+
+        function toggleDropdown() {
+            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function filterTags() {
+            const searchValue = document.querySelector('.tag-search').value.toLowerCase();
+            const items = document.querySelectorAll('.tag-dropdown-item');
+            items.forEach(item => {
+                const tagName = item.textContent.toLowerCase();
+                item.style.display = tagName.includes(searchValue) ? 'flex' : 'none';
+            });
+        }
+
+        function toggleTag(checkbox) {
+            const tagValue = checkbox.value;
+            if (checkbox.checked) {
+                if (!selectedTags.includes(tagValue)) {
+                    selectedTags.push(tagValue);
+                    displaySelectedTags();
+                }
+            } else {
+                selectedTags = selectedTags.filter(tag => tag !== tagValue);
+                displaySelectedTags();
+            }
+        }
+
+        function displaySelectedTags() {
+            selectedTagsDisplay.innerHTML = '';
+            selectedTags.forEach(tag => {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'selected-tag';
+                tagElement.innerHTML = `${tag} <span class="selected-tag-remove" onclick="removeTag('${tag}')">&times;</span>`;
+                selectedTagsDisplay.appendChild(tagElement);
+            });
+            selectedTagsInput.value = selectedTags.join(',');
+        }
+
+        function removeTag(tag) {
+            selectedTags = selectedTags.filter(t => t !== tag);
+            document.querySelector(`.tag-dropdown-item input[value="${tag}"]`).checked = false;
+            displaySelectedTags();
+        }
+
+        // Close dropdown if clicking outside
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('.tag-dropdown-container')) {
+                dropdownMenu.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>

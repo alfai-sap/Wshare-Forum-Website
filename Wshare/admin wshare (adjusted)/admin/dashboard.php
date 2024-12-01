@@ -29,8 +29,10 @@ $topUsersByTimeSpent = getTotalTimeSpentByUsers();
 </head>
 <body>
 
+<?php include 'sidebar.php'; ?>
 <h1>Wshare Analytics</h1>
 
+<div class="container">
 <!-- Analytics Summary Section -->
 <div class="dashboard">
     <div class="box">
@@ -147,6 +149,7 @@ $topUsersByTimeSpent = getTotalTimeSpentByUsers();
         </table>
     </div>
     
+</div>
 </div>
 
 </body>

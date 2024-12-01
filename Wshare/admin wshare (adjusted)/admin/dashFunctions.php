@@ -182,4 +182,95 @@ function getTotalTimeSpentByUsers() {
     $result = mysqli_query($conn, $query);
     return mysqli_fetch_all($result, MYSQLI_ASSOC);
 }
+
+// Fetch all users
+function getAllUsers() {
+    global $conn;
+    $query = "SELECT * FROM users";
+    $result = mysqli_query($conn, $query);
+    return mysqli_fetch_all($result, MYSQLI_ASSOC);
+}
+
+// Add a new user
+function addUser($username, $email, $password) {
+    global $conn;
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    $query = "INSERT INTO users (Username, Email, Password) VALUES (?, ?, ?)";
+    
+    // Prepare the statement
+    $stmt = mysqli_prepare($conn, $query);
+    if ($stmt) {
+        // Bind parameters (s = string)
+        mysqli_stmt_bind_param($stmt, "sss", $username, $email, $hashedPassword);
+        // Execute the statement
+        mysqli_stmt_execute($stmt);
+        // Close the statement
+        mysqli_stmt_close($stmt);
+    } else {
+        // Handle error
+        die('Query preparation failed: ' . mysqli_error($conn));
+    }
+}
+
+// Update an existing user
+function updateUser($userID, $username, $email) {
+    global $conn;
+    $query = "UPDATE users SET Username = ?, Email = ? WHERE UserID = ?";
+    
+    // Prepare the statement
+    $stmt = mysqli_prepare($conn, $query);
+    if ($stmt) {
+        // Bind parameters (s = string, i = integer)
+        mysqli_stmt_bind_param($stmt, "ssi", $username, $email, $userID);
+        // Execute the statement
+        mysqli_stmt_execute($stmt);
+        // Close the statement
+        mysqli_stmt_close($stmt);
+    } else {
+        // Handle error
+        die('Query preparation failed: ' . mysqli_error($conn));
+    }
+}
+
+// Delete a user
+function deleteUser($userID) {
+    global $conn;
+    $query = "DELETE FROM users WHERE UserID = ?";
+    
+    // Prepare the statement
+    $stmt = mysqli_prepare($conn, $query);
+    if ($stmt) {
+        // Bind parameter (i = integer)
+        mysqli_stmt_bind_param($stmt, "i", $userID);
+        // Execute the statement
+        mysqli_stmt_execute($stmt);
+        // Close the statement
+        mysqli_stmt_close($stmt);
+    } else {
+        // Handle error
+        die('Query preparation failed: ' . mysqli_error($conn));
+    }
+}
+// Function to get all users or filter by search term
+function getUsersBySearch($searchTerm = '') {
+    global $conn;
+
+    // Use ? placeholder for query
+    $query = "SELECT * FROM users WHERE Username LIKE ? OR Email LIKE ?";
+    $stmt = $conn->prepare($query);
+
+    // Bind the parameters (both will use the same search term)
+    $searchTermWithWildcards = '%' . $searchTerm . '%';
+    $stmt->bind_param("ss", $searchTermWithWildcards, $searchTermWithWildcards); // "ss" means two string parameters
+
+    // Execute the query and fetch results
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    // Fetch and return all matching rows
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+
 ?>
+

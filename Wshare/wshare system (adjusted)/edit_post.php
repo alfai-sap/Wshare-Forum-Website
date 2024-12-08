@@ -28,6 +28,7 @@ if ($result->num_rows > 0) {
     <link rel="stylesheet" href="./css/homepage.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/edit_post.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/navbar.css?v=<?php echo time(); ?>">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
 </head>
 <body>
     <?php include 'navbar.php'; ?>
@@ -75,6 +76,74 @@ if ($result->num_rows > 0) {
                 
                 <label for="title">Replace Photo:</label>
                 <input type="file" id="photo" name="photo" class="post-image-in" accept="image/*">
+                
+                <!-- Display existing images -->
+                <div class="current-images" id="current-images">
+                    <?php
+                    $imagesQuery = "SELECT * FROM post_images WHERE PostID = ? ORDER BY DisplayOrder";
+                    $imagesStmt = $conn->prepare($imagesQuery);
+                    $imagesStmt->bind_param('i', $postID);
+                    $imagesStmt->execute();
+                    $images = $imagesStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                    
+                    foreach($images as $image): ?>
+                        <div class="image-container" data-image-id="<?php echo $image['ImageID']; ?>">
+                            <img src="<?php echo htmlspecialchars($image['ImagePath']); ?>" alt="Post Image">
+                            <input type="checkbox" name="remove_images[]" value="<?php echo $image['ImageID']; ?>">
+                            <label>Remove</label>
+                            <input type="hidden" name="image_order[]" value="<?php echo $image['ImageID']; ?>">
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <style>
+                .current-images {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                    gap: 10px;
+                    margin: 10px 0;
+                }
+
+                .image-container {
+                    position: relative;
+                    border: 1px solid #ddd;
+                    padding: 5px;
+                    cursor: move;
+                }
+
+                .image-container img {
+                    width: 100%;
+                    height: 150px;
+                    object-fit: cover;
+                }
+                </style>
+
+                <script>
+                // Initialize Sortable for existing images
+                new Sortable(document.getElementById('current-images'), {
+                    animation: 150,
+                    onEnd: function() {
+                        updateImageOrder();
+                    }
+                });
+
+                function updateImageOrder() {
+                    const containers = document.querySelectorAll('.image-container');
+                    const orderInput = document.createElement('input');
+                    orderInput.type = 'hidden';
+                    orderInput.name = 'image_order';
+                    orderInput.value = Array.from(containers).map(c => c.getAttribute('data-image-id')).join(',');
+                    
+                    // Remove existing order input if any
+                    const existingOrder = document.querySelector('input[name="image_order"]');
+                    if (existingOrder) existingOrder.remove();
+                    
+                    document.querySelector('form').appendChild(orderInput);
+                }
+                </script>
+
+                <label for="new_photos">Add More Photos:</label>
+                <input type="file" name="new_photos[]" multiple accept="image/*">
                 
                 <!-- Tag Selection Dropdown -->
                 
@@ -140,6 +209,12 @@ if ($result->num_rows > 0) {
             var element = document.getElementById('comments');
             element.style.display = (element.style.display === 'none') ? 'block' : 'none';
         });
+
+        document.addEventListener('click', function(e) {
+            if (e.target && (e.target.matches('.image-container img') || e.target.matches('.current-photo img'))) {
+                showImagePreview(e.target);
+            }
+        });
     </script>
     <script>
         // JavaScript for handling the tag dropdown functionality
@@ -198,6 +273,23 @@ if ($result->num_rows > 0) {
                 dropdownMenu.style.display = 'none';
             }
         });
+
+
+        // Add this JavaScript to update the image order before form submission
+        function updateImageOrder() {
+            const containers = document.querySelectorAll('.image-container');
+            const imageIds = Array.from(containers).map(c => c.dataset.imageId).join(',');
+            const input = document.querySelector('input[name="image_order"]');
+            if (input) {
+                input.value = imageIds;
+            } else {
+                const newInput = document.createElement('input');
+                newInput.type = 'hidden';
+                newInput.name = 'image_order';
+                newInput.value = imageIds;
+                document.querySelector('form').appendChild(newInput);
+            }
+        }
     </script>
 </body>
-</html>
+</html> 

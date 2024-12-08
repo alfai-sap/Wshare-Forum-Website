@@ -5,12 +5,16 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    background-color: #f9f9f9;
+    background-color: #ffffff;
     height: 80px;
     list-style: none;
     width: 100%;
 }
 
+hr{
+   opacity: 50%;
+   color: #0056b3;  
+}
 .logo-navbar {
     list-style: none;
     display: flex;
@@ -33,6 +37,17 @@
     font-weight: bolder;
     font-size: x-large;
     display: flex;
+    padding: 10px;
+    cursor: pointer;
+    background-color: transparent;
+}
+
+
+.logo-nav img{
+    border: none;
+    font-weight: bolder;
+    font-size: x-large;
+    display: none;
     padding: 10px;
     cursor: pointer;
     background-color: transparent;
@@ -106,6 +121,9 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .logo-nav img{
+        display: flex;
+    }
     .logo-nav p{
         display: none;
     }

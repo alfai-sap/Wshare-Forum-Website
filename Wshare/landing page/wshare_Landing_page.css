@@ -5,13 +5,14 @@
 }
 
 body {
-    font-family: Georgia;
+    font-family: poppins;
     line-height: 1.6;
 }
 
 /* Navbar Styles */
 .navbar {
-    background-color: #007bff;
+    background-color: #0056b3;
+    backface-visibility: 30%;
     padding: 20px;
     position: fixed;
     top: 0;
@@ -57,7 +58,8 @@ body {
 
 
 .hero-section {
-    background: linear-gradient(rgba(0, 123, 255, 0.7), rgba(0, 123, 255, 0.7)), url('hero-bg.jpg') no-repeat center center/cover;
+    /*background: linear-gradient(rgba(0, 123, 255, 0.7), rgba(0, 123, 255, 0.7)), url('blue.png') no-repeat center center/cover;*/
+    background: url('blue.png') no-repeat center center/cover;
     color: white;
     height: 100vh;
     display: flex;
@@ -87,7 +89,8 @@ body {
 }
 
 .cta-btn:hover {
-    background-color: #f0f0f0;
+    background-color: #0056b3;
+    color: #fff;
 }
 
 
@@ -103,7 +106,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -131,7 +134,7 @@ body {
 
 .card p {
     font-size: 2rem;
-    color: #007bff;
+    color: #0056b3;
 }
 
 .user-stats {
@@ -303,7 +306,7 @@ body {
 
 /* Footer Styles */
 .footer {
-    background-color: #007bff;
+    background-color: #0056b3;
     color: white;
     padding: 20px 0;
     text-align: center;

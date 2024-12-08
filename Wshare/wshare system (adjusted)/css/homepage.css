@@ -80,17 +80,6 @@ form {
     background-color: transparent;
     border-radius: 10px;
 }
-h1 {
-    padding-top: 125px;
-    padding-bottom: 20px;
-    text-align: center;
-    color: #007bff;
-}
-
-h2 {
-    padding-top: 100px;
-    color: #007bff;
-}
 
 .search_results {
     color: #007bff;
@@ -104,23 +93,6 @@ h2 {
     font-size:x-large;
 }
 
-p {
-    color: #eee2de;
-}
-
-.welcome {
-    text-align: center;
-}
-
-.post-form {
-    height: 100%;
-    width: 100%;
-    background-color: #ffffff;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-
-}
-
 .post_uname {
     color: #0056b3;
     text-decoration: none;
@@ -129,23 +101,10 @@ p {
     padding-right: 10px;
 }
 
-form {
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
-label {
-    display: block;
-    font-weight: bold;
-    
-}
-
-
-
 .post-container {
     background-color: #e1ebed;
     border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    /*box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);*/
 }
 
 .post {
@@ -163,11 +122,6 @@ label {
     padding: 20px 10px;
     text-align: left;
     color: #0056b3;
-}
-
-hr {
-    border: 1px solid #007bff;
-    opacity: 20%;
 }
 
 .comments {
@@ -380,6 +334,84 @@ hr {
     margin: 0;
 }
 
+.filter-container {
+    padding: 15px;
+    margin: 10px 0;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.filter-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.filter-group select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 150px;
+}
+
+.filter-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.filter-button:hover {
+    background-color: #0056b3;
+}
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.timeframe-filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    min-width: 120px;
+}
+
+.filter-button {
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.filter-button:hover {
+    background-color: #0056b3;
+}
+
+/* Adjust existing dropdown styles to match */
+.dropdown {
+    display: inline-block;
+}
+
+.dropbtn {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
 /*
 
 /* Media Queries */

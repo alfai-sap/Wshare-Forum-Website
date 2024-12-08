@@ -56,7 +56,7 @@ form {
 
 /* Content */
 .container {
-    width: 1024px;
+    width: 900px;
     margin: 0px auto;
     background-color: transparent;
     border-radius: 10px;
@@ -73,8 +73,8 @@ h1 {
 .post-container {
     background-color: #e1ebed;
     border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+    
+    margin-bottom: 5px;
 }
 
 .post {
@@ -88,12 +88,7 @@ h1 {
     margin: 0;
     cursor: pointer;
     padding: 20px 10px;
-    color: #007bff;
-}
-
-hr {
-    border: 1px solid #007bff;
-    opacity: 20%;
+    color: #0056b3;
 }
 
 .post_username {
@@ -115,13 +110,13 @@ hr {
     margin-right: 10px;
     transition: 0.4s ease;
     margin-bottom: 2px;
-    color: black;
+    color: #0056b3;
     opacity: 50%;
 }
 
 .author_pic {
-    height: 50px;
-    width: 50px;
+    height: 30px;
+    width: 30px;
     margin: 10px;
     border-radius: 50%;
 }
@@ -134,7 +129,7 @@ hr {
 
 .post_content {
     margin-left: 10px;
-    margin-top: 20px;
+    margin-top: 10px;
     text-align: justify;
     margin-right: 10px;
     margin-bottom: 20px;

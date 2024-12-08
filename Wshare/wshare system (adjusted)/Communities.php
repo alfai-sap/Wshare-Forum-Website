@@ -1,7 +1,11 @@
 <?php
-require_once 'functions.php'; // Assuming this file handles the database connection
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
+require_once 'functions.php';
+require_once 'changes.php';
+require_once 'notifications_functions.php';
 // Check if the user is logged in
 if (!isset($_SESSION['username'])) {
     header('Location: login.php'); // Redirect to login page if not logged in
@@ -68,7 +72,6 @@ if ($filterOption === 'created') {
 $stmt->execute();
 $result = $stmt->get_result();
 
-
 ?>
 
 <!DOCTYPE html>
@@ -80,6 +83,8 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="./css/navbar.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/left-navbar.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/communities.css ?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="./css/right-sidebar.css ?v=<?php echo time(); ?>" >
+    <link rel="stylesheet" href="./css/notifications.css  ?v=<?php echo time(); ?>">
 </head>
 <body>
     <ul class="navbar">
@@ -92,9 +97,9 @@ $result = $stmt->get_result();
     </ul>
     
     <?php include 'navbar.php';?>
-
+    <?php include 'right-sidebar.php';?>
     <div class="container">
-        <h1>Join a Community</h1>
+        <br><br><br><br>
         <div class="sort-options">
         <a class="createhub" href="create_community.php">Create Hub</a> |
         <a class="create" href="my_communities.php">My Hubs</a>
@@ -145,11 +150,15 @@ $result = $stmt->get_result();
                                     <span class="admin-text">You're an Admin</span>
                                 <?php } elseif ($isMember) { ?>
                                     <span class="member-text">You're a Member</span>
-                                <?php }elseif ($hasPendingRequest) { ?>
+                                <?php } elseif ($hasPendingRequest) { ?>
                                     <span class="member-text">Join request pending</span>
                                 <?php } elseif ($hasRejectedRequest) { ?>
                                     <span class="member-text">Your join request was rejected</span>
-                                <?php }else { ?>
+                                <?php } elseif (checkUserBan()) { ?>
+                                    <span class="ban-message" style="color: red;">
+                                        <?php echo checkUserBan(true); ?>
+                                    </span>
+                                <?php } else { ?>
                                     <a href="join_community.php?community_id=<?php echo $row['CommunityID']; ?>" class="join-button">Join</a>
                                 <?php } ?>
                             </div>

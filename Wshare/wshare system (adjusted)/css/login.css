@@ -10,7 +10,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: linear-gradient(rgba(0, 123, 255, 0.85), rgba(0, 123, 255, 0.85)), url('hero-bg.jpg') no-repeat center center/cover;
+    background-color: #0056b3;
     background-blend-mode: overlay;
     background-attachment: fixed;
 }

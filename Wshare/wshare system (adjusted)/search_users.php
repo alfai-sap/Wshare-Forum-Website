@@ -6,7 +6,7 @@ if (!isset($_SESSION['username'])) {
     header('Location: login.php');
     exit;
 }
-
+require_once 'notifications_functions.php';
 // Get current user ID
 $currentUser = getUserByUsername($_SESSION['username']);
 $currentUserID = $currentUser['UserID'];
@@ -35,6 +35,8 @@ if (isset($_GET['action']) && isset($_GET['userID'])) {
     <link rel="stylesheet" href="./css/search_users.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/navbar.css ?v=<?php echo time(); ?>" >
     <link rel="stylesheet" href="./css/left-navbar.css ?v=<?php echo time(); ?>" >
+    <link rel="stylesheet" href="./css/right-sidebar.css ?v=<?php echo time(); ?>" >
+    <link rel="stylesheet" href="./css/notifications.css  ?v=<?php echo time(); ?>">
     
 </head>
 
@@ -51,7 +53,7 @@ if (isset($_GET['action']) && isset($_GET['userID'])) {
 
     
     <?php include 'navbar.php';?>
-
+    <?php include 'right-sidebar.php';?>
     <div class="container">
         <br><br><br><br>
         

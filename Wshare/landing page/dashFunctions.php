@@ -18,7 +18,7 @@ function getTotalUsers() {
 // Fetch new users in the last month
 function getNewUsersLastMonth() {
     global $conn;
-    $query = "SELECT COUNT(*) AS new_users FROM users WHERE dateJoined > NOW() - INTERVAL 1 MONTH";
+    $query = "SELECT COUNT(*) AS new_users FROM users WHERE JoinedAt > NOW() - INTERVAL 1 MONTH";
     $result = mysqli_query($conn, $query);
     return mysqli_fetch_assoc($result)['new_users'];
 }
@@ -128,9 +128,9 @@ function getTopFollowers() {
 // Fetch daily new users over time (for a graph or trend analysis)
 function getUserGrowth() {
     global $conn;
-    $query = "SELECT DATE(dateJoined) AS join_date, COUNT(*) AS new_users
+    $query = "SELECT DATE(JoinedAt) AS join_date, COUNT(*) AS new_users
               FROM users
-              GROUP BY DATE(dateJoined)
+              GROUP BY DATE(JoinedAt)
               ORDER BY join_date DESC
               LIMIT 30"; // Last 30 days
     $result = mysqli_query($conn, $query);

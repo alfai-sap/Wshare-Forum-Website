@@ -6,6 +6,7 @@ session_start();
 if (isset($_GET['id'])) {
     $postId = $_GET['id'];
     $post = getCommunityPostById($postId);
+    $communityId = $post['CommunityID'];
     $comments = getCommunityCommentsByPostId($postId);
     $userProfile = getUserProfileById($post['UserID']);
     $profilePic = $userProfile['ProfilePic'] ?? 'default_pic.svg'; // Default picture if none exists
@@ -30,19 +31,31 @@ if (isset($_GET['id'])) {
 
     <div class="container">
         <a class="backButton" id="backButton">
-            <div class="back" style="display:flex; margin-left:10px;">
-                <img class="icons" src="signoff.svg">
-                <p class="back-label" style="padding-top:10px;color:#007bff">Back</p>
-            </div>
+            <div class="back"><p class="back-label">Back</p></div>
         </a>
 
         <?php if (isset($post)): ?>
             <div class="post">
+            <?php if (hasUserLikedPost($post['PostID'], $_SESSION['user_id'])): ?>
+                    <div class="liked-message" style="background-color: #e0f7fa; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                        <p style="margin: 0; color: #00796b;">You liked this post on <?php echo date('F j, Y', strtotime(getLikeDate($post['PostID'], $_SESSION['user_id']))); ?></p>
+                    </div><br>
+                <?php endif; ?>
                 <div class="author-info">
                     <img class="author_pic" src="<?= $profilePic ?>" alt="Profile Picture">
                     <div class="unametime" style="display:flex; flex-direction: column;">
-                    <div class="unam-time" style="display: flex;">
+                    <div class="unam-time" style="display: flex; align-items: center;">
                         <p class="authorname"><?php echo $post['Username']; ?></p>
+                        <?php
+                            // Check if post author is an admin of this community
+                            $adminCheck = "SELECT Role FROM community_members WHERE CommunityID = ? AND UserID = ? AND Role = 'admin'";
+                            $stmt = $conn->prepare($adminCheck);
+                            $stmt->bind_param('ii', $communityId, $post['UserID']);
+                            $stmt->execute();
+                            $adminResult = $stmt->get_result();
+                            if ($adminResult->num_rows > 0): ?>
+                                <span style="color: #ff4b4b; margin-left: 5px; font-size: 0.8em; padding: 2px 6px; border: 1px solid #ff4b4b; border-radius: 4px;">Admin</span>
+                            <?php endif; ?>
                         <p class="timestamp"><?php echo timeAgo($post['CreatedAt']); ?></p>
                     </div>
                     
@@ -52,19 +65,32 @@ if (isset($_GET['id'])) {
                 <h3><?= $post['Title'] ?></h3>
                 <p class="post-content"><?= $post['Content'] ?></p>
 
+                <!-- Add this photo section -->
+                <?php if (!empty($post['PhotoPath'])): ?>
+                    <div class="post-image">
+                        <img class="post-image-img" src="<?php echo $post['PhotoPath']; ?>" alt="Post Image">
+                    </div>
+                <?php endif; ?>
+
+                
+
                 <!-- Like and comment buttons -->
                 <div class="lik">
-                    <form class="like" action="like_post.php" method="POST">
+                    <form class="like" action="like_community_post.php" method="POST">
                         <input type="hidden" name="postID" value="<?= $post['PostID'] ?>">
                         <button type="submit" class="like-btn" name="like">
-                            <img class="bulb" src="bulb.svg">
+                            <?php if (hasUserLikedPost($post['PostID'], $_SESSION['user_id'])): ?>
+                                <img class="bulb" src="bulb_active.svg">
+                            <?php else: ?>
+                                <img class="bulb" src="bulb.svg">
+                            <?php endif; ?>
                         </button>
                     </form>
-                    <span class="like-count"><?= getLikeCount($post['PostID']) ?></span>
+                    <span class="like-count"><?= getCommunityLikeCount($post['PostID']) ?></span>
                     <button class="like-btn">
                         <img class="bulb" src="comment.svg">
                     </button>
-                    <span class="like-count"><?= countComments($post['PostID']) ?></span>
+                    <span class="like-count"><?= getCommunityCountComment($post['PostID']) ?></span>
                 </div>
             </div>
 
@@ -81,16 +107,32 @@ if (isset($_GET['id'])) {
                                 <div class="comments_author_uname_content">
                                     <img class="comments_author_pfp" src="<?= $comment['ProfilePic'] ?? 'default_pic.svg' ?>">
                                     <div class="comments_author_uname_time">
-                                        <p class="comments_author_uname"><strong><?= $comment['Username'] ?></strong></p>
-                                        <p class="comment_timestamp"><?= $comment['CreatedAt'] ?></p>
+                                        <div class="author-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                            <p class="comments_author_uname">
+                                                <strong><?= $comment['Username'] ?></strong>
+                                            </p>
+                                            <?php
+                                            // Check if commenter is an admin of this community
+                                            $adminCheck = "SELECT Role FROM community_members 
+                                                          WHERE CommunityID = ? AND UserID = ? AND Role = 'admin'";
+                                            $stmt = $conn->prepare($adminCheck);
+                                            $stmt->bind_param('ii', $communityId, $comment['UserID']);
+                                            $stmt->execute();
+                                            $adminResult = $stmt->get_result();
+                                            if ($adminResult->num_rows > 0): ?>
+                                                <span class="admin-badge" style="color: #ff4b4b; font-size: 0.75em; padding: 2px 6px; border: 1px solid #ff4b4b; border-radius: 4px;">Admin</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <p class="comment_timestamp" style="margin: 0; color: #666;"><?= timeAgo($comment['CreatedAt']) ?></p>
                                     </div>
                                 </div>
                                 <p class="commentcontent"><?= $comment['Content'] ?></p>
                             </div>
 
                             <!-- Replies Section -->
-                            <?php $replies = getCommunityRepliesByCommentId($comment['CommentID']); ?>
-                            <?php if ($replies): ?>
+                            <?php 
+                            $replies = getCommunityRepliesByCommentId($comment['CommentID']); 
+                            if ($replies): ?>
                                 <button class="shw" data-comment-id="<?= $comment['CommentID'] ?>">
                                     <p class="icon-label"><img class="reply-icon" src="chats.svg"> replies</p>
                                 </button>
@@ -98,7 +140,21 @@ if (isset($_GET['id'])) {
                                     <?php foreach ($replies as $reply): ?>
                                         <div class="comment-replies">
                                             <img class="comment-reply-author-pfp" src="<?= $reply['ProfilePic'] ?>">
-                                            <p class="comment-reply-content"><strong><?= $reply['Username'] ?>:</strong> <?= $reply['Content'] ?></p>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <strong><?= $reply['Username'] ?></strong>
+                                                <?php
+                                                // Check if replier is an admin
+                                                $stmt = $conn->prepare($adminCheck);
+                                                $stmt->bind_param('ii', $communityId, $reply['UserID']);
+                                                $stmt->execute();
+                                                $adminResult = $stmt->get_result();
+                                                if ($adminResult->num_rows > 0): ?>
+                                                    <span class="admin-badge" style="color: #ff4b4b; font-size: 0.75em; padding: 2px 6px; border: 1px solid #ff4b4b; border-radius: 4px;">(Admin)</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <p class="comment-reply-content">
+                                                : <?= $reply['Content'] ?>
+                                            </p>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -143,7 +199,117 @@ if (isset($_GET['id'])) {
 
     </div>
 
+    <!-- Add Image Modal -->
+    <div id="imageModal" class="image-modal">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <img id="modalImage" class="modal-content">
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoom(1.2)">+</button>
+            <button class="zoom-btn" onclick="zoom(0.8)">-</button>
+            <button class="zoom-btn" onclick="resetZoom()">Reset</button>
+        </div>
+    </div>
+
     <script>
+    let currentZoom = 1;
+    let isDragging = false;
+    let startX, startY, translateX = 0, translateY = 0;
+
+    // Make post images clickable
+    document.querySelectorAll('.post-image-img').forEach(img => {
+        img.style.cursor = 'pointer';
+        img.onclick = function() {
+            openModal(this.src);
+        }
+    });
+
+    function openModal(imgSrc) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        modal.style.display = "block";
+        modalImg.src = imgSrc;
+        resetPosition();
+    }
+
+    // Same functions as above...
+    function closeModal() {
+        document.getElementById('imageModal').style.display = "none";
+        resetPosition();
+    }
+
+    function zoom(factor) {
+        currentZoom *= factor;
+        currentZoom = Math.min(Math.max(0.5, currentZoom), 3);
+        updateTransform();
+    }
+
+    function startDrag(e) {
+        isDragging = true;
+        if (e.type === "mousedown") {
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+        } else if (e.type === "touchstart") {
+            startX = e.touches[0].clientX - translateX;
+            startY = e.touches[0].clientY - translateY;
+        }
+        document.getElementById('modalImage').style.cursor = 'grabbing';
+    }
+
+    function drag(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        
+        const clientX = e.type === "mousemove" ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type === "mousemove" ? e.clientY : e.touches[0].clientY;
+        
+        translateX = clientX - startX;
+        translateY = clientY - startY;
+        
+        updateTransform();
+    }
+
+    function stopDrag() {
+        isDragging = false;
+        document.getElementById('modalImage').style.cursor = 'grab';
+    }
+
+    function resetPosition() {
+        translateX = 0;
+        translateY = 0;
+        currentZoom = 1;
+        updateTransform();
+    }
+
+    function updateTransform() {
+        document.getElementById('modalImage').style.transform = 
+            `scale(${currentZoom}) translate(${translateX}px, ${translateY}px)`;
+    }
+
+    // Event listeners
+    const modalImage = document.getElementById('modalImage');
+    modalImage.addEventListener('mousedown', startDrag);
+    modalImage.addEventListener('touchstart', startDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('touchmove', drag, { passive: false });
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+
+    // Keyboard controls
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeModal();
+        if (e.key === '+' || e.key === '=') zoom(1.2);
+        if (e.key === '-') zoom(0.8);
+        if (e.key === '0') resetPosition();
+    });
+    </script>
+
+    <script>
+        // JavaScript to handle the back button functionality
+        document.getElementById('backButton').addEventListener('click', function() {
+            // Redirect to the community page with the correct community ID
+            window.location.href = 'community_page.php?community_id=<?php echo $communityId; ?>';
+        });
+
         // JavaScript to toggle visibility of elements
         document.getElementById('comments-label').addEventListener('click', function() {
             var icon = document.getElementById('comments-label-icon');
@@ -169,11 +335,6 @@ if (isset($_GET['id'])) {
                 const replies = this.parentNode.querySelector('.replies');
                 replies.style.display = (replies.style.display === 'none' || replies.style.display === '') ? 'block' : 'none';
             });
-        });
-
-        // JavaScript to handle back button functionality
-        document.getElementById('backButton').addEventListener('click', function() {
-            window.history.back();
         });
     </script>
 </body>

@@ -1,14 +1,8 @@
 <?php
 session_start();
 require_once 'functions.php';
+require_once 'changes.php';
 require_once 'notifications_functions.php';
-// Fetch the data
-$topUsers = getTopUsersByTotalLikes();
-$topCommunities = getTopCommunities();
-$userID = getUserIdByUsername($_SESSION['username']); // Assuming user ID is stored in the session
-$notifications = getNotifications($userID);
-
-
 ?>
 
 <!DOCTYPE html>
@@ -23,9 +17,11 @@ $notifications = getNotifications($userID);
     <link rel="stylesheet" href="./css/homepage.css ?v=<?php echo time(); ?>" >
     <link rel="stylesheet" href="./css/navbar.css ?v=<?php echo time(); ?>" >
     <link rel="stylesheet" href="./css/right-sidebar.css ?v=<?php echo time(); ?>" >
+    <link rel="stylesheet" href="./css/notifications.css ?v=<?php echo time(); ?>" >
+    <link rel="stylesheet" href="./css/modal.css ?v=<?php echo time(); ?>" >
 </head>
 
-<body>
+<body></body>
     <ul class="navbar">
         <form class="nav" action="" method="GET" id="searchForm" style="display: flex;">
             <input class="search-input" type="text" id="search" name="search" placeholder="Search a topic..." style="width: 670px;">
@@ -43,30 +39,58 @@ $notifications = getNotifications($userID);
             <button class="search-button" id="searchBtn">Search</button>
         </form>
     </ul>
+
     
+
     <!-- Logo Navigation Bar -->
     <?php include 'navbar.php';?>
     <?php include 'right-sidebar.php';?>
     <!-- Main Content -->
     <div class="container">
         
-    <?php if (isset($_SESSION['username'])): ?>
+    <?php if (isset($_SESSION['username'])): 
+            
+    ?>
+        
 
-        <button class="dropbtn" style="background-color:#007bff;"><a href = "create_post.php" style="text-decoration: none; color:#000000; width:200px; color:#ffffff;">Create post</a></button>
-        <!-- Sort Dropdown -->
-        <div class="dropdown">
+        <div class="filter-row">
+            <?php if (isset($_SESSION['username'])): 
+                if (!checkUserBan()): ?>
+                    <button class="dropbtn" style="background-color:#007bff;">
+                        <a href="create_post.php" style="text-decoration: none; color:#000000; width:200px; color:#ffffff;">Create post</a>
+                    </button>
+                <?php else: ?>
+                    <div class="ban-message" style="color: red; margin: 10px;">
+                        <?php echo checkUserBan(true); ?>
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
 
-            <button class="dropbtn">Sort post by</button>
-
-            <div class="dropdown-content">
-                <a href="?sort=time">Newest</a>
-                <a href="?sort=date">Oldest</a>
-                <a href="?sort=comments">Most Popular</a>
-                <a href="?sort=Bpts">Highest Brilliant Points</a>
+            
+            <div class="dropdown">
+                <button class="dropbtn">Sort post by</button>
+                <div class="dropdown-content">
+                    <a href="?sort=time">Newest</a>
+                    <a href="?sort=date">Oldest</a>
+                    <a href="?sort=comments">Most Popular</a>
+                    <a href="?sort=Bpts">Highest Brilliant Points</a>
+                </div>
             </div>
 
-        </div><br><br>
-
+            <form action="" method="GET" id="filterForm" class="timeframe-filter">
+                <select name="timeframe" id="timeframe" class="filter-select">
+                    <option value="">Time Frame</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                </select>
+                <button type="submit" class="filter-button">Apply</button>
+            </form>
+        </div>
+        <br><br>
+        <!-- Advanced Filter Section -->
+        
         
         <!-- Display Posts -->
         <?php
@@ -81,25 +105,14 @@ $notifications = getNotifications($userID);
                 $posts = getRecentPosts();
             }
 
-            if (isset($_GET['sort'])) {
-                $sort = $_GET['sort'];
-                switch ($sort) {
-                    case 'time':
-                        $posts = getPostsSortedByTime();
-                        break;
-                    case 'date':
-                        $posts = getPostsSortedByDate();
-                        break;
-                    case 'comments':
-                        $posts = getPostsSortedByComments();
-                        break;
-                    case 'Bpts':
-                        $posts = getPostsSortedByBPTS();
-                        break;
-                    default:
-                        $posts = getRecentPosts();
-                        break;
-                }
+            if (isset($_GET['sort']) || isset($_GET['timeframe']) || isset($_GET['tag'])) {
+                $sort = $_GET['sort'] ?? '';
+                $timeframe = $_GET['timeframe'] ?? '';
+                $tag = $_GET['tag'] ?? '';
+                
+                $posts = getFilteredPosts($sort, $timeframe, $tag);
+            } else {
+                $posts = getRecentPosts();
             }
 
 
@@ -170,22 +183,54 @@ $notifications = getNotifications($userID);
 
                             
 
-                            <p class="post_content"><?php echo formatParagraph($post['Content'], 1000, 50); ?></p>
+                            <p class="post_content" style="display:none;"><?php echo formatParagraph($post['Content'], 1000, 50); ?></p>
 
-                            <!-- Check if the post has an image -->
-                            <?php if (!empty($post['PhotoPath'])): ?>
-                                <div class="post-image">
-                                    <img class = "post-image-img" src="<?php echo $post['PhotoPath']; ?>" alt="Post Image">
-                                </div>
+                            <!-- Check if the post has images -->
+                            <?php 
+                                $images = [];
+                                if (!empty($post['PhotoPath'])) {
+                                    // First add the main photo from posts table if it exists
+                                    $images[] = $post['PhotoPath'];
+                                }
+                                
+                                // Then add any additional images from post_images table
+                                $stmt = $conn->prepare("SELECT ImagePath FROM post_images WHERE PostID = ? ORDER BY DisplayOrder");
+                                $stmt->bind_param('i', $post['PostID']);
+                                $stmt->execute();
+                                $imgResult = $stmt->get_result();
+                                
+                                while($img = $imgResult->fetch_assoc()) {
+                                    $images[] = $img['ImagePath'];
+                                }
+                                $stmt->close();
+
+                                if (!empty($images)): ?>
+                                    <div class="post-images-container" data-images="<?php echo htmlspecialchars(implode(',', $images)); ?>">
+                                        <?php foreach($images as $index => $image): ?>
+                                            <div class="post-image-slide <?php echo $index === 0 ? 'active' : ''; ?>">
+                                                <img class="post-image-img" src="<?php echo htmlspecialchars(trim($image)); ?>" alt="Post Image">
+                                            </div>
+                                        <?php endforeach; ?>
+                                        
+                                        <?php if(count($images) > 1): ?>
+                                            <button class="slide-nav prev" data-direction="prev">&lt;</button>
+                                            <button class="slide-nav next" data-direction="next">&gt;</button>
+                                            <div class="image-counter">1/<?php echo count($images); ?></div>
+                                        <?php endif; ?>
+                                        
+                                        <div class="gallery-overlay"></div>
+                                    </div>
                             <?php endif; ?>
 
                             <div class="lik" style="display:flex; padding:10px;">
                                 <form class="like" action="like_post.php" method="POST" style="margin:0;">
                                     <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
                                     <button type="submit" class="like-btn" name="like" style="background-color:transparent; border:none; padding: 10px;">
-                                        <img class="bulb" src="bulb.svg" style="height: 20px; width: 20px; border-radius: 50%; transition: all 0.3s ease;"
-                                        onmouseover="this.style.height='30px'; this.style.width='30px';"
-                                        onmouseout="this.style.height='20px'; this.style.width='20px';">
+                                        <?php if (hasUserLikedPost($post['PostID'], $_SESSION['user_id'])): ?>
+                                            <img class="bulb" src="bulb_active.svg" style="height:20px; width:20px;">
+                                        <?php else: ?>
+                                            <img class="bulb" src="bulb.svg" style="height:20px; width:20px;">
+                                        <?php endif; ?>
                                     </button>
                                 </form>
 
@@ -207,6 +252,8 @@ $notifications = getNotifications($userID);
                                         <p class="like-count" style="display:flex; align-self:center; color:#007bff; margin-left:5px;">See discussion</p>
                                     </a>
                                 </button>
+
+            
 
                             </div>
 
@@ -233,6 +280,17 @@ $notifications = getNotifications($userID);
     </div>
 
     
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal">
+        <span class="close-modal" title="Close">&times;</span>
+        <button class="nav-btn prev-btn" title="Previous">&lt;</button>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="Modal Image" draggable="false">
+        </div>
+        <button class="nav-btn next-btn" title="Next">&gt;</button>
+        <div class="image-counter"></div>
+    </div>
 
     <!-- JavaScript -->
     <script>
@@ -261,6 +319,7 @@ $notifications = getNotifications($userID);
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="./javascripts/index.js"></script>
+    <script src="./javascripts/modal.js"></script>
 
 </body>
 

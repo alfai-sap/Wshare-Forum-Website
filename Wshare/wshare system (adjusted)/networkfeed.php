@@ -36,6 +36,7 @@ $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
     <link rel = "stylesheet" href="./css/networkfeed.css ?v=<?php echo time(); ?>">
     <link rel = "stylesheet" href="./css/navbar.css ?v=<?php echo time(); ?>">
     <link rel = "stylesheet" href="./css/left-navbar.css ?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="./css/notifications.css  ?v=<?php echo time(); ?>">
     
 </head>
 <body>
@@ -97,16 +98,24 @@ $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
                     </div>
 
                     
-                    <h3 class="post_title"><?php echo $post['Title']; ?></h3>
+                    <h3 class="post_title" ><?php echo $post['Title']; ?></h3>
                     
 
                     <p class="post_content"><?php echo $post['Content']; ?></p>
 
+                    <?php if (!empty($post['PhotoPath'])):?>
+                    <img src="<?php echo $post['PhotoPath']; ?>" alt="Post Image" class="post-image" style = "width:100%; height:100%;">
+                    <?php endif; ?>
                     <div class="lik" style = "display:flex; padding:10px;">
-
                         <form class="like" action="like_post.php" method="POST" style = "margin:0;">
                             <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
-                            <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="bulb.svg" style = "height:20px; width:20px;"></button>
+                            <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 10px;">
+                                <?php if (hasUserLikedPost($post['PostID'], $user_id)): ?>
+                                    <img class="bulb" src="bulb_active.svg" style = "height:20px; width:20px;">
+                                <?php else: ?>
+                                    <img class="bulb" src="bulb.svg" style = "height:20px; width:20px;">
+                                <?php endif; ?>
+                            </button>
                         </form>
 
                         <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>

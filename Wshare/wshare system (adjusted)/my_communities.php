@@ -7,7 +7,7 @@ if (!isset($_SESSION['username'])) {
     header('Location: login.php'); // Redirect to login page if not logged in
     exit;
 }
-
+require_once 'notifications_functions.php'; //
 // Fetch user ID
 $username = $_SESSION['username'];
 $userID = getUserIdByUsername($username); // You should define this function in `functions.php`
@@ -57,7 +57,7 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="./css/navbar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/left-navbar.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/communities.css?v=<?php echo time(); ?>">
-
+    <link rel="stylesheet" href="./css/right-sidebar.css?v=<?php echo time(); ?>">
 </head>
 <body>
 
@@ -72,11 +72,11 @@ $result = $stmt->get_result();
     </ul>
 
     <?php include 'navbar.php';?>
-
+    <?php include 'right-sidebar.php';?>
     
 
     <div class="container">
-        <h1>My Communities</h1>
+        <br><br><br><br>
         
         <!-- Filter Links for Sorting -->
         <div class="filter-links">

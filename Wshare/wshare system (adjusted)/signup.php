@@ -1,3 +1,19 @@
+<?php
+require_once 'functions.php'; // Include the file that contains the getAllSettings function
+session_start();
+$errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : [];
+$old_input = isset($_SESSION['old_input']) ? $_SESSION['old_input'] : [];
+
+$settings = getAllSettings();
+$allowRegistration = $settings['allow_registration'] ?? '1';
+
+if (isset($errors['general'])) {
+    echo '<div class="error-messages"><p>' . $errors['general'] . '</p></div>';
+}
+// Clear the session data after displaying
+unset($_SESSION['errors']);
+unset($_SESSION['old_input']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,20 +27,11 @@
 <div class="container">
     <h1>Sign Up</h1>
 
-    <?php
-    session_start();
-    $errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : [];
-    $old_input = isset($_SESSION['old_input']) ? $_SESSION['old_input'] : [];
+    <?php if ($allowRegistration == '0'): ?>
+        <div class="alert alert-warning">Registration is currently unavailable. Please try again later.</div>
+    <?php endif; ?>
 
-    if (isset($errors['general'])) {
-        echo '<div class="error-messages"><p>' . $errors['general'] . '</p></div>';
-    }
-    // Clear the session data after displaying
-    unset($_SESSION['errors']);
-    unset($_SESSION['old_input']);
-    ?>
-
-    <form action="signup_process.php" method="POST">
+    <form action="signup_process.php" method="POST" <?php echo $allowRegistration == '0' ? 'style="display:none;"' : ''; ?>>
         <div>
             <?php if (isset($errors['username'])): ?>
                 <span class="error"><?php echo $errors['username']; ?></span>

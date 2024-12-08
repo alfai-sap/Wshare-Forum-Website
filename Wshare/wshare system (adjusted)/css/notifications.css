@@ -1,0 +1,110 @@
+.notifications-container {
+    width: 800px;
+    margin-left: 600px; /* Adjusted to account for left navbar width */
+    
+    padding: 20px;
+    background-color: #fff;
+    min-height: calc(100vh - 40px);
+}
+
+.notification-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.notification-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.notification-item.unseen {
+    background-color: #f0f7ff;
+    border-left: 4px solid #007bff;
+}
+
+.notification-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-content p {
+    margin: 0;
+    color: #333;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.notification-content a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.notification-content a:hover {
+    text-decoration: underline;
+}
+
+.notification-content strong {
+    color: #0056b3;
+}
+
+.notification-time {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.no-notifications {
+    text-align: center;
+    color: #666;
+    padding: 30px;
+    font-size: 16px;
+}
+
+.notification-badge {
+    position: relative;
+    top: -8px;
+    right: -8px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 40%;
+    padding: 2px 6px;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 15px;
+    height: 20px;
+}
+
+h1 {
+    color: #007bff;
+    margin-bottom: 30px;
+    font-size: 24px;
+}
+
+@media screen and (max-width: 1200px) {
+    .notifications-container {
+        width: calc(100% - 340px);
+        margin-left: 280px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .notifications-container {
+        width: 100%;
+        margin-left: 0;
+        padding: 10px;
+    }
+}

@@ -1,5 +1,4 @@
-
-    <!-- Logo Navigation Bar -->
+<!-- Logo Navigation Bar -->
     <ul class="logo-navbar">
 
         <li><button id="logo-nav" class="logo-nav"><img class="toggle-icon" src="menu.svg"></button></li>
@@ -39,6 +38,7 @@
 
         </li>
 
+        <hr />
         <li>
             <a href="index.php">
 
@@ -55,7 +55,7 @@
 
                 <div class="left-nav">
                     <img class="icons" src="chats2.svg">
-                    <p class="label_nav">Collaboration Hubs</p>
+                    <p class="label_nav">Community Hubs</p>
                 </div>
 
             </a>
@@ -66,7 +66,7 @@
 
                 <div class="left-nav">
                     <img class="icons" src="searchpeople.svg">
-                    <p class="label_nav">Find connections</p>
+                    <p class="label_nav">Search user</p>
                 </div>
 
             </a>
@@ -77,7 +77,7 @@
 
                 <div class="left-nav">
                     <img class="icons" src="networkfeed.svg">
-                    <p class="label_nav">Posts from Connections</p>
+                    <p class="label_nav">Posts from Network</p>
                 </div>
 
             </a>
@@ -95,6 +95,67 @@
         </li>
 
         
+
+        <li>
+            <a href="#">
+
+                <div class="left-nav">
+                    <img class="icons" src="library.svg">
+                    <p class="label_nav">Course Library</p>
+                </div>
+
+            </a>
+        </li>
+
+        <hr />
+
+        <li>
+            <a href="notifications.php">
+                <div class="left-nav">
+                    <img class="icons" src="notif.svg">
+                    <p class="label_nav">Notifications</p>
+                    <?php if ($notificationCount = getUnreadNotificationCount($_SESSION['user_id'])): ?>
+                        <span class="notification-badge"><?php echo $notificationCount; ?></span>
+                    <?php endif; ?>
+                </div>
+            </a>
+        </li>
+
+        <li>
+            <a href="#">
+
+                <div class="left-nav">
+                    <img class="icons" src="review.svg">
+                    <p class="label_nav">Feedback</p>
+                </div>
+
+            </a>
+        </li>
+
+        <li>
+            <a href="settings.php">
+
+                <div class="left-nav">
+                    <img class="icons" src="settings.svg">
+                    <p class="label_nav">Settings</p>
+                </div>
+
+            </a>
+        </li>
+        
+        <?php
+        // Check if user is admin
+        $currentUser = getUserByUsername($_SESSION['username']);
+        if (isset($currentUser['IsAdmin']) && $currentUser['IsAdmin'] == 1): ?>
+            <li>
+                <a href="../admin wshare (adjusted)/admin/dashboard.php">  <!-- Updated path -->
+                    <div class="left-nav">
+                        <img class="icons" src="admin-dashboard.svg">
+                        <p class="label_nav">Admin Dashboard</p>
+                    </div>
+                </a>
+            </li>
+        <?php endif; ?>
 
         <li>
             <a href="logout.php">

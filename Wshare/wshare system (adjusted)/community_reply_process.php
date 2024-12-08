@@ -4,7 +4,7 @@ require_once 'functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_SESSION['username'])) {
-        echo 'Please login to reply.';
+        echo '<script>alert("Please login to reply.");</script>';
         exit;
     }
 
@@ -15,10 +15,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = insertCommunityReply($comment_id, $user_id, $content);
 
     if ($result) {
-        header("Location: " . $_SERVER['HTTP_REFERER']);
+        echo '<script>alert("Reply submitted successfully."); window.location.href = "' . $_SERVER['HTTP_REFERER'] . '";</script>';
         exit();
     } else {
-        echo 'Failed to submit reply.';
+        echo '<script>alert("Failed to submit reply.");</script>';
     }
 }
 ?>

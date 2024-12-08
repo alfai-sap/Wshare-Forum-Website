@@ -1,6 +1,9 @@
-
-
-
+<?php
+require_once 'functions.php'; // Include the file that contains the getAllSettings function
+session_start();
+$settings = getAllSettings();
+$maintenanceMode = $settings['maintenance_mode'] ?? '0';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,16 +19,18 @@
         <h1>Login</h1><br><br>
 
         <?php
-            session_start();
             if (isset($_SESSION['login_error'])) {
                 echo '<div class="error">' . $_SESSION['login_error'] . '</div><br>';
                 unset($_SESSION['login_error']);
             }
         ?>
 
-        <form action="login_process.php" method="POST">
-            <input type="text" id="username" name="username" placeholder="username..." required><br><br>
-            <input type="password" id="password" name="password" placeholder="password..." required><br><br>
+        <?php if ($maintenanceMode == '1'): ?>
+            <div class="alert alert-warning">The system is currently in maintenance mode. Please try again later.</div>
+        <?php endif; ?>
+        <form action="login_process.php" method="POST" <?php echo $maintenanceMode == '1' ? 'style="display:none;"' : ''; ?>>
+            <input type="text" id="username" name="username" placeholder="username..."><br><br>
+            <input type="password" id="password" name="password" placeholder="password..."><br><br>
             <input class="btn" type="submit" value="Login">
         </form>
 

@@ -1,5 +1,6 @@
 <?php
 require_once 'functions.php';
+require_once 'changes.php';
 session_start();
 
 // Check if user is logged in
@@ -84,14 +85,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <p class="email"><b><?php echo $userview['Email']; ?></b></p>
     <p class = "Profile-joined" style = "font-size:small; margin-left:10px;"><b><?php echo "Joined ". timeAgo($userview['JoinedAt']); ?></p>
     
-    <?php if($_SESSION['username'] != $userview['Username']){ ?>
-    <form action="" method="POST">
-        <input type="hidden" name="action" value="<?php echo $buttonAction; ?>">
-        <button type="submit" class="<?php echo $isFollowing ? 'follow-btn unfollow' : 'follow-btn'; ?>">
-            <?php echo $buttonText; ?>
-        </button>
-    </form>
-    <?php }?>
+    <?php if($_SESSION['username'] != $userview['Username']){ 
+        if (!checkUserBan()){ ?>
+            <form action="" method="POST">
+                <input type="hidden" name="action" value="<?php echo $buttonAction; ?>">
+                <button type="submit" class="<?php echo $isFollowing ? 'follow-btn unfollow' : 'follow-btn'; ?>">
+                    <?php echo $buttonText; ?>
+                </button>
+            </form>
+        <?php } else { ?>
+            <div class="ban-message" style="color: red; margin: 10px;">
+                <?php echo checkUserBan(true); ?>
+            </div>
+        <?php } 
+    }?>
 
     <br>
     <br>
@@ -109,7 +116,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <li style="list-style: none;">
                     
                         <div class="post">
-
+                            <?php if (hasUserLikedPost($post['PostID'], $_SESSION['user_id'])): ?>
+                                <div class="liked-message" style="background-color: #e0f7fa; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                                    <p style="margin: 0; color: #00796b;">You liked this post on <?php echo date('F j, Y', strtotime(getLikeDate($post['PostID'], $_SESSION['user_id']))); ?></p>
+                                </div>
+                            <?php endif; ?>
                             <div class="pic_user" style = "display:flex;">
 
                                 <div class="user_post_info">
@@ -130,10 +141,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <p class="post_content"><?php echo $post['Content']; ?></p>
 
                             <div class="lik" style = "display:flex;">
-
-                                <form class="like" action="like_post.php" method="POST" style = "margin:0;">
+                                <form class="like" action="like_post.php" method="POST">
                                     <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
-                                    <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 5px;"><img class="bulb" src="bulb.svg" style = "height:25px; width:25px;"></button>
+                                    <button type="submit" class="like-btn" name="like" style="background-color:transparent; border:none; padding: 10px;">
+                                        <?php if (hasUserLikedPost($post['PostID'],  $_SESSION['user_id'])): ?>
+                                            <img class="bulb" src="bulb_active.svg" style="height:20px; width:20px;">
+                                        <?php else: ?>
+                                            <img class="bulb" src="bulb.svg" style="height:20px; width:20px;">
+                                        <?php endif; ?>
+                                    </button>
                                 </form>
 
                                 <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
@@ -156,6 +172,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Follow/Unfollow button -->
     
 
+</div>
+
+<!-- Add Image Modal -->
+<div id="imageModal" class="image-modal">
+    <span class="close-modal" onclick="closeModal()">&times;</span>
+    <img id="modalImage" class="modal-content">
+    <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoom(1.2)">+</button>
+        <button class="zoom-btn" onclick="zoom(0.8)">-</button>
+        <button class="zoom-btn" onclick="resetZoom()">Reset</button>
+    </div>
 </div>
 
 <script>
@@ -193,5 +220,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="./javascripts/index.js"></script>
+
+<script>
+// Same JavaScript code as above for view_post.php
+let currentZoom = 1;
+let isDragging = false;
+let startX, startY, translateX = 0, translateY = 0;
+
+// Make post images clickable 
+document.querySelectorAll('.post-image-img').forEach(img => {
+    img.style.cursor = 'pointer';
+    img.onclick = function() {
+        openModal(this.src);
+    }
+});
+
+// Add the rest of the JavaScript functions and event listeners as shown above
+// ...
+</script>
+
 </body>
 </html>

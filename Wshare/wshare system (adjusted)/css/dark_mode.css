@@ -1,0 +1,89 @@
+body.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+body.dark-mode a {
+    color: #bb86fc;
+}
+
+body.dark-mode .container {
+    background-color: #1e1e1e;
+}
+
+body.dark-mode .left-navbar, body.dark-mode .logo-navbar {
+    background-color: #1e1e1e;
+}
+
+body.dark-mode .left-nav, body.dark-mode .logo-nav {
+    color: #e0e0e0;
+}
+
+body.dark-mode .left-nav img, body.dark-mode .logo-nav img {
+    filter: invert(1);
+}
+
+body.dark-mode input, body.dark-mode textarea {
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #444;
+}
+
+body.dark-mode input[type="submit"], body.dark-mode button {
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #444;
+}
+
+body.dark-mode input[type="checkbox"] {
+    background-color: #333;
+    border-color: #444;
+}
+
+body.dark-mode .notification-badge {
+    background-color: #bb86fc;
+    color: #121212;
+}
+
+/* Additional dark mode styles for all user pages */
+body.dark-mode .post {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+body.dark-mode .comments {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+body.dark-mode .settings-container {
+    background-color: #1e1e1e;
+    box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .settings-option label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .profile-container {
+    background-color: #1e1e1e;
+}
+
+body.dark-mode .community-container {
+    background-color: #1e1e1e;
+}
+
+/* Add dark mode styles for all interactive elements */
+body.dark-mode .btn,
+body.dark-mode .button,
+body.dark-mode .submit-btn {
+    background-color: #333;
+    color: #e0e0e0;
+    border-color: #444;
+}
+
+body.dark-mode .btn:hover,
+body.dark-mode .button:hover,
+body.dark-mode .submit-btn:hover {
+    background-color: #444;
+}

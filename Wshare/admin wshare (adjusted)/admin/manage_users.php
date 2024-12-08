@@ -1,6 +1,7 @@
 <?php
 include 'dashFunctions.php'; // Include your database functions
 
+
 // Handle CRUD operations
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_user'])) {
@@ -9,6 +10,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         updateUser($_POST['user_id'], $_POST['username'], $_POST['email']);
     } elseif (isset($_POST['delete_user'])) {
         deleteUser($_POST['user_id']);
+    }
+}
+
+// Handle ban submission
+if (isset($_POST['ban_user'])) {
+    $userID = $_POST['user_id'];
+    $reason = $_POST['ban_reason'];
+    $duration = $_POST['ban_duration'];
+    $adminID = $_SESSION['admin_id']; // Make sure you have admin's session
+
+    if (banUser($userID, $adminID, $reason, $duration)) {
+        $success = "User has been banned successfully.";
+    } else {
+        $error = "Failed to ban user.";
+    }
+}
+
+// Handle unban
+if (isset($_POST['unban_user'])) {
+    $userID = $_POST['user_id'];
+    if (unbanUser($userID)) {
+        $success = "User has been unbanned successfully.";
+        // Stay on the same page after unbanning
+        header("Location: ".$_SERVER['PHP_SELF']);
+        exit();
+    } else {
+        $error = "Failed to unban user.";
     }
 }
 
@@ -24,7 +52,6 @@ if (isset($_POST['search'])) {
 // Fetch all users for display or filter based on search term
 $users = getUsersBySearch($searchTerm);
 
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,6 +60,138 @@ $users = getUsersBySearch($searchTerm);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Users</title>
     <link rel="stylesheet" href="dashboard.css?v=<?php echo time(); ?>">
+    <style>
+        .ban-modal {
+            height: 500px;
+            width: 800px;
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .ban-modal h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .ban-modal .form-group {
+            margin-bottom: 15px;
+        }
+        .ban-modal label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .ban-modal select,
+        .ban-modal textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .ban-modal textarea {
+            resize: vertical;
+            height: 100px;
+        }
+        .ban-modal button {
+            margin-top: 10px;
+        }
+        .ban-history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .ban-history-table th,
+        .ban-history-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .ban-history-table th {
+            background-color: #007bff;
+        }
+
+        .active-ban {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .expired-ban {
+            color: #6c757d;
+        }
+
+        .btn-info, .btn-success, .btn-warning, .btn-danger, .btn-secondary {
+            color: white;
+            border: none;
+            margin: 10;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-warning {
+            background-color: #dc3545; /* Change to red */
+            color: white; /* Change text color to white */
+        }
+
+        .btn-warning:hover {
+            background-color: #c82333; /* Darker red on hover */
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .inline-form button {
+            margin-right: 5px;
+        }
+    </style>
 </head>
 <body>
 
@@ -71,14 +230,28 @@ $users = getUsersBySearch($searchTerm);
                 <th>Username</th>
                 <th>Email</th>
                 <th>Date Joined</th>
+                <th>Status</th>
                 <th>Actions</th>
+                <th>Ban History</th> <!-- New column -->
+                <th>Manage</th> <!-- New column for buttons -->
             </tr>
-            <?php foreach ($users as $user) { ?>
+            <?php foreach ($users as $user) { 
+                $banInfo = isUserBanned($user['UserID']);
+                $banHistory = getUserBanHistory($user['UserID']);
+            ?>
             <tr>
                 <td><?php echo $user['UserID']; ?></td>
                 <td><?php echo $user['Username']; ?></td>
                 <td><?php echo $user['Email']; ?></td>
-                <td><?php echo $user['dateJoined']; ?></td>
+                <td><?php echo timeAgo($user['JoinedAt']); ?></td>
+                <td>
+                    <?php if ($banInfo): ?>
+                        <span class="badge badge-danger">Banned until <?php echo date('Y-m-d', strtotime($banInfo['BanEnd'])); ?></span>
+                    <?php else: ?>
+                        <span class="badge badge-success">Active</span>
+                    <?php endif; ?>
+                </td>
+                
                 <td>
                     <!-- Update Form -->
                     <form method="POST" class="inline-form">
@@ -87,18 +260,116 @@ $users = getUsersBySearch($searchTerm);
                         <input type="email" name="email" value="<?php echo $user['Email']; ?>" required>
                         <button type="submit" name="update_user">Update</button>
                     </form>
+                </td>
+                <td>
+                    
 
                     <!-- Delete Form -->
                     <form method="POST" class="inline-form">
                         <input type="hidden" name="user_id" value="<?php echo $user['UserID']; ?>">
                         <button type="submit" name="delete_user" onclick="return confirm('Are you sure?')">Delete</button>
                     </form>
+
+                    <?php if ($banInfo): ?>
+                        <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to unban this user?');">
+                            <input type="hidden" name="user_id" value="<?php echo $user['UserID']; ?>">
+                            <button type="submit" name="unban_user" class="btn btn-success">Unban</button>
+                        </form>
+                    <?php else: ?>
+                        <button onclick="showBanModal(<?php echo $user['UserID']; ?>)" class="btn btn-warning">Ban</button>
+                    <?php endif; ?>
+                </td>
+
+                <td>
+                    <button onclick="showBanHistory(<?php echo htmlspecialchars(json_encode($banHistory)); ?>)" class="btn btn-info">
+                        View History (<?php echo count($banHistory); ?>)
+                    </button>
                 </td>
             </tr>
             <?php } ?>
         </table>
     </div>
 </div>
+
+<!-- Ban Modal -->
+<div id="banModal" class="ban-modal">
+    <h2>Ban User</h2>
+    <form method="POST">
+        <input type="hidden" name="user_id" id="banUserId">
+        <div class="form-group">
+            <label for="ban_duration">Ban Duration (days):</label>
+            <select name="ban_duration" id="ban_duration" required>
+                <option value="1">1 day</option>
+                <option value="3">3 days</option>
+                <option value="7">1 week</option>
+                <option value="30">1 month</option>
+                <option value="90">3 months</option>
+                <option value="365">1 year</option>
+                <option value="36500">Permanent</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="ban_reason">Reason:</label>
+            <textarea name="ban_reason" id="ban_reason" required></textarea>
+        </div>
+        <button type="submit" name="ban_user" class="btn btn-danger">Ban User</button>
+        <button type="button" onclick="hideBanModal()" class="btn btn-secondary">Cancel</button>
+    </form>
+</div>
+<div id="modalBackdrop" class="modal-backdrop"></div>
+
+<!-- Add Ban History Modal -->
+<div id="banHistoryModal" class="ban-modal">
+    <h2>Ban History</h2>
+    <div id="banHistoryContent"></div>
+    <button type="button" onclick="hideBanHistoryModal()" class="btn btn-secondary">Close</button>
+</div>
+
+<script>
+function showBanModal(userId) {
+    document.getElementById('banUserId').value = userId;
+    document.getElementById('banModal').style.display = 'block';
+    document.getElementById('modalBackdrop').style.display = 'block';
+}
+
+function hideBanModal() {
+    document.getElementById('banModal').style.display = 'none';
+    document.getElementById('modalBackdrop').style.display = 'none';
+}
+
+function showBanHistory(history) {
+    const modal = document.getElementById('banHistoryModal');
+    const content = document.getElementById('banHistoryContent');
+    
+    let html = '<table class="ban-history-table">';
+    html += '<tr><th>Date</th><th>Duration</th><th>Reason</th><th>Banned By</th><th>Status</th></tr>';
+    
+    history.forEach(ban => {
+        const banStart = new Date(ban.BanStart).toLocaleDateString();
+        const banEnd = new Date(ban.BanEnd).toLocaleDateString();
+        const isActive = ban.IsActive == 1 ? 'Active' : 'Expired';
+        const statusClass = ban.IsActive == 1 ? 'active-ban' : 'expired-ban';
+        
+        html += `<tr>
+            <td>${banStart}</td>
+            <td>${banStart} to ${banEnd}</td>
+            <td>${ban.BanReason}</td>
+            <td>${ban.BannedByUsername}</td>
+            <td class="${statusClass}">${isActive}</td>
+        </tr>`;
+    });
+    
+    html += '</table>';
+    content.innerHTML = html;
+    modal.style.display = 'block';
+    document.getElementById('modalBackdrop').style.display = 'block';
+}
+
+function hideBanHistoryModal() {
+    document.getElementById('banHistoryModal').style.display = 'none';
+    document.getElementById('modalBackdrop').style.display = 'none';
+}
+</script>
 
 </body>
 </html>

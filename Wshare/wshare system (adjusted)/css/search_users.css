@@ -26,13 +26,12 @@ form {
 }
 
 body {
-    font-family: inter;
     background-color: #f9f9f9;
 }
 
 .container {
     margin-top: 100px; /* Adjust as needed based on navbar height */
-    width: 1024px;
+    width: 1000px;
     margin: 0 auto;
     padding: 20px;
     background-color: transparent;
@@ -40,9 +39,9 @@ body {
 }
 
 .search-result {
-    padding: 20px;
+    padding: 10px;
     background-color: #ffffff;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     border-radius: 10px;
     transition: 0.2s ease-in-out;
 }
@@ -52,18 +51,18 @@ body {
 }
 
 .search-result:hover{
-    background-color: #e1ebed;
+    background-color: #f1f1f1;
 }
 
 strong {
-    color: #007bff;
+    color: #0056b3;
 }
 
 .view_profile {
     margin-top: 70px;
     justify-self: center;
     text-decoration: none;
-    color: #007bff;
+    color: #0056b3;
 }
 
 .prof_uname {
@@ -72,8 +71,8 @@ strong {
 }
 
 .prof_pic {
-    width: 70px;
-    height: 70px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
 }
 

@@ -46,7 +46,10 @@ function createUser($username, $email, $password) {
 //also a function to get user's username
 function getUserByUsername($username) {
     global $conn;
-    $sql = "SELECT * FROM Users u LEFT JOIN userprofiles up ON u.UserID = up.UserID WHERE Username = ?";
+    $sql = "SELECT u.*, up.Fullname, up.Bio, up.ProfilePic, u.IsAdmin, u.JoinedAt 
+            FROM Users u 
+            LEFT JOIN userprofiles up ON u.UserID = up.UserID 
+            WHERE Username = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -92,6 +95,70 @@ function isEmailUnique($email) {
 }
 
 
+function getCommentById($commentId) {
+    global $conn;  // Assuming you have a global database connection
+
+    // First, try to get the comment from the main comments table
+    $query = "SELECT c.*, u.Username 
+              FROM comments c 
+              JOIN users u ON c.UserID = u.UserID 
+              WHERE c.CommentID = ?";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $commentId);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc();
+    }
+    
+    // If not found in main comments, check community comments
+    $query = "SELECT cc.*, u.Username 
+              FROM community_comments cc 
+              JOIN users u ON cc.UserID = u.UserID 
+              WHERE cc.CommentID = ?";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $commentId);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc();
+    }
+    
+    return null;
+}
+
+function getUserById($userId) {
+    global $conn;  // Assuming you have a global database connection
+
+    // Fetch user details with associated profile information
+    $query = "SELECT u.*, up.Fullname, up.Bio, up.ProfilePic 
+              FROM users u 
+              LEFT JOIN userprofiles up ON u.UserID = up.UserID 
+              WHERE u.UserID = ?";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        
+        // Remove sensitive information like password
+        unset($user['Password']);
+        
+        return $user;
+    }
+    
+    return null;
+}
 
 //search posts
 function searchPosts($search) {
@@ -698,9 +765,18 @@ function getUserBio($username) {
 
 // Fetch posts from followed users
 function getPostsFromFollowedUsers($user_id, $conn) {
-    $sql = "SELECT posts.PostID, posts.UserID, posts.Title, posts.Content, posts.CreatedAt, posts.UpdatedAt, users.Username 
+    $sql = "SELECT 
+                posts.PostID, 
+                up.ProfilePic, 
+                posts.UserID, 
+                posts.Title, 
+                posts.Content, 
+                posts.CreatedAt, 
+                posts.UpdatedAt, 
+                users.Username 
             FROM posts
             JOIN users ON posts.UserID = users.UserID
+            JOIN userprofiles up ON users.UserID = up.UserID
             JOIN follows ON posts.UserID = follows.FollowingID
             WHERE follows.FollowerID = ?";
     
@@ -710,11 +786,21 @@ function getPostsFromFollowedUsers($user_id, $conn) {
     return $stmt->get_result();
 }
 
+
 // Fetch posts from users who are following the current user
 function getPostsFromFollowers($user_id, $conn) {
-    $sql = "SELECT posts.PostID, posts.UserID, posts.Title, posts.Content, posts.CreatedAt, posts.UpdatedAt, users.Username 
+    $sql = "SELECT 
+                posts.PostID, 
+                up.ProfilePic, 
+                posts.UserID, 
+                posts.Title, 
+                posts.Content, 
+                posts.CreatedAt, 
+                posts.UpdatedAt, 
+                users.Username 
             FROM posts
             JOIN users ON posts.UserID = users.UserID
+            JOIN userprofiles up ON users.UserID = up.UserID
             JOIN follows ON posts.UserID = follows.FollowerID
             WHERE follows.FollowingID = ?";
     
@@ -723,6 +809,7 @@ function getPostsFromFollowers($user_id, $conn) {
     $stmt->execute();
     return $stmt->get_result();
 }
+
 
 function getPostsSortedByTime() {
     global $conn;
@@ -803,11 +890,106 @@ function getPostsSortedByBPTS() {
     return $posts;
 }
 
+function getFilteredPosts($sort = '', $timeframe = '', $tag = '') {
+    global $conn;
+    
+    $sql = "SELECT DISTINCT p.*, u.Username, 
+            COUNT(DISTINCT l.LikeID) as like_count,
+            COUNT(DISTINCT c.CommentID) as comment_count
+            FROM Posts p
+            LEFT JOIN Users u ON p.UserID = u.UserID
+            LEFT JOIN Likes l ON p.PostID = l.PostID
+            LEFT JOIN Comments c ON p.PostID = c.PostID";
+
+    // Add tag filtering if specified
+    if (!empty($tag)) {
+        $sql .= " LEFT JOIN post_tags pt ON p.PostID = pt.PostID
+                  LEFT JOIN tags t ON pt.TagID = t.TagID
+                  WHERE t.TagName = ?";
+    }
+
+    // Add timeframe filtering
+    $timeframeClause = "";
+    switch ($timeframe) {
+        case 'today':
+            $timeframeClause = " AND DATE(p.CreatedAt) = CURDATE()";
+            break;
+        case 'week':
+            $timeframeClause = " AND p.CreatedAt >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
+            break;
+        case 'month':
+            $timeframeClause = " AND p.CreatedAt >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+            break;
+        case 'year':
+            $timeframeClause = " AND p.CreatedAt >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+            break;
+    }
+    
+    if (!empty($timeframeClause)) {
+        $sql .= empty($tag) ? " WHERE 1=1" . $timeframeClause : $timeframeClause;
+    }
+
+    $sql .= " GROUP BY p.PostID";
+
+    // Add sorting
+    switch ($sort) {
+        case 'time':
+            $sql .= " ORDER BY p.CreatedAt DESC";
+            break;
+        case 'date':
+            $sql .= " ORDER BY p.CreatedAt ASC";
+            break;
+        case 'comments':
+            $sql .= " ORDER BY comment_count DESC";
+            break;
+        case 'Bpts':
+            $sql .= " ORDER BY like_count DESC";
+            break;
+        case 'popular':
+            $sql .= " ORDER BY (like_count + comment_count) DESC";
+            break;
+        case 'trending':
+            $sql .= " AND p.CreatedAt >= DATE_SUB(NOW(), INTERVAL 1 WEEK)
+                     ORDER BY (like_count + comment_count) DESC";
+            break;
+        default:
+            $sql .= " ORDER BY p.CreatedAt DESC";
+    }
+
+    $stmt = $conn->prepare($sql);
+    if (!empty($tag)) {
+        $stmt->bind_param("s", $tag);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function getPostEngagementScore($postId) {
+    global $conn;
+    
+    $sql = "SELECT 
+            (COUNT(DISTINCT l.LikeID) * 1.5 + COUNT(DISTINCT c.CommentID)) as engagement_score
+            FROM Posts p
+            LEFT JOIN Likes l ON p.PostID = l.PostID
+            LEFT JOIN Comments c ON p.PostID = c.PostID
+            WHERE p.PostID = ?
+            GROUP BY p.PostID";
+            
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $postId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    
+    return $row['engagement_score'] ?? 0;
+}
 
 // Function to handle like/unlike actions
-function toggleLike($postID, $userID){
+function toggleLike($postID, $userID) {
     global $conn;
-
+    
     // Check if the user already liked the post
     $query = "SELECT * FROM Likes WHERE PostID = ? AND UserID = ?";
     $stmt = $conn->prepare($query);
@@ -815,24 +997,99 @@ function toggleLike($postID, $userID){
     $stmt->execute();
     $result = $stmt->get_result();
 
-    // If the user already liked the post, unlike it
     if ($result->num_rows > 0) {
+        // Unlike the post
         $query = "DELETE FROM Likes WHERE PostID = ? AND UserID = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("ii", $postID, $userID);
         $stmt->execute();
+        return getLikeCount($postID);
     } else {
-        // If the user hasn't liked the post, like it
+        // Like the post
         $query = "INSERT INTO Likes (PostID, UserID) VALUES (?, ?)";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("ii", $postID, $userID);
         $stmt->execute();
-    }
 
-    // Get the updated like count for the post
-    return getLikeCount($postID);
+        // Get post owner information and post details
+        $postQuery = "SELECT p.UserID, p.Title, u.Username 
+                     FROM Posts p 
+                     JOIN Users u ON p.UserID = u.UserID 
+                     WHERE p.PostID = ?";
+        $stmt = $conn->prepare($postQuery);
+        $stmt->bind_param("i", $postID);
+        $stmt->execute();
+        $postResult = $stmt->get_result();
+        $postData = $postResult->fetch_assoc();
+
+        // Get liker's username
+        $likerQuery = "SELECT Username FROM Users WHERE UserID = ?";
+        $stmt = $conn->prepare($likerQuery);
+        $stmt->bind_param("i", $userID);
+        $stmt->execute();
+        $likerResult = $stmt->get_result();
+        $likerData = $likerResult->fetch_assoc();
+
+        // Create notification for post owner
+        if ($postData['UserID'] != $userID) { // Don't notify if user likes their own post
+            $postTitle = strlen($postData['Title']) > 30 ? 
+                        substr($postData['Title'], 0, 30) . '...' : 
+                        $postData['Title'];
+            
+            $content = sprintf(
+                '%s liked your post "%s"',
+                htmlspecialchars($likerData['Username']),
+                htmlspecialchars($postTitle)
+            );
+            
+            createNotification($postData['UserID'], $userID, 'like', $content, $postID);
+        }
+
+        return getLikeCount($postID);
+    }
 }
 
+// Optional: Add more notification types for different activities
+function createCommentNotification($postID, $commentUserID, $comment) {
+    global $conn;
+    
+    // Get post owner and post details
+    $postQuery = "SELECT p.UserID, p.Title, u.Username 
+                 FROM Posts p 
+                 JOIN Users u ON p.UserID = u.UserID 
+                 WHERE p.PostID = ?";
+    $stmt = $conn->prepare($postQuery);
+    $stmt->bind_param("i", $postID);
+    $stmt->execute();
+    $postData = $stmt->get_result()->fetch_assoc();
+    
+    // Get commenter's username
+    $commenterQuery = "SELECT Username FROM Users WHERE UserID = ?";
+    $stmt = $conn->prepare($commenterQuery);
+    $stmt->bind_param("i", $commentUserID);
+    $stmt->execute();
+    $commenterData = $stmt->get_result()->fetch_assoc();
+    
+    if ($postData['UserID'] != $commentUserID) {
+        $postTitle = strlen($postData['Title']) > 30 ? 
+                    substr($postData['Title'], 0, 30) . '...' : 
+                    $postData['Title'];
+        
+        $commentPreview = strlen($comment) > 50 ? 
+                         substr($comment, 0, 50) . '...' : 
+                         $comment;
+        
+        $content = sprintf(
+            '<strong>%s</strong> commented on your post "<a href="view_post.php?id=%d">%s</a>": "%s"',
+            htmlspecialchars($commenterData['Username']),
+            $postID,
+            htmlspecialchars($postTitle),
+            htmlspecialchars($commentPreview)
+        );
+        
+        createNotification($postData['UserID'], $commentUserID, 'comment', $content, $postID);
+    }
+}
 //Number of likes
 function getLikeCount($postID) {
     global $conn;
@@ -1272,9 +1529,9 @@ function trackPostReply($commentID, $userID) {
 // Query to get top users (most likes collected)
 function getTopUsers() {
     global $conn;
-    $sql = "SELECT u.Username, COUNT(l.LikeID) AS total_likes
+    $sql = "SELECT u.Username, COUNT(l.LikeID) AS total_likes, up.ProfilePic
             FROM users u
-            LEFT JOIN likes l ON u.UserID = l.UserID
+            LEFT JOIN likes l ON u.UserID = l.UserID JOIN userprofiles up ON up.UserID = l.UserID
             GROUP BY u.UserID
             ORDER BY total_likes DESC
             LIMIT 5"; // Get the top 5 users
@@ -1291,13 +1548,14 @@ function getTopUsers() {
 
 function getTopUsersByTotalLikes() {
     global $conn;
-    $sql = "SELECT u.Username, COUNT(l.LikeID) AS total_likes
+    $sql = "SELECT u.Username, COUNT(l.LikeID) AS total_likes, up.ProfilePic
             FROM users u
-            INNER JOIN posts p ON u.UserID = p.UserID
-            LEFT JOIN likes l ON p.PostID = l.PostID
+            JOIN userprofiles up ON u.UserID = up.UserID
+            JOIN posts p ON up.UserID = p.UserID
+            JOIN likes l ON p.PostID = l.PostID
             GROUP BY u.UserID
             ORDER BY total_likes DESC
-            LIMIT 5"; // Get the top 5 users by total accumulated likes
+            LIMIT 10"; // Get the top 5 users by total accumulated likes
     $result = mysqli_query($conn, $sql);
 
     // Fetch and return the data as an associative array
@@ -1309,6 +1567,43 @@ function getTopUsersByTotalLikes() {
     return $topUsers;
 }
 
+function getTopDailyPosts() {
+    global $conn;
+    $query = "SELECT 
+                p.PostID, 
+                p.Title, 
+                p.PhotoPath, 
+                p.Content, 
+                u.Username, 
+                up.ProfilePic,
+                COUNT(DISTINCT l.LikeID) AS TotalLikes, 
+                COUNT(DISTINCT c.CommentID) AS TotalComments,
+                (COUNT(DISTINCT l.LikeID) + COUNT(DISTINCT c.CommentID)) AS Engagement
+            FROM 
+                posts p
+            JOIN likes l ON l.PostID = p.PostID
+            JOIN comments c ON c.PostID = p.PostID
+            JOIN users u ON u.UserID = p.UserID
+            JOIN userprofiles up ON p.UserID = up.UserID    
+            WHERE 
+                DATE(p.CreatedAt) = CURDATE()
+            GROUP BY 
+                p.PostID
+            ORDER BY 
+                Engagement DESC
+            LIMIT 5;
+            ";
+    $result = mysqli_query($conn, $query);
+    if (!$result) {
+        die('Query Failed: ' . mysqli_error($conn));
+    }
+    $topDailyPosts = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $topDailyPosts[] = $row;
+    }
+    return $topDailyPosts;
+}
+
 
 // Query to get top communities (most number of members)
 function getTopCommunities() {
@@ -1318,7 +1613,7 @@ function getTopCommunities() {
             LEFT JOIN community_members cm ON c.CommunityID = cm.CommunityID
             GROUP BY c.CommunityID
             ORDER BY member_count DESC
-            LIMIT 5"; // Get the top 5 communities
+            LIMIT 10"; // Get the top 5 communities
     $result = mysqli_query($conn, $sql);
 
     // Fetch and return the data as an associative array
@@ -1331,32 +1626,76 @@ function getTopCommunities() {
 }
 
 // Query to get notifications
-function getNotifications($username = null) {
-    // Ensure the $username is set and not empty
-    if (empty($username)) {
-        // If no username is provided, return early or set a default value
-        return []; // Or fetch notifications for guests/unauthenticated users if applicable
-    }
-
-    // Construct the query
-    $query = "SELECT * FROM notifications n JOIN users u ON n.UserID = u.UserID WHERE Username = ? AND Seen = 0 ORDER BY CreatedAt DESC LIMIT 5";
-
-    // Execute the query
-    $stmt = $GLOBALS['conn']->prepare($query);
-    $stmt->bind_param("s", $username);
+function getNotifications($userID) {
+    global $conn;
+    $sql = "SELECT n.*, u.Username, up.ProfilePic 
+            FROM notifications n 
+            JOIN users u ON n.UserID = u.UserID 
+            LEFT JOIN userprofiles up ON u.UserID = up.UserID 
+            WHERE n.RecipientID = ? 
+            ORDER BY n.CreatedAt DESC 
+            LIMIT 20";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $userID);
     $stmt->execute();
     $result = $stmt->get_result();
-
-    // Fetch notifications
-    $notifications = [];
-    while ($row = $result->fetch_assoc()) {
-        $notifications[] = $row;
-    }
-
-    return $notifications;
+    return $result->fetch_all(MYSQLI_ASSOC);
 }
 
+// Create a new notification - Fixed version
+function createNotification($recipientID, $userID, $type, $content, $referenceID) {
+    global $conn;
+    
+    // Debug log
+    error_log("Creating notification: recipientID=$recipientID, userID=$userID, type=$type, content=$content, referenceID=$referenceID");
+    
+    // Make sure content is a string and not empty
+    if (empty($content)) {
+        error_log("Empty notification content");
+        return false;
+    }
 
+    $sql = "INSERT INTO notifications (RecipientID, UserID, Type, Content, ReferenceID, Seen) 
+            VALUES (?, ?, ?, ?, ?, 0)";
+    
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        error_log("Prepare failed: " . $conn->error);
+        return false;
+    }
+    
+    $stmt->bind_param("iisis", $recipientID, $userID, $type, $content, $referenceID);
+    $result = $stmt->execute();
+    
+    if (!$result) {
+        error_log("Execute failed: " . $stmt->error);
+        return false;
+    }
+    
+    return true;
+}
+
+// Mark notification as read
+function markNotificationAsRead($notificationID) {
+    global $conn;
+    $sql = "UPDATE notifications SET Seen = 1 WHERE NotificationID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $notificationID);
+    return $stmt->execute();
+}
+
+// Get unread notification count
+function getUnreadNotificationCount($userID) {
+    global $conn;
+    $sql = "SELECT COUNT(*) as count FROM notifications WHERE RecipientID = ? AND Seen = 0";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $userID);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    return $row['count'];
+}
 
 
 // HELPER FUNCTIONS
@@ -1371,15 +1710,15 @@ function timeAgo($timestamp) {
     } elseif ($diff < 3600) {
         // Less than 1 hour ago
         $minutes = floor($diff / 60);
-        return ($minutes == 1) ? '1 minute ago' : $minutes . ' minutes ago';
+        return ($minutes == 1) ? '1 min ago' : $minutes . ' mins ago';
     } elseif ($diff < 86400) {
         // Less than 1 day ago
         $hours = floor($diff / 3600);
-        return ($hours == 1) ? '1 hour ago' : $hours . ' hours ago';
+        return ($hours == 1) ? '1 hr ago' : $hours . ' hrs ago';
     } elseif ($diff < 604800) {
         // Less than 1 week ago
         $days = floor($diff / 86400);
-        return ($days == 1) ? '1 day ago' : $days . ' days ago';
+        return ($days == 1) ? '1d ago' : $days . ' days ago';
     } elseif ($diff < 2419200) {
         // Less than 1 month ago (4 weeks approximation)
         $weeks = floor($diff / 604800);
@@ -1391,7 +1730,7 @@ function timeAgo($timestamp) {
     } else {
         // More than 1 year ago
         $years = floor($diff / 29030400);
-        return ($years == 1) ? '1 year ago' : $years . ' years ago';
+        return ($years == 1) ? '1yr ago' : $years . ' years ago';
     }
 }
 
@@ -1420,5 +1759,116 @@ function formatParagraph($text, $maxLength = 300, $maxWords = 300) {
     return nl2br($cleanText);
 }
 
+function verifyAdminCredentials($username, $password) {
+    global $conn;
+    
+    // Check if the user exists and is an admin
+    $sql = "SELECT UserID, Password, IsAdmin FROM Users WHERE Username = ? AND IsAdmin = 1";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 1) {
+        $user = $result->fetch_assoc();
+        if (password_verify($password, $user['Password'])) {
+            return $user['UserID'];
+        }
+    }
+    return false;
+}
 
+function getAllSettings() {
+    global $conn;
+    $query = "SELECT * FROM admin_settings";
+    $result = mysqli_query($conn, $query);
+    $settings = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $settings[$row['SettingName']] = $row['SettingValue'];
+    }
+    return $settings;
+}
+
+function hasUserLikedPost($postID, $userID) {
+    global $conn;
+    $query = "SELECT COUNT(*) as count FROM Likes WHERE PostID = ? AND UserID = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ii", $postID, $userID);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    return $row['count'] > 0;
+}
+
+function getLikeDate($postID, $userID) {
+    global $conn;
+    $query = "SELECT LikedAt FROM Likes WHERE PostID = ? AND UserID = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ii", $postID, $userID);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    return $row['LikedAt'];
+}
+
+function getUserSettings($userId) {
+    global $conn;
+    $settings = array();
+    
+    try {
+        // Create the table if it doesn't exist
+        $createTable = "CREATE TABLE IF NOT EXISTS user_settings (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            setting_name VARCHAR(50) NOT NULL,
+            setting_value TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_user_setting (user_id, setting_name),
+            FOREIGN KEY (user_id) REFERENCES users(UserID)
+        )";
+        $conn->query($createTable);
+        
+        // Now query the settings
+        $query = "SELECT setting_name, setting_value FROM user_settings WHERE user_id = ?";
+        $stmt = $conn->prepare($query);
+        if ($stmt) {
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            while ($row = $result->fetch_assoc()) {
+                $settings[$row['setting_name']] = $row['setting_value'];
+            }
+            
+            $stmt->close();
+        }
+    } catch (Exception $e) {
+        error_log("Error getting user settings: " . $e->getMessage());
+    }
+    
+    return $settings;
+}
+
+function updateUserSetting($userId, $settingName, $settingValue) {
+    global $conn;
+    
+    try {
+        $query = "INSERT INTO user_settings (user_id, setting_name, setting_value) 
+                  VALUES (?, ?, ?) 
+                  ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)";
+                  
+        $stmt = $conn->prepare($query);
+        if ($stmt) {
+            $stmt->bind_param("iss", $userId, $settingName, $settingValue);
+            $success = $stmt->execute();
+            $stmt->close();
+            return $success;
+        }
+    } catch (Exception $e) {
+        error_log("Error updating user setting: " . $e->getMessage());
+    }
+    return false;
+}
+
+// Make sure this is the last closing brace in the file
 ?>

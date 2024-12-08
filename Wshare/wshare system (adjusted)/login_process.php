@@ -21,6 +21,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = htmlspecialchars(trim($_POST['username']));
     $password = trim($_POST['password']);
 
+    // First check if user is an admin
+    $adminID = verifyAdminCredentials($username, $password);
+    if ($adminID) {
+        // Admin login successful
+        session_regenerate_id(true);
+        $_SESSION['admin_id'] = $adminID;
+        $_SESSION['admin_username'] = $username;
+        
+        // Redirect to admin dashboard with correct path
+        header('Location: ../admin wshare (adjusted)/admin/dashboard.php');  // Updated path
+        exit;
+    }
+
     // Prevent brute force attacks by implementing a delay
     sleep(1); // Introduce a 1-second delay to slow down brute-force attacks
 

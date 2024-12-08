@@ -10,7 +10,7 @@
     height: 100%;
     position: fixed;
     z-index: 970;
-    width: 400px;
+    width: 350px;
     background-color: #f9f9f9; 
 }
 
@@ -21,7 +21,7 @@
 }
 
 .left-nav:hover{
-    background-color: #e1ebed;
+    background-color: #f1f1f1;
 }
 
 .left-nav p{
@@ -30,7 +30,8 @@
     align-self: center;
     margin: 5px;
     padding: 5px;
-    color: #0056b3;
+    color: black;
+    
 }
 
 .left-navbar li a{

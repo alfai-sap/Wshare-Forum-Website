@@ -155,10 +155,15 @@
                             <p class="post_content"><?php echo $post['Content']; ?></p>
 
                             <div class="lik" style = "display:flex;">
-
-                                <form action="like_post.php" method="POST">
+                                <form class="like" action="like_post.php" method="POST">
                                     <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
-                                    <button type="submit" class="like-btn" name="like" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="bulb.svg" style = "height:20px; width:20px;"></button>
+                                    <button type="submit" class="like-btn" name="like" style="background-color:transparent; border:none; padding: 10px;">
+                                        <?php if (hasUserLikedPost($post['PostID'],  $_SESSION['user_id'])): ?>
+                                            <img class="bulb" src="bulb_active.svg" style="height:20px; width:20px;">
+                                        <?php else: ?>
+                                            <img class="bulb" src="bulb.svg" style="height:20px; width:20px;">
+                                        <?php endif; ?>
+                                    </button>
                                 </form>
 
                                 <span class="like-count" style = "display:flex; align-self:center; color:#007bff; font-weight: normal;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
@@ -190,6 +195,108 @@
 
     </div>
 
+    <!-- Add Image Modal -->
+    <div id="imageModal" class="image-modal">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <img id="modalImage" class="modal-content">
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoom(1.2)">+</button>
+            <button class="zoom-btn" onclick="zoom(0.8)">-</button>
+            <button class="zoom-btn" onclick="resetZoom()">Reset</button>
+        </div>
+    </div>
+
+    <script>
+    let currentZoom = 1;
+    let isDragging = false;
+    let startX, startY, translateX = 0, translateY = 0;
+
+    // Make images clickable
+    document.querySelectorAll('.post-image-img, .profile_pic').forEach(img => {
+        img.style.cursor = 'pointer';
+        img.onclick = function() {
+            openModal(this.src);
+        }
+    });
+
+    function openModal(imgSrc) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        modal.style.display = "block";
+        modalImg.src = imgSrc;
+        resetPosition();
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').style.display = "none";
+        resetPosition();
+    }
+
+    function zoom(factor) {
+        currentZoom *= factor;
+        currentZoom = Math.min(Math.max(0.5, currentZoom), 3);
+        updateTransform();
+    }
+
+    function startDrag(e) {
+        isDragging = true;
+        if (e.type === "mousedown") {
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+        } else if (e.type === "touchstart") {
+            startX = e.touches[0].clientX - translateX;
+            startY = e.touches[0].clientY - translateY;
+        }
+        document.getElementById('modalImage').style.cursor = 'grabbing';
+    }
+
+    function drag(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        
+        const clientX = e.type === "mousemove" ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type === "mousemove" ? e.clientY : e.touches[0].clientY;
+        
+        translateX = clientX - startX;
+        translateY = clientY - startY;
+        
+        updateTransform();
+    }
+
+    function stopDrag() {
+        isDragging = false;
+        document.getElementById('modalImage').style.cursor = 'grab';
+    }
+
+    function resetPosition() {
+        translateX = 0;
+        translateY = 0;
+        currentZoom = 1;
+        updateTransform();
+    }
+
+    function updateTransform() {
+        document.getElementById('modalImage').style.transform = 
+            `scale(${currentZoom}) translate(${translateX}px, ${translateY}px)`;
+    }
+
+    // Event listeners
+    const modalImage = document.getElementById('modalImage');
+    modalImage.addEventListener('mousedown', startDrag);
+    modalImage.addEventListener('touchstart', startDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('touchmove', drag, { passive: false });
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+
+    // Keyboard controls
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeModal();
+        if (e.key === '+' || e.key === '=') zoom(1.2);
+        if (e.key === '-') zoom(0.8);
+        if (e.key === '0') resetPosition();
+    });
+    </script>
 
     <script>
     

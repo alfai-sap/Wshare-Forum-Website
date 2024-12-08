@@ -1,6 +1,20 @@
 <?php
 require_once 'functions.php';
+require_once 'changes.php'; // Add this line if not already present
 session_start();
+
+if (!isset($_SESSION['username'])) {
+    header('Location: login.php');
+    exit;
+}
+
+if (checkUserBan()) {
+    echo "<div style='text-align: center; margin-top: 50px; color: red;'>";
+    echo checkUserBan(true);
+    echo "<br><a href='Communities.php'>Return to Communities</a>";
+    echo "</div>";
+    exit;
+}
 
 $creatorID = getUserIdByUsername($_SESSION['username']);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -9,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $visibility = $_POST['visibility'];  // Capture the visibility setting
     
     // Handle file upload
-    $thumbnail = '';
+    $thumbnail = 'defaultbg.jpg'; // Default thumbnail
     if (isset($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] == UPLOAD_ERR_OK) {
         $uploadDir = 'community_thumbs/';
         $uploadFile = $uploadDir . basename($_FILES['thumbnail']['name']);

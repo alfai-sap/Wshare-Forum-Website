@@ -155,7 +155,7 @@ form {
 }
 
 .Profile-uname {
-    color: #007bff;
+    color: #0056b3;
     font-size: xx-large;
 }
 
@@ -215,7 +215,7 @@ form {
     cursor: pointer;
     padding: 20px 10px;
     text-align: left;
-    color: #007bff;
+    color: #0056b3;
 }
 
 .post_content {

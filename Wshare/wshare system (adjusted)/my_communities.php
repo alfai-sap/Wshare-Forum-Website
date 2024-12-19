@@ -72,8 +72,7 @@ $result = $stmt->get_result();
     </ul>
 
     <?php include 'navbar.php';?>
-    <?php include 'right-sidebar.php';?>
-    
+    <?php include 'top-communities.php';?>
 
     <div class="container">
         <br><br><br><br>

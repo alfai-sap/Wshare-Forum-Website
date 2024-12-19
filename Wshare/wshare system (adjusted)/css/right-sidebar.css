@@ -6,7 +6,7 @@
     right: 0;
     width: 400px;
     height: 100%;
-    background-color: #f9f9f9;
+    background-color: transparent;
     padding: 20px;
     /*box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);*/
     overflow-y: auto; /* Allow scrolling */
@@ -43,4 +43,101 @@
     .right-sidebar {
         display: none; /* Hide sidebar on small screens */
     }
+}
+
+/* Suggested Users Styling */
+.right-sidebar-section {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.suggested-users ul li {
+    display: flex;
+    align-items: center;
+}
+
+.suggested-users ul li a {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-decoration: none;
+    color: inherit;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 500;
+    color: #0056b3;
+    margin-bottom: 2px;
+}
+
+.mutual-connections {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* Override existing hover state for suggested users */
+.suggested-users ul li:hover {
+    background-color: #f1f1f1;
+    transform: translateX(5px);
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.user-profile-link {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    padding: 10px !important;
+}
+
+.user-details {
+    flex: 1;
+    min-width: 0; /* Prevents text overflow issues */
+}
+
+.username {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 2px;
+    font-size: 0.95rem;
+}
+
+.email {
+    color: #666;
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mutual-connections {
+    color: #0056b3;
+    font-size: 0.75rem;
+}
+
+.user-avatar {
+    flex-shrink: 0; /* Prevents avatar from shrinking */
+    width: 45px;
+    height: 45px;
 }

@@ -81,10 +81,40 @@ form {
     border-radius: 10px;
 }
 
+.deleted-user {
+    color: #999;
+    font-style: italic;
+    text-decoration: none;
+    cursor: default;
+}
+
 .search_results {
     color: #007bff;
-    padding-top: 30px;
-    padding-bottom: 20px;
+    padding: 15px 20px;
+    margin: 10px 0;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1em;
+}
+
+.search_results::before {
+    content: '🔍';
+    font-size: 1.2em;
+}
+
+.search_results .query {
+    color: #0056b3;
+    font-weight: 600;
+}
+
+.search_results .count {
+    margin-left: auto;
+    color: #6c757d;
+    font-size: 0.9em;
 }
 
 .post_title {
@@ -261,6 +291,109 @@ form {
     border-radius: 8px; /* Rounded corners for a cleaner look */ 
 }
 
+/* Image slider styles */
+.post-images-container {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.images-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.post-image-slide {
+    display: none;
+    width: 100%;
+}
+
+.post-image-slide.active {
+    display: block;
+}
+
+.nav-area {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 30%;
+    cursor: pointer;
+    z-index: 10;
+    transition: background-color 0.3s ease;
+}
+
+.nav-area:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.nav-left {
+    left: 0;
+}
+
+.nav-right {
+    right: 0;
+}
+
+.image-counter {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+}
+
+.image-progress-bar {
+    position: absolute;
+    top: 20px; /* Change from bottom to top */
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex; /* Change to inline-flex */
+    align-items: center; /* Center dots vertically */
+    gap: 8px;
+    z-index: 20;
+    padding: 6px 12px; /* Reduce padding */
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    height: auto; /* Let height be determined by content */
+    min-height: 20px; /* Set minimum height */
+    pointer-events: none; /* Prevent interference with navigation */
+}
+
+.progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    flex-shrink: 0;
+    display: inline-block; /* Add this */
+    vertical-align: middle; /* Add this */
+}
+
+.post-images-container:hover .image-progress-bar {
+    opacity: 1;
+}
+
+.progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    flex-shrink: 0; /* Prevent dots from shrinking */
+}
+
+.progress-dot.active {
+    background: #007bff;
+    transform: scale(1.2);
+    transition: transform 0.2s ease;
+}
+
 .post-tags {
     margin-top: 20px;
 }
@@ -372,12 +505,18 @@ form {
     align-items: center;
     gap: 15px;
     margin: 10px 0;
+    flex-wrap: wrap;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
 }
 
 .timeframe-filter {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-grow: 1;
+    flex-wrap: wrap;
 }
 
 .filter-select {
@@ -385,16 +524,18 @@ form {
     border: 1px solid #ddd;
     border-radius: 4px;
     background-color: white;
-    min-width: 120px;
+    min-width: 150px;
+    flex-grow: 1;
 }
 
 .filter-button {
-    padding: 8px 15px;
+    padding: 8px 20px;
     background-color: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .filter-button:hover {
@@ -452,3 +593,145 @@ form {
     }
     
 }
+
+/* ...existing code... */
+
+.post-documents {
+    margin: 10px 0;
+}
+
+.post-documents h3 {
+    margin-bottom: 5px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.post-documents ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.post-documents li {
+    margin-bottom: 5px;
+}
+
+.post-documents a {
+    margin-left: 10px;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.post-documents a:hover {
+    text-decoration: underline;
+}
+
+.post-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.post-images img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Video styles */
+.post-videos-container {
+    margin-top: 10px;
+}
+
+.post-video {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.post-video-player {
+    width: 100%;
+    max-height: 500px;
+    border-radius: 8px;
+    background-color: #000;
+}
+
+/* Adjust existing media container */
+.post-media-container {
+    width: 100%;
+    margin: 10px 0;
+}
+
+/* Ensure consistent spacing between images and videos */
+.post-images-container + .post-videos-container {
+    margin-top: 20px;
+}
+
+/* Combined Media Slideshow */
+.post-media-container {
+    position: relative;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.post-media-slideshow {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.media-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.media-slide {
+    display: none;
+    width: 100%;
+}
+
+.media-slide.active {
+    display: block;
+}
+
+.post-media-img,
+.post-media-video {
+    width: 100%;
+    max-height: 500px;
+    border-radius: 8px;
+    object-fit: contain;
+    background-color: #000;
+}
+
+.media-counter {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+}
+
+.media-progress-bar {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 20;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.post-media-slideshow:hover .media-progress-bar {
+    opacity: 1;
+}
+
+/* ...existing code... */

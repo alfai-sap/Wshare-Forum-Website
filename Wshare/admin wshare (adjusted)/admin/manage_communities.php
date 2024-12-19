@@ -24,6 +24,7 @@ $totalCommunities = getTotalCommunities();
 $totalMembers = getTotalCommunityMembers();
 $activeCommunities = getActiveCommunities();
 $inactiveCommunities = getInactiveCommunities();
+$settings = getAllAdminSettings();
 ?>
 
 <!DOCTYPE html>

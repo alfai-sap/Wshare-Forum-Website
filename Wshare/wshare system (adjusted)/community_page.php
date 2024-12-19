@@ -2,6 +2,7 @@
 require_once 'functions.php';
 require_once 'changes.php'; // Add this line if it's not already there
 require_once 'chat_functions.php';
+require_once "bookmark_functions.php"; // Add this line to include bookmark functions
 session_start();
 
 $communityID = isset($_GET['community_id']) ? intval($_GET['community_id']) : 0;
@@ -69,13 +70,15 @@ $stmt->execute();
 $postsResult = $stmt->get_result();
 
 // Fetch members and admins with emails and profile pictures
-$query = "SELECT u.UserID, u.Username, u.Email, up.ProfilePic, cm.Role 
+$query = "SELECT u.UserID, u.Username, u.Email, up.ProfilePic, cm.Role, 
+                 (SELECT COUNT(*) FROM user_bans WHERE UserID = u.UserID AND CommunityID = ? AND IsActive = 1) AS IsBanned,
+                 (SELECT COUNT(*) FROM user_bans WHERE UserID = u.UserID AND CommunityID = ? AND IsActive = 1 AND BannedBy = 0) AS IsBannedBySuperAdmin
           FROM community_members cm 
           JOIN users u ON cm.UserID = u.UserID 
           JOIN userprofiles up ON u.UserID = up.UserID
           WHERE cm.CommunityID = ?";
 $stmt = $conn->prepare($query);
-$stmt->bind_param('i', $communityID);
+$stmt->bind_param('iii', $communityID, $communityID, $communityID);
 $stmt->execute();
 $membersResult = $stmt->get_result();
 
@@ -104,6 +107,9 @@ if ($result->num_rows > 0) {
 
 // Fetch chat messages
 $messages = getMessages($communityID);
+
+// Fetch reports if the user is an admin
+$reports = $currentUserRole === 'admin' ? getCommunityReports($communityID) : [];
 ?>
 
 <!DOCTYPE html>
@@ -111,11 +117,105 @@ $messages = getMessages($communityID);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($community['Title']); ?></title>
+    <title><?php echo htmlspecialchars($community['Title']); ?> - Community</title>
     <link rel="stylesheet" href="./css/navbar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/left-navbar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/community_page.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="./css/right-chat.css?v=<?php echo time(); ?>">
+    <style>
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table th, table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+
+        .inline-form {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .inline-form select, .inline-form button {
+            margin-right: 5px;
+        }
+
+        .inline-form button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .inline-form button:hover {
+            background-color: #0056b3;
+        }
+
+        .inline-form button:active {
+            transform: scale(0.98);
+        }
+
+        .ban-message {
+            color: red;
+            background-color: #ffe6e6;
+            padding: 10px;
+            border: 1px solid red;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
@@ -141,6 +241,7 @@ $messages = getMessages($communityID);
                 <button class="top-menu-btn" >
                     <a href="community_edit.php?community_id=<?php echo $communityID; ?>">Update details</a>
                 </button>
+                <button class="top-menu-btn" onclick="toggleReports()">Manage Reports</button>
             <?php endif;?>
         </div>
 
@@ -173,6 +274,15 @@ $messages = getMessages($communityID);
                                 <!-- Remove Member button (prevent removing self) -->
                                 <?php if ($member['UserID'] != $userID) { ?>
                                     <button type="submit" name="action" value="remove_member" class="top-menu-btn" onclick="return confirm('Are you sure you want to remove this member from the community?');">Remove</button>
+                                <?php } ?>
+                                
+                                <!-- Ban/Unban Member button -->
+                                <?php if ($member['IsBannedBySuperAdmin'] > 0) { ?>
+                                    <span class="admin-text">Banned</span>
+                                <?php } elseif ($member['IsBanned'] > 0) { ?>
+                                    <button type="submit" name="action" value="unban_member" class="top-menu-btn" onclick="return confirm('Are you sure you want to unban this member?');">Unban</button>
+                                <?php } else { ?>
+                                    <button type="button" class="top-menu-btn" onclick="openBanModal(<?php echo $member['UserID']; ?>)">Ban</button>
                                 <?php } ?>
                             </form>
                         <?php } ?>
@@ -238,17 +348,52 @@ $messages = getMessages($communityID);
             </ul>
         </div>
         
-        
+        <!-- Admin Section for Managing Reports -->
+        <div id="reportsList" style="display:none;">
+            <h2>Manage Reports</h2>
+            <div class="table-container">
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Reporter</th>
+                        <th>Violation</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    <?php foreach ($reports as $report): ?>
+                    <tr>
+                        <td><?php echo $report['ReportID']; ?></td>
+                        <td><?php echo ucfirst($report['ReportType']); ?></td>
+                        <td><?php echo htmlspecialchars($report['Username']); ?></td>
+                        <td><?php echo htmlspecialchars($report['Violation']); ?></td>
+                        <td><?php echo ucfirst($report['Status']); ?></td>
+                        <td>
+                            <form method="POST" class="inline-form" action="update_report_status.php">
+                                <input type="hidden" name="report_id" value="<?php echo $report['ReportID']; ?>">
+                                <select name="status">
+                                    <option value="pending" <?php echo $report['Status'] == 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                    <option value="reviewed" <?php echo $report['Status'] == 'reviewed' ? 'selected' : ''; ?>>Reviewed</option>
+                                    <option value="resolved" <?php echo $report['Status'] == 'resolved' ? 'selected' : ''; ?>>Resolved</option>
+                                </select>
+                            </form>
+                            <a href="view_community_report.php?id=<?php echo $report['ReportID']; ?>">View</a>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </table>
+            </div>
+        </div>
 
         <!-- Only show the post form if the user is a member -->
         <?php if ($isMember) { ?>
-            <?php if (checkUserBan()): ?>
-                <div class="ban-message" style="color: red; margin: 10px 0;">
-                    <?php echo checkUserBan(true); ?>
+            <?php if (checkUserBan(true, $communityID)): ?>
+                <div class="ban-message">
+                    <?php echo checkUserBan(true, $communityID); ?>
                 </div>
             <?php else: ?>
                 <div class="community-form" id="create_post_form" style="margin: 10px; display:none;">
-                    <p class="message">Welcome <?php echo $username ?>! Share your story with the community.</p>
+                    <p class="message">Got an Interesting topic ? share it to the community.</p>
                     <form id="post-form" action="community_create_post.php" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="community_id" value="<?php echo $communityID; ?>">
 
@@ -256,7 +401,7 @@ $messages = getMessages($communityID);
                         <input class="post-title-in" type="text" id="title" name="title" placeholder="Title..." required>
 
                         <label for="content">Content:</label>
-                        <textarea class="post-content-in" id="content" name="content" placeholder="What am I thinking?..." required></textarea>
+                        <textarea class="post-content-in" id="content" name="content" placeholder="I'm thinking about..." required></textarea>
 
                         <label for="photo">Photo:</label>
                         <input class="post-image-in" type="file" id="photo" name="photo" accept="image/*">
@@ -441,37 +586,35 @@ $messages = getMessages($communityID);
                     <?php endif; ?>
                     <br>
                     
-                    <div class="lik" style="display:flex;">
+                    <div class="post-buttons-separator"></div>
+                    
+                    <div class="lik">
                         <form class="like" action="like_community_post.php" method="POST">
                             <input type="hidden" name="postID" value="<?php echo $post['PostID']; ?>">
-                            <button type="submit" class="like-btn" name="like" style="background-color:transparent; border:none; padding: 10px;">
+                            <button type="submit" class="like-btn" name="like">
                                 <?php if (hasUserLikedPost($post['PostID'], $_SESSION['user_id'])): ?>
-                                    <img class="bulb" src="bulb_active.svg" style="height:20px; width:20px;">
+                                    <img class="bulb liked-icon" src="bulb_active.svg">
                                 <?php else: ?>
-                                    <img class="bulb" src="bulb.svg" style="height:20px; width:20px;">
+                                    <img class="bulb" src="bulb.svg">
                                 <?php endif; ?>
                             </button>
                         </form>
-
-                        <span class="like-count" style="display:flex; align-self:center; color:#007bff;">
+                        <span class="like-count">
                             <?php echo getCommunityLikeCount($post['PostID']); ?> Brilliant Points
                         </span>
-
-                        <button class="like-btn" style="background-color:transparent; border:none; padding: 10px;">
-                            <img class="bulb" src="comment.svg" style="height:20px; width:20px; background-color:transparent; outline:none; border:none;">
+                        <button class="comment-btn">
+                            <img class="bulb" src="comment.svg">
                         </button>
-
-                        <span class="like-count" style="display:flex; align-self:center; color:#007bff;">
+                        <span class="comment-count">
                             <?php echo getCommunityCountComment($post['PostID']); ?> Comments
                         </span>
-
-                        <button class="like-btn" style="background-color:transparent; border:none; padding: 10px;">
-                            <a href="view_community_post.php?id=<?php echo $post['PostID']; ?>" style="display:flex; align-self:center; text-decoration:none;">
-                                <img class="bulb" src="view.svg" style="height:20px; width:20px; background-color:transparent; outline:none; border:none;">
-                                <p class="like-count" style="display:flex; align-self:center; color:#007bff; margin-left:5px;">See discussion</p>
+                        <button class="view-btn">
+                            <a href="view_community_post.php?id=<?php echo $post['PostID']; ?>" class="view-link">
+                                <img class="bulb" src="view.svg">
+                                
                             </a>
+                            <span class="comment-count">See discussion</span>
                         </button>
-
                     </div>
                 </div>
             </div>
@@ -480,10 +623,37 @@ $messages = getMessages($communityID);
     </div><!-- Close main container -->
 
     <?php if ($isMember): ?>
+    <?php if (checkUserBan(true, $communityID)): ?>
+        <div class="ban-message">
+            <?php echo checkUserBan(true, $communityID); ?>
+        </div>
+    <?php else: ?>
     <div class="chat-container" id="chat-container">
         <div class="chat-header">
-            <h3>Community Chat</h3><br>
-            <button class="top-menu-btn" onclick="toggleChatWindow()">Close</button>
+            <div class="chat-header-top">
+                <h3>Community Chat</h3>
+                <div class="chat-header-buttons">
+                    <button class="refresh-btn" onclick="refreshMessages()" title="Refresh messages">
+                        <img src="refresh.svg" alt="Refresh" width="16" height="16">
+                    </button>
+                    <button class="top-menu-btn" onclick="toggleChatWindow()">Close</button>
+                </div>
+            </div>
+            <div class="chat-filters">
+                <div class="filter-dropdown">
+                    <button class="filter-btn" id="current-filter">Chat</button>
+                    <div class="filter-options">
+                        <button onclick="filterMessages('all')" class="filter-option">Chat</button>
+                        <button onclick="filterMessages('documents')" class="filter-option">Documents</button>
+                        <button onclick="filterMessages('pictures')" class="filter-option">Pictures</button>
+                        <button onclick="filterMessages('videos')" class="filter-option">Videos</button>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-search">
+                <input type="text" id="chat-search" placeholder="Search messages...">
+                <button id="clear-search" style="display: none;">Clear</button>
+            </div>
         </div>
         
         <?php if (isset($_SESSION['chat_error'])): ?>
@@ -500,12 +670,13 @@ $messages = getMessages($communityID);
                 $isOwnMessage = $message['UserID'] == $userID;
                 $messageClass = $isOwnMessage ? 'message-self' : '';
             ?>
-                <div class="message <?php echo $messageClass; ?>" data-message-id="<?php echo $message['MessageID']; ?>" onclick="toggleReplyButton(this)">
+                <div class="message <?php echo $messageClass; ?>" data-message-id="<?php echo $message['MessageID']; ?>">
                     <?php if (!$isOwnMessage): ?>
                         <div class="message-header">
                             <img src="<?php echo htmlspecialchars($message['ProfilePic']); ?>" 
                                  alt="Profile" class="message-avatar" width="24" height="24">
                             <span class="message-username"><?php echo htmlspecialchars($message['Username']); ?></span>
+                            <span class="message-timestamp"><?php echo timeAgo($message['CreatedAt']); ?></span>
                         </div>
                     <?php endif; ?>
                     
@@ -562,14 +733,18 @@ $messages = getMessages($communityID);
                             <?php endforeach; ?>
                         </div>
                         
-                        <div class="message-info">
-                            <?php echo timeAgo($message['CreatedAt']); ?>
-                        </div>
+                        
                     </div>
                     
-                    <div class="message-actions" style="display: none;">
+                    <?php if ($isOwnMessage): ?>
+                        <div class="message-header">
+                            <span class="message-timestamp"><?php echo timeAgo($message['CreatedAt']); ?></span>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <div class="message-actions">
                         <button class="reply-btn" onclick="setReplyTo(<?php echo $message['MessageID']; ?>, '<?php echo htmlspecialchars($message['Username']); ?>')">
-                            <img src="reply.svg" alt="Reply" width="16" height="16"> Reply
+                            reply
                         </button>
                     </div>
                 </div>
@@ -597,14 +772,44 @@ $messages = getMessages($communityID);
             <div id="file-error" class="error-message" style="display: none; color: red;"></div>
         </div>
     </div>
-    
+    <?php endif; ?>
 <?php endif; ?>
 
+<!-- Ban Member Modal -->
+<div id="banMemberModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeBanModal()">&times;</span>
+        <h2>Ban Member</h2>
+        <form id="banMemberForm" method="POST" action="community_manage_member.php">
+            <input type="hidden" name="community_id" value="<?php echo $communityID; ?>">
+            <input type="hidden" name="member_id" id="banMemberId">
+            <input type="hidden" name="action" value="ban_member">
+            
+            <div class="form-group">
+                <label for="ban_duration">Ban Duration:</label>
+                <select name="ban_duration" id="ban_duration" required class="form-control">
+                    <option value="1">1 day</option>
+                    <option value="3">3 days</option>
+                    <option value="7">1 week</option>
+                    <option value="30">1 month</option>
+                    <option value="90">3 months</option>
+                    <option value="365">1 year</option>
+                    <option value="36500">Permanent</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="ban_reason">Reason:</label>
+                <textarea name="ban_reason" id="ban_reason" required class="form-control"></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-danger">Ban User</button>
+            <button type="button" onclick="closeBanModal()" class="btn btn-secondary">Cancel</button>
+        </form>
+    </div>
+</div>
+
 <script>
-    function toggleReplyButton(messageElement) {
-        const actions = messageElement.querySelector('.message-actions');
-        actions.style.display = actions.style.display === 'block' ? 'none' : 'block';
-    }
 
     function setReplyTo(messageID, username) {
         document.getElementById('reply-to').value = messageID;
@@ -680,7 +885,7 @@ function toggleReaction(messageId, reactionType) {
 // Add this to your existing JavaScript
 function validateForm() {
     const attachments = document.getElementById('attachments').files;
-    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    const maxSize = 25 * 1024 * 1024; // 25MB in bytes
     const errorDiv = document.getElementById('file-error');
     
     if (attachments.length > 0) {
@@ -689,7 +894,7 @@ function validateForm() {
             totalSize += attachments[i].size;
             
             if (attachments[i].size > maxSize) {
-                errorDiv.textContent = `File "${attachments[i].name}" exceeds 5MB limit`;
+                errorDiv.textContent = `File "${attachments[i].name}" exceeds 25MB limit`;
                 errorDiv.style.display = 'block';
                 return false;
             }
@@ -707,7 +912,7 @@ function validateForm() {
 }
 
 document.getElementById('attachments').addEventListener('change', function(e) {
-    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    const maxSize = 25 * 1024 * 1024; // 25MB in bytes
     const errorDiv = document.getElementById('file-error');
     const preview = document.getElementById('attachment-preview');
     preview.innerHTML = '';
@@ -717,7 +922,7 @@ document.getElementById('attachments').addEventListener('change', function(e) {
     for (const file of e.target.files) {
         totalSize += file.size;
         if (file.size > maxSize) {
-            errorDiv.textContent = `File "${file.name}" exceeds 5MB limit`;
+            errorDiv.textContent = `File "${file.name}" exceeds 25MB limit`;
             errorDiv.style.display = 'block';
             e.target.value = ''; // Clear the file input
             return;
@@ -845,65 +1050,26 @@ document.getElementById('attachments').addEventListener('change', function(e) {
         document.getElementById('pendingRequestsList').style.display = 'none';
         document.getElementById('edit-community').style.display = 'none';
     }
-</script>
 
-<script>
-    // JavaScript for handling the tag dropdown functionality
-    const dropdownMenu = document.querySelector('.tag-dropdown-menu');
-    const tagDropdown = document.querySelector('.tag-dropdown');
-    const selectedTagsInput = document.getElementById('selected-tags');
-    const selectedTagsDisplay = document.getElementById('selected-tags-display');
-    let selectedTags = [];
+    function toggleReports() {
+        var reportsList = document.getElementById('reportsList');
 
-    function toggleDropdown() {
-        dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+        reportsList.style.display = reportsList.style.display === 'none' ? 'block' : 'none';
+        document.getElementById('adminsList').style.display = 'none';
+        document.getElementById('membersList').style.display = 'none';
+        document.getElementById('pendingRequestsList').style.display = 'none';
+        document.getElementById('create_post_form').style.display = 'none';
+        document.getElementById('edit-community').style.display = 'none';
+    }
+    
+    function openBanModal(memberId) {
+        document.getElementById('banMemberId').value = memberId;
+        document.getElementById('banMemberModal').style.display = 'block';
     }
 
-    function filterTags() {
-        const searchValue = document.querySelector('.tag-search').value.toLowerCase();
-        const items = document.querySelectorAll('.tag-dropdown-item');
-        items.forEach(item => {
-            const tagName = item.textContent.toLowerCase();
-            item.style.display = tagName.includes(searchValue) ? 'flex' : 'none';
-        });
+    function closeBanModal() {
+        document.getElementById('banMemberModal').style.display = 'none';
     }
-
-    function toggleTag(checkbox) {
-        const tagValue = checkbox.value;
-        if (checkbox.checked) {
-            if (!selectedTags.includes(tagValue)) {
-                selectedTags.push(tagValue);
-                displaySelectedTags();
-            }
-        } else {
-            selectedTags = selectedTags.filter(tag => tag !== tagValue);
-            displaySelectedTags();
-        }
-    }
-
-    function displaySelectedTags() {
-        selectedTagsDisplay.innerHTML = '';
-        selectedTags.forEach(tag => {
-            const tagElement = document.createElement('div');
-            tagElement.className = 'selected-tag';
-            tagElement.innerHTML = `${tag} <span class="selected-tag-remove" onclick="removeTag('${tag}')">&times;</span>`;
-            selectedTagsDisplay.appendChild(tagElement);
-        });
-        selectedTagsInput.value = selectedTags.join(',');
-    }
-
-    function removeTag(tag) {
-        selectedTags = selectedTags.filter(t => t !== tag);
-        document.querySelector(`.tag-dropdown-item input[value="${tag}"]`).checked = false;
-        displaySelectedTags();
-    }
-
-    // Close dropdown if clicking outside
-    document.addEventListener('click', function (event) {
-        if (!event.target.closest('.tag-dropdown-container')) {
-            dropdownMenu.style.display = 'none';
-        }
-    });
 </script>
 
 <style>
@@ -952,6 +1118,169 @@ document.getElementById('attachments').addEventListener('change', function(e) {
     color: #65676b;
 }
 </style>
+
+<script>
+document.querySelectorAll('.post_title').forEach(title => {
+    title.addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent any default behavior
+        const content = this.closest('.post').querySelector('.post_content');
+        
+        // Toggle content visibility
+        content.classList.toggle('show');
+        this.classList.toggle('active');
+    });
+});
+</script>
+
+<script>
+// Add this near your other chat-related JavaScript
+document.getElementById('chat-search').addEventListener('input', function(e) {
+    const searchText = e.target.value.toLowerCase();
+    const clearButton = document.getElementById('clear-search');
+    const messages = document.querySelectorAll('#chat-messages .message');
+    
+    clearButton.style.display = searchText ? 'block' : 'none';
+    
+    messages.forEach(message => {
+        const content = message.querySelector('.message-content').textContent.toLowerCase();
+        const username = message.querySelector('.message-username');
+        const usernameText = username ? username.textContent.toLowerCase() : '';
+        
+        // Remove any existing highlight spans
+        message.querySelectorAll('.highlight').forEach(span => {
+            const text = span.textContent;
+            span.replaceWith(text);
+        });
+        
+        if (searchText === '') {
+            message.style.display = 'flex';
+            return;
+        }
+        
+        if (content.includes(searchText) || usernameText.includes(searchText)) {
+            message.style.display = 'flex';
+            
+            // Highlight matching text in content
+            const contentElement = message.querySelector('.message-content');
+            const originalText = contentElement.textContent;
+            const highlightedText = originalText.replace(
+                new RegExp(searchText, 'gi'),
+                match => `<span class="highlight">${match}</span>`
+            );
+            contentElement.innerHTML = highlightedText;
+            
+            // Scroll the message into view
+            message.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            message.style.display = 'none';
+        }
+    });
+});
+
+document.getElementById('clear-search').addEventListener('click', function() {
+    const searchInput = document.getElementById('chat-search');
+    searchInput.value = '';
+    searchInput.dispatchEvent(new Event('input'));
+    this.style.display = 'none';
+});
+</script>
+
+<script>
+function filterMessages(type) {
+    const messages = document.querySelectorAll('#chat-messages .message');
+    const currentFilter = document.getElementById('current-filter');
+    currentFilter.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+    
+    messages.forEach(message => {
+        const hasAttachment = message.querySelector('.message-attachments');
+        
+        switch(type) {
+            case 'documents':
+                message.style.display = hasAttachment && 
+                    message.querySelector('a[href$=".pdf"], a[href$=".doc"], a[href$=".docx"], a[href$=".txt"]') ? 
+                    'flex' : 'none';
+                break;
+            case 'pictures':
+                message.style.display = hasAttachment && 
+                    message.querySelector('img:not(.message-avatar)') ? 
+                    'flex' : 'none';
+                break;
+            case 'videos':
+                message.style.display = hasAttachment && 
+                    message.querySelector('video, a[href$=".mp4"], a[href$=".mov"]') ? 
+                    'flex' : 'none';
+                break;
+            default:
+                message.style.display = 'flex';
+        }
+    });
+}
+
+// Update existing search function to include attachments
+document.getElementById('chat-search').addEventListener('input', function(e) {
+    const searchText = e.target.value.toLowerCase();
+    const clearButton = document.getElementById('clear-search');
+    const messages = document.querySelectorAll('#chat-messages .message');
+    
+    clearButton.style.display = searchText ? 'block' : 'none';
+    
+    messages.forEach(message => {
+        const content = message.querySelector('.message-content').textContent.toLowerCase();
+        const username = message.querySelector('.message-username');
+        const usernameText = username ? username.textContent.toLowerCase() : '';
+        const attachments = message.querySelectorAll('.message-attachments a');
+        let attachmentNames = '';
+        attachments.forEach(a => attachmentNames += a.textContent.toLowerCase() + ' ');
+        
+        if (searchText === '') {
+            message.style.display = 'flex';
+            return;
+        }
+        
+        if (content.includes(searchText) || 
+            usernameText.includes(searchText) || 
+            attachmentNames.includes(searchText)) {
+            // ... existing highlight code ...
+        } else {
+            message.style.display = 'none';
+        }
+    });
+});
+</script>
+
+<script>
+function refreshMessages() {
+    const refreshBtn = document.querySelector('.refresh-btn img');
+    refreshBtn.classList.add('rotating');
+    
+    fetch(`get_messages.php?community_id=<?php echo $communityID; ?>`)
+        .then(response => response.json())
+        .then(messages => {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = ''; // Clear existing messages
+            
+            messages.forEach(message => {
+                // Recreate message elements
+                const messageDiv = createMessageElement(message);
+                chatMessages.appendChild(messageDiv);
+            });
+        })
+        .catch(error => console.error('Error:', error))
+        .finally(() => {
+            setTimeout(() => {
+                refreshBtn.classList.remove('rotating');
+            }, 500);
+        });
+}
+
+function createMessageElement(message) {
+    // This is a simplified version - you'll need to match your existing message structure
+    const div = document.createElement('div');
+    div.className = `message ${message.UserID == <?php echo $userID; ?> ? 'message-self' : ''}`;
+    // Add your message content structure here
+    return div;
+}
+</script>
 
 </body>
 </html>

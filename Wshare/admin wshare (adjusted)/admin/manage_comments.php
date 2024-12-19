@@ -7,7 +7,7 @@ if (isset($_POST['delete_comment'])) {
 }
 
 // Handle search
-$comments = isset($_GET['search']) ? searchComments($_GET['search']) : getAllComments(20);
+$comments = isset($_GET['search']) ? searchCommentsDash($_GET['search']) : getAllComments(20);
 
 // Get comment statistics
 $commentStats = getCommentStats();
@@ -21,6 +21,8 @@ if (isset($_POST['filter_keyword'])) {
 if (isset($_POST['analyze_content'])) {
     $analysisResults = analyzeCommentContent($_POST['comment_id']);
 }
+
+$settings = getAllAdminSettings();
 ?>
 
 <!DOCTYPE html>
@@ -86,7 +88,8 @@ if (isset($_POST['analyze_content'])) {
                     <td><?php echo htmlspecialchars($comment['PostTitle']); ?></td>
                     <td><?php echo htmlspecialchars(substr($comment['Content'], 0, 100)) . '...'; ?></td>
                     <td><?php echo htmlspecialchars($comment['Username']); ?></td>
-                    <td><?php echo $comment['CreatedAt']; ?></td>
+                    <td><?php echo calculateTimeAgo($comment['CreatedAt']); ?></td>
+                    <td><?php echo countPostComments($comment['PostID']); ?></td>
                     <td>
                         <form method="POST" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this comment?');">
                             <input type="hidden" name="comment_id" value="<?php echo $comment['CommentID']; ?>">

@@ -1,78 +1,161 @@
-/*left navbar*/
-*{
+* {
     margin: 0;
     padding: 0;
     font-family: poppins;
 }
 
-.left-navbar{
-
-    height: 100%;
+.left-navbar {
+    height: 100vh;
     position: fixed;
     z-index: 970;
-    width: 350px;
-    background-color: #f9f9f9; 
+    width: 300px;
+    background-color: #f9f9f9;
+    overflow-y: auto;
+    padding-top: 60px; /* reduced from 80px */
+    list-style: none;
 }
 
-
-.left-nav{
-    display: flex;
-    padding: 10px;
+.left-navbar li {
+    list-style-type: none;
+    margin: 0 !important; /* Force this margin */
+    padding: 0 !important; /* Force this padding */
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
-.left-nav:hover{
-    background-color: #f1f1f1;
-}
-
-.left-nav p{
-    font-weight: normal;
+.left-navbar a {
     text-decoration: none;
-    align-self: center;
-    margin: 5px;
-    padding: 5px;
-    color: black;
-    
+    color: inherit;
 }
 
-.left-navbar li a{
-    text-decoration: none;
-}
-
-.username-nav{
+/* Profile Section */
+.profile-section {
     padding: 20px;
-    color: #0056b3;
-    /*text-shadow: 0px 0px 5px #007bff;*/
     text-align: center;
-
-    
-
-    b{
-        color: #007bff;
-    }
+    border-bottom: 1px solid #e0e0e0;
 }
 
-.login_user_pic{
-    
-    
-    height:40px;
-    width: 40px;
-    padding:10px; 
-    border-radius:40px ;    
-}
-
-.icons{
+.profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     padding: 10px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.profile-image {
+    margin-bottom: 10px;
+}
+
+.login_user_pic {
+    height: 40px; /* reverted from 60px */
+    width: 40px; /* reverted from 60px */
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #007bff;
+}
+
+.username-nav {
+    font-size: 0.9rem; /* reverted from 1rem */
+    color: #333;
+    margin: 5px 0;
+}
+
+.username-nav b {
+    color: #007bff;
+}
+
+/* Navigation Sections */
+.nav-section {
+    padding: 15px 0;  /* reduced from 20px 0 */
+    border-bottom: 1px solid #e0e0e0;
+    list-style: none;
+}
+
+.nav-section li {
+    list-style-type: none;
+    margin: 0 !important; /* Force this margin */
+    padding: 0 !important; /* Force this padding */
+}
+
+.section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #666;
+    padding: 0 20px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.left-nav {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;  /* reduced from 15px 25px */
+    transition: all 0.2s ease;
+    border-radius: 0 25px 25px 0;
+    margin: 2px 0;  /* reduced from 4px 0 */
+}
+
+.left-nav:hover {
+    background-color: #f0f7ff;
+    transform: translateX(5px);
+}
+
+.icons {
     height: 20px;
     width: 20px;
+    margin-right: 12px;
 }
 
+.left-nav p {
+    text-decoration: none;
+    font-size: 0.9rem;
+    color: #333;
+    margin: 0;
+}
+
+/* Notification Badge */
+.notification-badge {
+    background-color: #ff4444;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    margin-left: auto;
+}
+
+/* Admin Section */
+.admin-nav {
+    background-color: #f8f9fa;
+    border-left: 3px solid #007bff;
+}
+
+/* Mobile Navigation Overlay */
+.navbar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 960;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
     .left-navbar {
-       
-        display: none;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 970;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+
+    .left-navbar.active {
+        transform: translateX(0);
     }
 }
-/*universal*/
 
 
 

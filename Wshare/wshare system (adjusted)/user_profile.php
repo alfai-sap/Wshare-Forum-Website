@@ -101,14 +101,13 @@
             </div>
 
             <p class = "Profile-email"><b><?php echo $user['Email']; ?></p>
-            <p class = "Profile-joined"><b><?php echo "Joined ". timeAgo($user['JoinedAt']); ?></p>
-            
-            
+            <p class = "Profile-joined"><b><?php echo "Joined ". timeAgo($user['JoinedAt']); ?></p><br><br>
+
+            <button class="update-profile-btn"><a href="edit_profile.php">Edit Profile</a></button>
         </div>
 
         
         <br>
-        <button class="update-profile-btn"><a href="edit_profile.php">Edit Profile</a></button>
         
         <h3  class = "pfp-label" style="color: #007bff; text-align: left; padding-top:50px;">Bio</h3>       
 
@@ -166,19 +165,19 @@
                                     </button>
                                 </form>
 
-                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff; font-weight: normal;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
+                                <span class="like-count" style = "display:flex; align-self:center; color:#0056b3; font-weight: normal;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
 
                                 <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="comment.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"></button>
 
-                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff; font-weight: normal;"><?php echo countComments($post['PostID']); ?> Comments</span>
+                                <span class="like-count" style = "display:flex; align-self:center; color:#0056b3; font-weight: normal;"><?php echo countComments($post['PostID']); ?> Comments</span>
 
-                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;"> See disscussion</p></a> </button>
+                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#0056b3; margin-left:5px;"> See disscussion</p></a> </button>
 
                                 <p class = "divider" style="display:flex; color: #007bff; font-weight:bold; align-self:center;"> | </p>
 
                                 <form action="edit_post.php" method="GET">
                                     <input type="hidden" name="post_id" value="<?php echo $post['PostID']; ?>">
-                                    <button class = "like-btn" type="submit" style = "display:flex; background-color:transparent; border:none; padding: 10px;"><img class = "bulb" src="edit.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;">Edit post</p></button>
+                                    <button class = "like-btn" type="submit" style = "display:flex; background-color:transparent; border:none; padding: 10px;"><img class = "bulb" src="edit.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#0056b3; margin-left:5px;padding:5px;">Edit post</p></button>
                                 </form>
                                 
                                 <button class = "non-nav-icon" onclick="confirmDelete(<?php echo $post['PostID']; ?>)"><img class = "non-nav-icon-img" src="delete.svg">

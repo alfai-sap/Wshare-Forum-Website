@@ -206,90 +206,203 @@ $monthlyPosts = getPostGrowth();
 </div>
 
 <script>
-// Format data for charts
-const userGrowthData = <?php echo json_encode(array_map(function($item) {
-    return [
-        'date' => $item['join_date'],
-        'count' => (int)$item['new_users']
-    ];
-}, $dailyNewUsers)); ?>;
+// Chart theme colors
+const chartColors = {
+    primary: '#4e73df',
+    success: '#1cc88a',
+    info: '#36b9cc',
+    warning: '#f6c23e',
+    danger: '#e74a3b',
+    secondary: '#858796',
+    gridLines: '#eaecf4',
+    text: '#5a5c69'
+};
 
-const postGrowthData = <?php echo json_encode(array_map(function($item) {
-    return [
-        'date' => $item['post_date'],
-        'count' => (int)$item['new_posts']
-    ];
-}, $monthlyPosts)); ?>;
+// Enhanced gradient backgrounds
+const primaryGradient = document.getElementById('userActivityChart').getContext('2d').createLinearGradient(0, 0, 0, 400);
+primaryGradient.addColorStop(0, 'rgba(78, 115, 223, 0.3)');
+primaryGradient.addColorStop(1, 'rgba(78, 115, 223, 0)');
+
+const successGradient = document.getElementById('contentGrowthChart').getContext('2d').createLinearGradient(0, 0, 0, 400);
+successGradient.addColorStop(0, 'rgba(28, 200, 138, 0.3)');
+successGradient.addColorStop(1, 'rgba(28, 200, 138, 0)');
+
+// Chart.js global defaults
+Chart.defaults.font.family = "'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+Chart.defaults.plugins.tooltip.titleColor = '#ffffff';
+Chart.defaults.plugins.tooltip.bodyColor = '#ffffff';
+Chart.defaults.plugins.tooltip.borderColor = 'rgba(255, 255, 255, 0.1)';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.cornerRadius = 6;
+
+// Ensure we have valid data
+const userGrowthData = <?php echo json_encode($dailyNewUsers ?? []); ?>;
+const postGrowthData = <?php echo json_encode($monthlyPosts ?? []); ?>;
 
 // User Activity Chart
-const userActivityChart = new Chart(
+new Chart(
     document.getElementById('userActivityChart'),
     {
         type: 'line',
         data: {
-            labels: userGrowthData.map(row => row.date),
+            labels: userGrowthData.map(row => row.join_date),
             datasets: [{
                 label: 'New Users',
-                data: userGrowthData.map(row => row.count),
-                borderColor: '#007bff',
-                tension: 0.1,
-                fill: false
+                data: userGrowthData.map(row => row.new_users),
+                borderColor: chartColors.primary,
+                backgroundColor: primaryGradient,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: chartColors.primary,
+                pointBorderColor: '#fff',
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: chartColors.primary,
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                },
                 title: {
                     display: true,
-                    text: 'User Growth Trend'
+                    text: 'User Growth Trend',
+                    padding: 20,
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
                 }
             },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    grid: {
+                        color: chartColors.gridLines,
+                        borderDash: [2, 2]
+                    },
+                    title: {
+                        display: true,
+                        text: 'Number of Users',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Date',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
                 }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
             }
         }
     }
 );
 
 // Content Growth Chart
-const contentGrowthChart = new Chart(
+new Chart(
     document.getElementById('contentGrowthChart'),
     {
         type: 'bar',
         data: {
-            labels: postGrowthData.map(row => row.date),
+            labels: postGrowthData.map(row => row.post_date),
             datasets: [{
                 label: 'New Posts',
-                data: postGrowthData.map(row => row.count),
-                backgroundColor: '#28a745',
-                borderColor: '#28a745',
-                borderWidth: 1
+                data: postGrowthData.map(row => row.new_posts),
+                backgroundColor: successGradient,
+                borderColor: chartColors.success,
+                borderWidth: 2,
+                borderRadius: 4,
+                hoverBackgroundColor: chartColors.success
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                },
                 title: {
                     display: true,
-                    text: 'Post Growth Trend'
+                    text: 'Post Growth Trend',
+                    padding: 20,
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
                 }
             },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    grid: {
+                        color: chartColors.gridLines,
+                        borderDash: [2, 2]
+                    },
+                    title: {
+                        display: true,
+                        text: 'Number of Posts',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Date',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
                 }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
             }
         }
     }
 );
 
+// Enhanced Heatmap
 const heatmapData = <?php echo json_encode(getUserActivityHeatmapData()); ?>;
 
-const userActivityHeatmap = new Chart(
+new Chart(
     document.getElementById('userActivityHeatmap'),
     {
         type: 'matrix',
@@ -303,27 +416,31 @@ const userActivityHeatmap = new Chart(
                 })),
                 backgroundColor: context => {
                     const value = context.dataset.data[context.dataIndex].v;
-                    const alpha = value / Math.max(...heatmapData.data);
-                    return `rgba(255, 99, 132, ${alpha})`;
+                    const maxValue = Math.max(...heatmapData.data);
+                    const alpha = value / maxValue;
+                    return `rgba(78, 115, 223, ${alpha})`;
                 },
-                borderColor: 'rgba(255, 99, 132, 1)',
+                borderColor: '#ffffff',
                 borderWidth: 1,
-                width: context => context.chart.chartArea.width / 24,
-                height: context => context.chart.chartArea.height / 31
+                width: ({ chart }) => (chart.chartArea || {}).width / 24 - 1,
+                height: ({ chart }) => (chart.chartArea || {}).height / 31 - 1
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                title: {
-                    display: true,
-                    text: 'Heatmap of User Activity'
+                legend: {
+                    display: false
                 },
                 tooltip: {
                     callbacks: {
-                        title: context => `Hour: ${context[0].raw.x}, Day: ${context[0].raw.y}`,
-                        label: context => `Activity Count: ${context.raw.v}`
+                        title: context => {
+                            const hour = context[0].raw.x;
+                            const day = context[0].raw.y;
+                            return `Hour: ${hour}:00, Day ${day}`;
+                        },
+                        label: context => `Activity: ${context.raw.v}`
                     }
                 }
             },
@@ -331,16 +448,25 @@ const userActivityHeatmap = new Chart(
                 x: {
                     type: 'linear',
                     position: 'bottom',
+                    min: 0,
+                    max: 23,
                     ticks: {
                         stepSize: 1,
                         callback: value => `${value}:00`
+                    },
+                    grid: {
+                        display: false
                     }
                 },
                 y: {
                     type: 'linear',
+                    min: 1,
+                    max: 31,
                     ticks: {
-                        stepSize: 1,
-                        callback: value => `Day ${value}`
+                        stepSize: 1
+                    },
+                    grid: {
+                        display: false
                     }
                 }
             }

@@ -1,30 +1,20 @@
 <?php
-include 'dashFunctions.php';
+require_once 'dashFunctions.php';
 
 if (!isset($_GET['id'])) {
-    die('Report ID is required');
+    header('Location: reports.php');
+    exit();
 }
 
-$reportId = $_GET['id'];
-$report = getReportDetails($reportId);
+$reportId = intval($_GET['id']);
+$reportDetails = getReportedPostDetails($reportId);
 
-if (!$report) {
-    die('Report not found');
+if (!$reportDetails) {
+    echo "Report not found.";
+    exit();
 }
-
-// Fetch additional details based on report type
-$targetDetails = [];
-if ($report['ReportType'] == 'post') {
-    $targetDetails = getPostDetails($report['TargetID']);
-} elseif ($report['ReportType'] == 'comment') {
-    $targetDetails = getCommentDetails($report['TargetID']);
-} elseif ($report['ReportType'] == 'user') {
-    $targetDetails = getUserDetails($report['TargetID']);
-}
-
-// Fetch the person being reported
-$reportedUser = getUserDetails($report['ReportedUserID']);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,123 +24,144 @@ $reportedUser = getUserDetails($report['ReportedUserID']);
     <link rel="stylesheet" href="dashboard.css">
     <style>
         .container {
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
-        }
-        .report-details, .post-container, .comment-details, .user-details {
             background-color: #f9f9f9;
-            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .report-details {
             margin-bottom: 20px;
         }
-        .report-details p, .post-container p, .comment-details p, .user-details p {
+        .report-details p {
             margin: 10px 0;
         }
-        .post-container .post {
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
+        .report-details strong {
+            display: inline-block;
+            width: 150px;
         }
-        .post-container .author-info {
-            display: flex;
-            align-items: center;
-        }
-        .post-container .author_pic {
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            margin-right: 10px;
-        }
-        .post-container .unametime {
-            display: flex;
-            flex-direction: column;
-        }
-        .post-container .post-tags {
-            margin: 10px 0;
-        }
-        .post-container .tag-label {
-            background-color: #007bff;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 5px;
-            margin-right: 5px;
-        }
-        .post-container .post-image {
-            margin: 20px 0;
-        }
-        .post-container .lik {
-            display: flex;
-            align-items: center;
-        }
-        .post-container .like-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        .post-container .like-count {
-            margin-right: 20px;
-        }
-        .comments-label {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-        .comments-label img {
-            margin-left: 10px;
-            transition: transform 0.3s;
-        }
-        .comments {
-            display: none;
+        .evidence-section {
             margin-top: 20px;
         }
-        .comment {
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-        }
-        .comments_author {
-            display: flex;
-            align-items: center;
-        }
-        .comments_author_pfp {
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            margin-right: 10px;
-        }
-        .comments_author_uname_time {
-            display: flex;
-            flex-direction: column;
-        }
-        .commentcontent {
+        .evidence-section img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
             margin-top: 10px;
         }
-        .reply-btn, .shw {
-            background: none;
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .ban-modal {
+            height: 500px;
+            width: 800px;
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .ban-modal h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .ban-modal .form-group {
+            margin-bottom: 15px;
+        }
+        .ban-modal label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .ban-modal select,
+        .ban-modal textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .ban-modal textarea {
+            resize: vertical;
+            height: 100px;
+        }
+        .ban-modal button {
+            margin-top: 10px;
+        }
+        .btn-info, .btn-success, .btn-warning, .btn-danger, .btn-secondary {
+            color: white;
             border: none;
+            margin: 10;
+            padding: 5px 10px;
+            border-radius: 4px;
             cursor: pointer;
-            color: #007bff;
-            display: flex;
-            align-items: center;
         }
-        .reply-btn img, .shw img {
-            margin-right: 5px;
+
+        .btn-info {
+            background-color: #17a2b8;
         }
-        .replies {
-            margin-top: 10px;
-            padding-left: 20px;
+
+        .btn-info:hover {
+            background-color: #138496;
         }
-        .comment-replies {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
+
+        .btn-success {
+            background-color: #28a745;
         }
-        .comment-reply-author-pfp {
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            margin-right: 10px;
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-warning {
+            background-color: #dc3545; /* Change to red */
+            color: white; /* Change text color to white */
+        }
+
+        .btn-warning:hover {
+            background-color: #c82333; /* Darker red on hover */
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
         }
     </style>
 </head>
@@ -160,211 +171,68 @@ $reportedUser = getUserDetails($report['ReportedUserID']);
     <div class="container">
         <h1>Report Details</h1>
         <div class="report-details">
-            <p><strong>ID:</strong> <?php echo $report['ReportID']; ?></p>
-            <p><strong>Type:</strong> <?php echo ucfirst($report['ReportType']); ?></p>
-            <p><strong>Reporter:</strong> <?php echo htmlspecialchars($report['ReporterName']); ?></p>
-            <p><strong>Violation:</strong> <?php echo htmlspecialchars($report['Violation']); ?></p>
-            <p><strong>Status:</strong> <?php echo ucfirst($report['Status']); ?></p>
-            <p><strong>Created At:</strong> <?php echo $report['CreatedAt']; ?></p>
-            <p><strong>Target Content:</strong> <?php echo htmlspecialchars($report['TargetContent']); ?></p>
-            <p><strong>Additional Info:</strong> <?php echo htmlspecialchars($report['AdditionalInfo']); ?></p>
-            <?php if ($report['EvidencePhoto']): ?>
-                <p><strong>Evidence Photo:</strong></p>
-                <img src="<?php echo htmlspecialchars($report['EvidencePhoto']); ?>" alt="Evidence Photo">
-            <?php endif; ?>
-            <?php if ($reportedUser): ?>
-                <p><strong>Reported User:</strong> <?php echo htmlspecialchars($reportedUser['Username']); ?></p>
+            <p><strong>Report ID:</strong> <?php echo $reportDetails['ReportID']; ?></p>
+            <p><strong>Report Type:</strong> <?php echo ucfirst($reportDetails['ReportType']); ?></p>
+            <p><strong>Reporter:</strong> <?php echo htmlspecialchars($reportDetails['ReporterName']); ?></p>
+            <p><strong>Reported User:</strong> <?php echo htmlspecialchars($reportDetails['ReportedUsername']); ?></p>
+            <p><strong>Violation:</strong> <?php echo htmlspecialchars($reportDetails['Violation']); ?></p>
+            <p><strong>Status:</strong> <?php echo ucfirst($reportDetails['Status']); ?></p>
+            <p><strong>Created At:</strong> <?php echo $reportDetails['CreatedAt']; ?></p>
+            <p><strong>Post Title:</strong> <?php echo htmlspecialchars($reportDetails['Title']); ?></p>
+            <p><strong>Post Content:</strong> <?php echo nl2br(htmlspecialchars($reportDetails['Content'])); ?></p>
+        </div>
+        <div class="evidence-section">
+            <h2>Evidence</h2>
+            <?php if (!empty($reportDetails['EvidencePhoto'])): ?>
+                <img src="<?php echo htmlspecialchars($reportDetails['EvidencePhoto']); ?>" alt="Evidence Photo" style="max-width: 100%; height: auto;">
             <?php else: ?>
-                <p><strong>Reported User:</strong> Not available</p>
+                <p>No evidence provided.</p>
             <?php endif; ?>
         </div>
-
-        <?php if ($report['ReportType'] == 'post' && $targetDetails): ?>
-            <h2>Post Details</h2>
-            <div class="post-container">
-                <div class="post">
-                    <div class="author-info">
-                        <?php $profilePic = getUserProfileById($targetDetails['UserID'])['ProfilePic']; ?>
-                        <?php if (!empty($profilePic)): ?>
-                            <img class="author_pic" src="<?php echo '/wshare system (adjusted)/uploads/' . $profilePic; ?>" alt="Profile Picture">
-                        <?php else: ?>
-                            <img class="author_pic" src="default_pic.svg" alt="Profile Picture">
-                        <?php endif; ?>
-                        
-                        <div class="unametime">
-                            <div class="unam-time">
-                                <p class="authorname"><?php echo $targetDetails['Username'] ?? 'Unknown'; ?></p>
-                                <p class="timestamp"><?php echo timeAgo($targetDetails['CreatedAt']); ?></p>
-                            </div>
-                            
-                            <p class="timestamp-update">edited <?php echo timeAgo($targetDetails['updatedAt']); ?></p>
-                        </div>
-                    </div>
-                            
-                    <?php                                                                  
-                        $postID = $targetDetails['PostID'];
-
-                        // Query to get tags associated with the post
-                        $tagsQuery = "SELECT t.TagName FROM post_tags pt
-                                    INNER JOIN tags t ON pt.TagID = t.TagID
-                                    WHERE pt.PostID = ?";
-                        $tagsStmt = $conn->prepare($tagsQuery);
-                        $tagsStmt->bind_param('i', $postID);
-                        $tagsStmt->execute();
-                        $tagsResult = $tagsStmt->get_result();
-
-                        $tags = [];
-                        while ($row = $tagsResult->fetch_assoc()) {
-                            $tags[] = $row['TagName'];
-                        }
-
-                        $tagsStmt->close();
-
-                        if (!empty($tags)): ?>
-                            <div class="post-tags">
-                                <?php foreach ($tags as $tag): ?>
-                                    <span class="tag-label"><?php echo htmlspecialchars($tag); ?></span>
-                                <?php endforeach; ?>
-                            </div>
-                    <?php endif; ?>
-                    <h3><?php echo $targetDetails['Title']; ?></h3>
-                    
-                    <p class="post-content"><?php echo $targetDetails['Content']; ?></p>
-            
-                          
-                    <?php if (!empty($targetDetails['PhotoPath'])): ?>
-                        <div class="post-image">
-                            <img class="post-image-img" src="<?php echo '/wshare system (adjusted)/posts_img/uploads/' . $targetDetails['PhotoPath']; ?>" alt="Post Image">
-                        </div>
-                    <?php endif; ?>
-
-                    <div class="lik">
-                        <form class="like" action="like_post.php" method="POST">
-                            <input type="hidden" name="postID" value="<?php echo $targetDetails['PostID']; ?>">
-                            <button type="submit" class="like-btn" name="like"><img class="bulb" src="bulb.svg"></button>
-                        </form>
-
-                        <span class="like-count"><?php echo $targetDetails['like_count']; ?> Brilliant Points</span>
-                        
-                        <button class="like-btn"><img class="bulb" src="comment.svg"></button>
-
-                        <span class="like-count"><?php echo countComments($targetDetails['PostID']); ?> Comments</span>
-                    </div>
-                </div>
-            
-                <?php if ($targetDetails['comments']): ?>
-                    <div id="comments-label" class="comments-label">
-                        <h4>Comments</h4>
-                        <p><img id="comments-label-icon" class="comments-label-icon" src="show.svg"></p>
-                    </div>
-
-                    <div class="comments" id="comments">
-                        <?php foreach ($targetDetails['comments'] as $comment): ?>
-                            <div class="comment">
-                                <div class="comments_author">
-                                    <div class="comments_author_uname_content">
-                                        <?php $commentProfilePic = getUserProfileById($comment['UserID'])['ProfilePic']; ?>
-                                        <?php if (!empty($commentProfilePic)): ?>
-                                            <img class="comments_author_pfp" src="<?php echo 'uploads/' . $commentProfilePic; ?>">
-                                        <?php else: ?>
-                                            <img class="comments_author_pfp" src="default_pic.svg">
-                                        <?php endif; ?>
-            
-                                        <div class="comments_author_uname_time">
-                                            <p class="comments_author_uname"><strong><?php echo $comment['Username']; ?></strong></p>
-                                            <p class="comment_timestamp"><?php echo timeAgo($comment['CreatedAt']); ?></p>
-                                        </div>
-                                    </div>
-                                    <p class="commentcontent"><?php echo $comment['Content']; ?></p>
-                                </div>
-            
-                                <?php $replies = getRepliesByCommentId($comment['CommentID']); ?>
-                                <?php if ($replies): ?>
-                                    <button class="shw" data-comment-id="<?php echo $comment['CommentID']; ?>">
-                                        <p class="icon-label">
-                                            <img class="reply-icon" src="chats.svg"> replies
-                                        </p>
-                                    </button>
-                                    <div class="replies" style="display: none;">
-                                        <?php foreach ($replies as $reply): ?>
-                                            <div class="comment-replies">
-                                                <?php $replyProfilePic = getUserProfileById($reply['UserID'])['ProfilePic']; ?>
-                                                <?php if (!empty($replyProfilePic)): ?>
-                                                    <img class="comment-reply-author-pfp" src="<?php echo 'uploads/' . $replyProfilePic; ?>">
-                                                <?php else: ?>
-                                                    <img class="comment-reply-author-pfp" src="default_pic.svg">
-                                                <?php endif; ?>
-                                                <p class="comment-reply-content">
-                                                    <strong><?php echo $reply['Username']; ?>:</strong> <?php echo $reply['Content']; ?>
-                                                </p>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
-            
-                                <button class="reply-btn" data-comment-id="<?php echo $comment['CommentID']; ?>">
-                                    <p class="icon-label">
-                                        <img class="reply-icon" src="reply.svg"> reply
-                                    </p>
-                                </button>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        <?php elseif ($report['ReportType'] == 'comment' && $targetDetails): ?>
-            <h2>Comment Details</h2>
-            <div class="comment-details">
-                <p><strong>Content:</strong> <?php echo nl2br(htmlspecialchars($targetDetails['Content'])); ?></p>
-                <p><strong>Post Title:</strong> <?php echo htmlspecialchars($targetDetails['PostTitle']); ?></p>
-                <p><strong>Author:</strong> <?php echo htmlspecialchars($targetDetails['Username']); ?></p>
-            </div>
-        <?php elseif ($report['ReportType'] == 'user' && $targetDetails): ?>
-            <h2>User Details</h2>
-            <div class="user-details">
-                <p><strong>Username:</strong> <?php echo htmlspecialchars($targetDetails['Username']); ?></p>
-                <p><strong>Email:</strong> <?php echo htmlspecialchars($targetDetails['Email']); ?></p>
-                <p><strong>Joined At:</strong> <?php echo $targetDetails['dateJoined']; ?></p>
-            </div>
-        <?php endif; ?>
+        <div class="action-buttons">
+            <a href="reports.php" class="btn">Back to Reports</a>
+            <button class="btn" onclick="showBanModal(<?php echo $reportDetails['ReportedUserID']; ?>)">Ban User</button>
+        </div>
     </div>
 
+    <!-- Ban Modal -->
+    <div id="banModal" class="ban-modal">
+        <h2>Ban User</h2>
+        <form method="POST" action="manage_users.php">
+            <input type="hidden" name="user_id" id="banUserId">
+            <div class="form-group">
+                <label for="ban_duration">Ban Duration (days):</label>
+                <select name="ban_duration" id="ban_duration" required>
+                    <option value="1">1 day</option>
+                    <option value="3">3 days</option>
+                    <option value="7">1 week</option>
+                    <option value="30">1 month</option>
+                    <option value="90">3 months</option>
+                    <option value="365">1 year</option>
+                    <option value="36500">Permanent</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="ban_reason">Reason:</label>
+                <textarea name="ban_reason" id="ban_reason" required></textarea>
+            </div>
+            <button type="submit" name="ban_user" class="btn btn-danger">Ban User</button>
+            <button type="button" onclick="hideBanModal()" class="btn btn-secondary">Cancel</button>
+        </form>
+    </div>
+    <div id="modalBackdrop" class="modal-backdrop"></div>
+
     <script>
-    document.getElementById('comments-label').addEventListener('click', function() {
-        var icon = document.getElementById('comments-label-icon');
-        var element = document.getElementById('comments');
-        if (element.style.display === 'none') {
-            icon.style.transform = 'rotateZ(180deg)';
-            element.style.display = 'block';
-        } else {
-            icon.style.transform = 'rotateZ(0deg)';
-            element.style.display = 'none';
-        }
-    });
+    function showBanModal(userId) {
+        document.getElementById('banUserId').value = userId;
+        document.getElementById('banModal').style.display = 'block';
+        document.getElementById('modalBackdrop').style.display = 'block';
+    }
 
-    // JavaScript to toggle reply form visibility
-    document.querySelectorAll('.reply-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const replyForm = this.nextElementSibling;
-            if (replyForm.style.display === 'none') {
-                replyForm.style.display = 'block';
-            } else {
-                replyForm.style.display = 'none';
-            }
-        });
-    });
-
-    // JavaScript to toggle replies visibility
-    document.querySelectorAll('.shw').forEach(button => {
-        button.addEventListener('click', function() {
-            const replies = this.parentNode.querySelector('.replies');
-            if (replies.style.display === 'none' || replies.style.display === '') {
-                replies.style.display = 'block';
-            } else {
-                replies.style.display = 'none';
-            }
-        });
-    });
+    function hideBanModal() {
+        document.getElementById('banModal').style.display = 'none';
+        document.getElementById('modalBackdrop').style.display = 'none';
+    }
     </script>
 </body>
 </html>

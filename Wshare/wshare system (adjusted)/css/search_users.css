@@ -10,16 +10,16 @@ form {
     margin-bottom: 20px;
 }
 
-
-
-.login_user_pic {
+/* Scope login_user_pic specifically for search results */
+.search-result .login_user_pic {
     height: 40px;
     width: 40px;
     padding: 10px;
     border-radius: 30px;
 }
 
-.icons {
+/* Scope icons specifically for search results */
+.search-result .icons {
     padding: 10px;
     height: 25px;
     width: 25px;
@@ -63,6 +63,26 @@ strong {
     justify-self: center;
     text-decoration: none;
     color: #0056b3;
+}
+
+/* Scope profile specific styles */
+.search-result .prof_uname {
+    display: flex;
+    align-items: center;
+    margin: 5px;
+}
+
+.search-result .prof_pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    padding: 0; /* Remove padding that might conflict */
+}
+
+/* Override any inherited navbar styles */
+.navbar .search-input,
+.navbar .btn-search {
+    margin: 5px 0;
 }
 
 .prof_uname {

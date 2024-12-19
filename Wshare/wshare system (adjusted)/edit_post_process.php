@@ -8,6 +8,7 @@ if (!isset($_SESSION['username']) || !isset($_POST['post_id'])) {
 }
 
 $postID = $_POST['post_id'];
+$title = $_POST['title'];
 $content = $_POST['content'];
 $selectedTags = isset($_POST['selected_tags']) ? $_POST['selected_tags'] : '';
 
@@ -43,14 +44,14 @@ if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
     
     if (move_uploaded_file($_FILES['photo']['tmp_name'], $photoPath)) {
         // Update post with new photo path
-        $updatePost = $conn->prepare("UPDATE posts SET Content = ?, PhotoPath = ? WHERE PostID = ?");
-        $updatePost->bind_param('ssi', $content, $photoPath, $postID);
+        $updatePost = $conn->prepare("UPDATE posts SET Title = ?, Content = ?, PhotoPath = ? WHERE PostID = ?");
+        $updatePost->bind_param('sssi', $title, $content, $photoPath, $postID);
         $updatePost->execute();
     }
 } else {
     // Update post without changing photo
-    $updatePost = $conn->prepare("UPDATE posts SET Content = ? WHERE PostID = ?");
-    $updatePost->bind_param('si', $content, $postID);
+    $updatePost = $conn->prepare("UPDATE posts SET Title = ?, Content = ? WHERE PostID = ?");
+    $updatePost->bind_param('ssi', $title, $content, $postID);
     $updatePost->execute();
 }
 
@@ -83,10 +84,67 @@ if (isset($_FILES['new_photos']) && !empty($_FILES['new_photos']['name'][0])) {
     }
 }
 
-// Update the main post content
-$updatePost = $conn->prepare("UPDATE posts SET Content = ? WHERE PostID = ?");
-$updatePost->bind_param('si', $content, $postID);
-$updatePost->execute();
+// Handle document removal
+if (isset($_POST['remove_documents']) && is_array($_POST['remove_documents'])) {
+    $removeDocStmt = $conn->prepare("DELETE FROM post_documents WHERE DocumentPath = ? AND PostID = ?");
+    foreach ($_POST['remove_documents'] as $documentPath) {
+        $removeDocStmt->bind_param('si', $documentPath, $postID);
+        $removeDocStmt->execute();
+    }
+}
+
+// Handle new document uploads
+if (isset($_FILES['documents']) && !empty($_FILES['documents']['name'][0])) {
+    $uploadedDocuments = uploadDocuments($_FILES['documents']);
+    foreach ($uploadedDocuments as $documentPath) {
+        $sql = "INSERT INTO post_documents (PostID, DocumentPath) VALUES (?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('is', $postID, $documentPath);
+        $stmt->execute();
+    }
+}
+
+// Handle video removal
+if (isset($_POST['remove_videos']) && is_array($_POST['remove_videos'])) {
+    $removeVideoStmt = $conn->prepare("DELETE FROM post_videos WHERE VideoID = ? AND PostID = ?");
+    foreach ($_POST['remove_videos'] as $videoId) {
+        $removeVideoStmt->bind_param('ii', $videoId, $postID);
+        $removeVideoStmt->execute();
+    }
+}
+
+// Handle new video uploads
+if (isset($_FILES['new_videos']) && !empty($_FILES['new_videos']['name'][0])) {
+    $uploadDir = 'uploads/videos/';
+    if (!file_exists($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    $maxSize = 100 * 1024 * 1024; // 100MB
+    
+    foreach($_FILES['new_videos']['tmp_name'] as $key => $tmp_name) {
+        if ($_FILES['new_videos']['error'][$key] === UPLOAD_ERR_OK) {
+            if ($_FILES['new_videos']['size'][$key] <= $maxSize) {
+                $videoName = uniqid() . '_' . basename($_FILES['new_videos']['name'][$key]);
+                $videoPath = $uploadDir . $videoName;
+                
+                if (move_uploaded_file($tmp_name, $videoPath)) {
+                    $sql = "INSERT INTO post_videos (PostID, VideoPath) VALUES (?, ?)";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param('is', $postID, $videoPath);
+                    $stmt->execute();
+                }
+            }
+        }
+    }
+}
+
+// Handle main photo removal
+if (isset($_POST['remove_main_photo']) && $_POST['remove_main_photo'] == '1') {
+    $updatePost = $conn->prepare("UPDATE posts SET PhotoPath = NULL WHERE PostID = ?");
+    $updatePost->bind_param('i', $postID);
+    $updatePost->execute();
+}
 
 // Handle tags
 // First, remove existing tags

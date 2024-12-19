@@ -1,15 +1,21 @@
 <?php
-include 'dashFunctions.php'; // Include your database functions
+include 'dashFunctions.php';
+session_start();
 
+// Check if admin is logged in
+checkAdminSession();
+
+// Store admin ID in a variable for use throughout the page
+$adminID = $_SESSION['admin_id'];
 
 // Handle CRUD operations
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_user'])) {
-        addUser($_POST['username'], $_POST['email'], $_POST['password']);
+        addUserDash($_POST['username'], $_POST['email'], $_POST['password']);
     } elseif (isset($_POST['update_user'])) {
-        updateUser($_POST['user_id'], $_POST['username'], $_POST['email']);
+        updateUserDash($_POST['user_id'], $_POST['username'], $_POST['email']);
     } elseif (isset($_POST['delete_user'])) {
-        deleteUser($_POST['user_id']);
+        deleteUserDash($_POST['user_id']);
     }
 }
 
@@ -18,8 +24,8 @@ if (isset($_POST['ban_user'])) {
     $userID = $_POST['user_id'];
     $reason = $_POST['ban_reason'];
     $duration = $_POST['ban_duration'];
-    $adminID = $_SESSION['admin_id']; // Make sure you have admin's session
-
+    
+    // Use the stored admin ID
     if (banUser($userID, $adminID, $reason, $duration)) {
         $success = "User has been banned successfully.";
     } else {
@@ -41,7 +47,7 @@ if (isset($_POST['unban_user'])) {
 }
 
 // Fetch all users for display
-$users = getAllUsers();
+$users = getAllUsersDash();
 
 // Handle search query
 $searchTerm = '';
@@ -51,6 +57,26 @@ if (isset($_POST['search'])) {
 
 // Fetch all users for display or filter based on search term
 $users = getUsersBySearch($searchTerm);
+
+if (!isset($_SESSION['admin_id'])) {
+    header('Location: login.php');
+    exit();
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'ban' && isset($_GET['user_id'])) {
+    $userId = intval($_GET['user_id']);
+    $adminId = $_SESSION['admin_id'];
+    $reason = "Violation of community guidelines"; // You can customize this or get it from a form
+    $duration = 30; // Ban duration in days
+
+    if (banUser($userId, $adminId, $reason, $duration)) {
+        echo "User has been banned successfully.";
+    } else {
+        echo "Failed to ban the user.";
+    }
+}
+
+$settings = getAllAdminSettings();
 
 ?>
 <!DOCTYPE html>
@@ -243,7 +269,7 @@ $users = getUsersBySearch($searchTerm);
                 <td><?php echo $user['UserID']; ?></td>
                 <td><?php echo $user['Username']; ?></td>
                 <td><?php echo $user['Email']; ?></td>
-                <td><?php echo timeAgo($user['JoinedAt']); ?></td>
+                <td><?php echo calculateTimeAgo($user['JoinedAt']); ?></td>
                 <td>
                     <?php if ($banInfo): ?>
                         <span class="badge badge-danger">Banned until <?php echo date('Y-m-d', strtotime($banInfo['BanEnd'])); ?></span>

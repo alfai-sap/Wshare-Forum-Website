@@ -36,17 +36,28 @@ $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
     <link rel = "stylesheet" href="./css/networkfeed.css ?v=<?php echo time(); ?>">
     <link rel = "stylesheet" href="./css/navbar.css ?v=<?php echo time(); ?>">
     <link rel = "stylesheet" href="./css/left-navbar.css ?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="./css/notifications.css  ?v=<?php echo time(); ?>">
+    <!--<link rel="stylesheet" href="./css/notifications.css  ?v=<?php echo time(); ?>">-->
     
 </head>
 <body>
 
+<!-- Replace the existing search input -->
 <ul class="navbar">
-        <form action="" method="GET" class="search-bar">
-            <input type="text" name="search" placeholder="I'm looking for..." value="<?php echo htmlspecialchars($searchQuery); ?>" class="search-input">
-            <button type="submit" class="search-button">Search</button>
-        </form>
-    </ul>
+    <div class="nav" style="display: flex;">
+        <input class="search-input" type="text" id="networkSearch" 
+               placeholder="Search network posts..." 
+               style="width: 900px;">
+    </div>
+</ul>
+
+<div class="filter-row">
+    <form method="GET" action="" id="filterForm" class="timeframe-filter">
+        <select name="sort" id="sort" class="filter-select" onchange="updateSearch()">
+            <option value="followed" <?php echo ($sort_option == 'followed') ? 'selected' : ''; ?>>From Followed</option>
+            <option value="followers" <?php echo ($sort_option == 'followers') ? 'selected' : ''; ?>>From Followers</option>
+        </select>
+    </form>
+</div>
 
     <?php include 'navbar.php';?><br>
 
@@ -118,13 +129,13 @@ $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
                             </button>
                         </form>
 
-                        <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
+                        <span class="like-count" style = "display:flex; align-self:center; color:#0056b3;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
 
                         <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><img class="bulb" src="comment.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"></button>
 
-                        <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo countComments($post['PostID']); ?> Comments</span>
+                        <span class="like-count" style = "display:flex; align-self:center; color:#0056b3;"><?php echo countComments($post['PostID']); ?> Comments</span>
 
-                        <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;"> See disscussion</p></a> </button>
+                        <button class="like-btn" style = "background-color:transparent; border:none; padding: 10px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:20px; width:20px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#0056b3; margin-left:5px;"> See disscussion</p></a> </button>
 
                         <!--<span class="like-count" >see thread</span>-->
 
@@ -140,21 +151,61 @@ $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
 </div>
 
 <script>
-        document.getElementById('logo-nav').addEventListener('click', function() {
-            var element = document.getElementById('left-navbar');
-            element.style.display = (element.style.display === 'none') ? 'block' : 'none';
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('networkSearch');
+    const posts = document.querySelectorAll('.post-container');
+    const resultsContainer = document.createElement('div');
+    resultsContainer.className = 'search-results-info';
+    document.querySelector('.container').insertBefore(resultsContainer, document.querySelector('.post-container'));
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        posts.forEach(post => {
+            const title = post.querySelector('.post_title').textContent.toLowerCase();
+            const content = post.querySelector('.post_content').textContent.toLowerCase();
+            const username = post.querySelector('.post_uname').textContent.toLowerCase();
+
+            if (title.includes(searchTerm) || 
+                content.includes(searchTerm) || 
+                username.includes(searchTerm)) {
+                post.style.display = 'block';
+                visibleCount++;
+            } else {
+                post.style.display = 'none';
+            }
         });
 
-        document.getElementById('logo-left-nav').addEventListener('click', function() {
-            var element = document.getElementById('left-navbar');
-            element.style.display = (element.style.display === 'none') ? 'block' : 'none';
-        });
+        // Update search results info
+        if (searchTerm !== '') {
+            resultsContainer.innerHTML = `
+                <div class="search_results">
+                    Results for "<span class="query">${searchTerm}</span>"
+                    <span class="count">${visibleCount} ${visibleCount === 1 ? 'result' : 'results'} found</span>
+                </div>
+            `;
+            resultsContainer.style.display = 'block';
+        } else {
+            resultsContainer.style.display = 'none';
+            posts.forEach(post => post.style.display = 'block');
+        }
 
-        document.getElementById('comm_label').addEventListener('click', function() {
-            var element = document.getElementById('comments');
-            element.style.display = (element.style.display === 'none') ? 'block' : 'none';
-        });
-    </script>
+        // Show no results message
+        const noResultsMsg = document.querySelector('.no-results-message') || document.createElement('div');
+        noResultsMsg.className = 'no-results-message';
+        
+        if (visibleCount === 0 && searchTerm !== '') {
+            noResultsMsg.innerHTML = '<h4 style="color: #007bff; text-align:center; padding:20px;">No results found</h4>';
+            if (!document.querySelector('.no-results-message')) {
+                document.querySelector('.container').appendChild(noResultsMsg);
+            }
+        } else if (document.querySelector('.no-results-message')) {
+            document.querySelector('.no-results-message').remove();
+        }
+    });
+});
+</script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="./javascripts/index.js"></script>

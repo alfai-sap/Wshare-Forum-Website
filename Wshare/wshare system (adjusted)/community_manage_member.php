@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Handle the different actions (set as admin, remove member)
+// Handle the different actions (set as admin, remove member, ban member, unban member)
 switch ($action) {
     case 'set_admin':
         // Check if the member is already an admin
@@ -89,6 +89,29 @@ switch ($action) {
             echo "Member removed from the community successfully.";
         } else {
             echo "Failed to remove member from the community.";
+        }
+        break;
+
+    case 'ban_member':
+        $banReason = isset($_POST['ban_reason']) ? $_POST['ban_reason'] : '';
+        $banDuration = isset($_POST['ban_duration']) ? intval($_POST['ban_duration']) : 0;
+        
+        // Ban the member from the community
+        $result = banMemberFromCommunity($communityID, $memberID, $userID, $banReason, $banDuration);
+        if ($result) {
+            echo "Member banned from the community successfully.";
+        } else {
+            echo "Failed to ban member from the community.";
+        }
+        break;
+
+    case 'unban_member':
+        // Unban the member from the community
+        $result = unbanMemberFromCommunity($communityID, $memberID);
+        if ($result) {
+            echo "Member unbanned from the community successfully.";
+        } else {
+            echo "Failed to unban member from the community.";
         }
         break;
 
@@ -127,6 +150,29 @@ function removeMemberFromCommunity($communityID, $userID) {
     global $conn;
     $stmt = $conn->prepare("DELETE FROM community_members WHERE CommunityID = ? AND UserID = ?");
     $stmt->bind_param('ii', $communityID, $userID);
+    return $stmt->execute();
+}
+
+// Function to ban a member from the community
+function banMemberFromCommunity($communityID, $userID, $adminID, $reason, $duration) {
+    global $conn;
+    
+    // Calculate ban end date
+    $banEnd = date('Y-m-d H:i:s', strtotime("+$duration days"));
+    
+    $query = "INSERT INTO user_bans (UserID, BannedBy, CommunityID, BanReason, BanStart, BanEnd, IsActive) 
+              VALUES (?, ?, ?, ?, NOW(), ?, 1)";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param('iiiss', $userID, $adminID, $communityID, $reason, $banEnd);
+    return $stmt->execute();
+}
+
+// Function to unban a member from the community
+function unbanMemberFromCommunity($communityID, $userID) {
+    global $conn;
+    $query = "UPDATE user_bans SET IsActive = 0 WHERE UserID = ? AND CommunityID = ? AND IsActive = 1";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param('ii', $userID, $communityID);
     return $stmt->execute();
 }
 ?>

@@ -162,34 +162,73 @@ function getUserById($userId) {
 
 //search posts
 function searchPosts($search) {
-    global $conn; // database connection
-
-    // search query
-    $search = mysqli_real_escape_string($conn, $search); // Escape the search query to prevent SQL injection
-    $sql = "SELECT Posts.*, Users.Username 
-            FROM Posts 
-            LEFT JOIN Users ON Posts.UserID = Users.UserID 
-            WHERE Posts.Title LIKE '%$search%' OR Posts.Content LIKE '%$search%'";
-
-    // Execute the SQL query
-    $result = $conn->query($sql);
-
-    // Check if any rows were returned
+    global $conn;
+    
+    $search = '%' . mysqli_real_escape_string($conn, $search) . '%';
+    
+    $sql = "SELECT p.*, u.Username 
+            FROM Posts p
+            JOIN Users u ON p.UserID = u.UserID 
+            WHERE p.Title LIKE ? OR p.Content LIKE ?";
+            
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $search, $search);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    
     if ($result->num_rows > 0) {
-        // Fetch the rows and store them in an array
-        $posts = [];
-
-        while ($row = $result->fetch_assoc()) {
-            $posts[] = $row;
-        }
-
-        return $posts;
-
-    } else {
-        // No posts found matching the search query
-        return [];
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
+    
+    return [];
 }
+
+function searchAndFilterPosts($search) {
+    global $conn;
+    $query = "SELECT DISTINCT p.*, u.Username 
+              FROM posts p 
+              JOIN users u ON p.UserID = u.UserID
+              WHERE (p.Title LIKE ? OR p.Content LIKE ?)
+              ORDER BY p.CreatedAt DESC";
+
+    $stmt = $conn->prepare($query);
+    $searchParam = '%' . $search . '%';
+    $stmt->bind_param("ss", $searchParam, $searchParam);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function searchNetworkPosts($search, $sort_option, $user_id) {
+    global $conn;
+    
+    // Base query with all necessary joins
+    $sql = "SELECT DISTINCT p.*, u.Username, up.ProfilePic, p.CreatedAt, p.Content 
+            FROM posts p
+            JOIN users u ON p.UserID = u.UserID
+            JOIN userprofiles up ON u.UserID = up.UserID
+            JOIN follows f ON ";
+    
+    // Add condition based on sort option
+    if ($sort_option == 'followers') {
+        $sql .= "p.UserID = f.FollowerID AND f.FollowingID = ?";
+    } else {
+        $sql .= "p.UserID = f.FollowingID AND f.FollowerID = ?";
+    }
+    
+    // Add search condition
+    $sql .= " WHERE (p.Title LIKE ? OR p.Content LIKE ?)
+              ORDER BY p.CreatedAt DESC";
+
+    $stmt = $conn->prepare($sql);
+    $searchParam = '%' . $search . '%';
+    $stmt->bind_param("iss", $user_id, $searchParam, $searchParam);
+    $stmt->execute();
+    return $stmt->get_result();
+}
+
+// ...existing code...
 
 function getPostsByTags($tags) {
     global $conn;
@@ -230,44 +269,12 @@ function createPost($title, $content, $username, $thumbnail) {
 //automatic to siya para i-display ang mga posts sa homepage
 function getRecentPosts() {
     global $conn; 
-    $sql = "SELECT Posts.*, Users.Username FROM Posts JOIN Users ON Posts.UserID = Users.UserID ORDER BY CreatedAt DESC LIMIT 25"; //nakalimit lang sa 25, from latest to oldest. pwede pa i-increase para marami pang post na makita 
+    $sql = "SELECT Posts.*, COALESCE(Users.Username, '[deleted user]') as Username 
+            FROM Posts 
+            LEFT JOIN Users ON Posts.UserID = Users.UserID 
+            ORDER BY CreatedAt DESC"; //nakalimit lang sa 25, from latest to oldest. pwede pa i-increase para marami pang post na makita 
     $result = $conn->query($sql);
     return ($result->num_rows > 0) ? $result->fetch_all(MYSQLI_ASSOC) : array();
-}
-
-function searchAndFilterPosts($search, $tag) {
-    global $conn;
-    $query = "SELECT p.*, u.Username FROM posts p JOIN users u ON p.UserID = u.UserID
-              LEFT JOIN post_tags pt ON p.PostID = pt.PostID
-              LEFT JOIN tags t ON pt.TagID = t.TagID
-              WHERE 1=1";
-
-    if (!empty($search)) {
-        $query .= " AND (p.Title LIKE ? OR p.Content LIKE ?)";
-    }
-
-    if (!empty($tag)) {
-        $query .= " AND t.TagName = ?";
-    }
-
-    $stmt = $conn->prepare($query);
-
-    if (!empty($search) && !empty($tag)) {
-        $searchParam = '%' . $search . '%';
-        $stmt->bind_param('sss', $searchParam, $searchParam, $tag);
-    } elseif (!empty($search)) {
-        $searchParam = '%' . $search . '%';
-        $stmt->bind_param('ss', $searchParam, $searchParam);
-    } elseif (!empty($tag)) {
-        $stmt->bind_param('s', $tag);
-    }
-
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $posts = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-
-    return $posts;
 }
 
 //for getting the comm id
@@ -461,17 +468,28 @@ function getUserProfileById($userID) {
         $statement = $conn->prepare("SELECT * FROM UserProfiles WHERE UserID = ?");
         $statement->bind_param("i", $userID);
         $statement->execute();
-
         
         $result = $statement->get_result();
         $profile = $result->fetch_assoc();
 
+        // Return default values if no profile found
+        if (!$profile) {
+            return [
+                'ProfilePic' => 'default_pic.svg',
+                'Bio' => '[deleted user]',
+                'Fullname' => '[deleted user]'
+            ];
+        }
+
         return $profile;
 
     } catch (Exception $e) {
-
-        echo "Error: " . $e->getMessage();
-        return false;
+        error_log("Error: " . $e->getMessage());
+        return [
+            'ProfilePic' => 'default_pic.svg',
+            'Bio' => '[error loading profile]',
+            'Fullname' => '[error]'
+        ];
     }
 }
 
@@ -524,7 +542,10 @@ function editPost($postID, $title, $content, $userID) {
 // Function to get post by ID
 function getPostById($post_id) {
     global $conn;
-    $sql = "SELECT p.*, u.Username FROM Posts p INNER JOIN Users u ON p.UserID = u.UserID WHERE PostID = ?";
+    $sql = "SELECT p.*, COALESCE(u.Username, '[deleted user]') as Username 
+            FROM Posts p 
+            LEFT JOIN Users u ON p.UserID = u.UserID 
+            WHERE PostID = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $post_id);
     $stmt->execute();
@@ -583,6 +604,21 @@ function updatePostTags($postId, $selectedTags) {
         }
         $stmt->close();
     }
+}
+
+// Function to get documents by post ID
+function getDocumentsByPostId($postId) {
+    global $conn;
+    $sql = "SELECT DocumentPath FROM post_documents WHERE PostID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $postId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $documents = [];
+    while ($row = $result->fetch_assoc()) {
+        $documents[] = $row['DocumentPath'];
+    }
+    return $documents;
 }
 
 //verification of owner-post
@@ -671,40 +707,28 @@ function deletePost($postID, $userID) {
 }
 
 
+// ...existing code...
 function getCommunityPostById($post_id) {
-    global $conn; 
-
-    
+    global $conn;
     $sql = "SELECT * FROM community_posts p INNER JOIN Users u ON p.UserID = u.UserID WHERE PostID = ?";
-
-   
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $post_id);
-
-   
     $stmt->execute();
-
-   
     $result = $stmt->get_result();
-
     if ($result->num_rows > 0) {
-
-        // Fetch the post details
         $post = $result->fetch_assoc();
-
         return $post;
-
     } else {
-
         return null;
     }
 }
+// ...existing code...
 
 
 // Update username in the database
 function updateUsername($oldUsername, $newUsername) {
     global $conn;
-    $stmt = $conn->prepare("UPDATE Users SET Username = ? WHERE Username = ?");
+    $stmt = $conn->prepare("UPDATE Users SET Username = ?, LastUsernameChange = NOW() WHERE Username = ?");
     $stmt->bind_param("ss", $newUsername, $oldUsername);
     $stmt->execute();
     $stmt->close();
@@ -893,7 +917,7 @@ function getPostsSortedByBPTS() {
 function getFilteredPosts($sort = '', $timeframe = '', $tag = '') {
     global $conn;
     
-    $sql = "SELECT DISTINCT p.*, u.Username, 
+    $sql = "SELECT DISTINCT p.*, COALESCE(u.Username, '[deleted user]') as Username, 
             COUNT(DISTINCT l.LikeID) as like_count,
             COUNT(DISTINCT c.CommentID) as comment_count
             FROM Posts p
@@ -1608,12 +1632,14 @@ function getTopDailyPosts() {
 // Query to get top communities (most number of members)
 function getTopCommunities() {
     global $conn;
-    $sql = "SELECT c.Title, COUNT(cm.UserID) AS member_count
+    $sql = "SELECT c.CommunityID, c.Title AS CommunityName, c.Thumbnail AS CommunityImage, 
+                   COUNT(cm.UserID) AS MemberCount, 
+                   (SELECT COUNT(*) FROM community_posts WHERE community_posts.CommunityID = c.CommunityID) AS PostCount
             FROM communities c
             LEFT JOIN community_members cm ON c.CommunityID = cm.CommunityID
             GROUP BY c.CommunityID
-            ORDER BY member_count DESC
-            LIMIT 10"; // Get the top 5 communities
+            ORDER BY MemberCount DESC
+            LIMIT 10"; // Get the top 10 communities
     $result = mysqli_query($conn, $sql);
 
     // Fetch and return the data as an associative array
@@ -1710,7 +1736,7 @@ function timeAgo($timestamp) {
     } elseif ($diff < 3600) {
         // Less than 1 hour ago
         $minutes = floor($diff / 60);
-        return ($minutes == 1) ? '1 min ago' : $minutes . ' mins ago';
+        return ($minutes == 1) ? '1 min ago' : ($minutes == 0 ? 'just now' : $minutes . ' mins ago');
     } elseif ($diff < 86400) {
         // Less than 1 day ago
         $hours = floor($diff / 3600);
@@ -1870,5 +1896,220 @@ function updateUserSetting($userId, $settingName, $settingValue) {
     return false;
 }
 
+function canChangeUsername($userID) {
+    global $conn;
+    $sql = "SELECT LastUsernameChange FROM Users WHERE UserID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $userID);
+    $stmt->execute();
+    $stmt->bind_result($lastChange);
+    $stmt->fetch();
+    $stmt->close();
+
+    if ($lastChange) {
+        $lastChangeTime = strtotime($lastChange);
+        $sixMonthsAgo = strtotime('-6 months');
+        return $lastChangeTime < $sixMonthsAgo;
+    }
+    return true;
+}
+
+function updateUsernameWithValidation($oldUsername, $newUsername, $password) {
+    global $conn;
+    
+    // Check if new username is taken
+    if (!isUsernameUnique($newUsername)) {
+        return [
+            'success' => false,
+            'message' => 'This username is already taken. Please choose a different one.'
+        ];
+    }
+    
+    // Verify password
+    if (!verifyPassword($oldUsername, $password)) {
+        return [
+            'success' => false,
+            'message' => 'Incorrect password. Please try again.'
+        ];
+    }
+    
+    // Username is available and password is correct, proceed with update
+    try {
+        $stmt = $conn->prepare("UPDATE Users SET Username = ?, LastUsernameChange = NOW() WHERE Username = ?");
+        $stmt->bind_param("ss", $newUsername, $oldUsername);
+        $success = $stmt->execute();
+        
+        if ($success) {
+            return [
+                'success' => true,
+                'message' => 'Username updated successfully!'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'An error occurred while updating username. Please try again.'
+            ];
+        }
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'An error occurred while updating username. Please try again.'
+        ];
+    }
+}
+
 // Make sure this is the last closing brace in the file
+function getPopularPosts() {
+    global $conn;
+    
+    $sql = "SELECT 
+                p.PostID,
+                p.Title,
+                COUNT(DISTINCT l.LikeID) as like_count,
+                COUNT(DISTINCT b.BookmarkID) as bookmark_count
+            FROM Posts p
+            LEFT JOIN Likes l ON p.PostID = l.PostID
+            LEFT JOIN Bookmarks b ON p.PostID = b.PostID
+            GROUP BY p.PostID
+            HAVING COUNT(DISTINCT l.LikeID) + COUNT(DISTINCT b.BookmarkID) > 0
+            ORDER BY COUNT(DISTINCT l.LikeID) + COUNT(DISTINCT b.BookmarkID) DESC
+            LIMIT 10";
+            
+    $result = mysqli_query($conn, $sql);
+    
+    if (!$result) {
+        error_log("SQL Error in getPopularPosts: " . mysqli_error($conn));
+        return [];
+    }
+    
+    return mysqli_fetch_all($result, MYSQLI_ASSOC);
+}
+
+function getSuggestedUsers($userID, $limit = 5) {
+    global $conn;
+    
+    // Get users who are followed by people the current user follows
+    // (mutual connections) but not followed by the current user
+    $sql = "SELECT DISTINCT u.UserID, u.Username, up.ProfilePic,
+            COUNT(DISTINCT f1.FollowerID) as mutual_followers
+            FROM Users u
+            JOIN Follows f ON f.FollowingID = u.UserID
+            JOIN Follows f1 ON f1.FollowingID = u.UserID
+            LEFT JOIN UserProfiles up ON u.UserID = up.UserID
+            WHERE f.FollowerID IN (
+                SELECT FollowingID 
+                FROM Follows 
+                WHERE FollowerID = ?
+            )
+            AND u.UserID != ?
+            AND u.UserID NOT IN (
+                SELECT FollowingID 
+                FROM Follows 
+                WHERE FollowerID = ?
+            )
+            GROUP BY u.UserID
+            ORDER BY mutual_followers DESC
+            LIMIT ?";
+            
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("iiii", $userID, $userID, $userID, $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function getMutualConnectionsCount($userID, $targetUserID) {
+    global $conn;
+    
+    $sql = "SELECT COUNT(DISTINCT f1.FollowerID) as mutual_count
+            FROM Follows f1
+            JOIN Follows f2 ON f1.FollowerID = f2.FollowerID
+            WHERE f1.FollowingID = ? 
+            AND f2.FollowingID = ?";
+            
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $targetUserID, $userID);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    
+    return $row['mutual_count'] ?? 0;
+}
+
+function getReportsByType($type) {
+    global $conn;
+    $sql = "SELECT r.*, u.Username 
+            FROM reports r 
+            JOIN users u ON r.UserID = u.UserID 
+            WHERE r.ReportType = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $type);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function getCommunityReports($communityId) {
+    global $conn;
+    $query = "SELECT reports.*, users.Username, 
+              CASE 
+                WHEN reports.ReportType = 'post' THEN posts.Title
+                WHEN reports.ReportType = 'comment' THEN comments.Content
+                WHEN reports.ReportType = 'user' THEN reported_user.Username
+              END as TargetContent
+              FROM reports
+              JOIN users ON reports.UserID = users.UserID
+              LEFT JOIN posts ON reports.ReportType = 'post' AND reports.TargetID = posts.PostID
+              LEFT JOIN comments ON reports.ReportType = 'comment' AND reports.TargetID = comments.CommentID
+              LEFT JOIN users reported_user ON reports.ReportType = 'user' AND reports.TargetID = reported_user.UserID
+              LEFT JOIN community_posts ON reports.TargetID = community_posts.PostID
+              WHERE reports.PostType = 'community' AND community_posts.CommunityID = ?
+              ORDER BY reports.CreatedAt DESC";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "i", $communityId);
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_get_result($stmt)->fetch_all(MYSQLI_ASSOC);
+}
+
+function banUserFromCommunity($userID, $adminID, $communityID, $reason, $duration) {
+    global $conn;
+    
+    // Validate inputs
+    if (!$userID || !$adminID || !$communityID || !$reason || !$duration) {
+        return false;
+    }
+
+    // Calculate ban end date
+    $banEnd = date('Y-m-d H:i:s', strtotime("+$duration days"));
+    
+    $query = "INSERT INTO user_bans (UserID, BannedBy, CommunityID, BanReason, BanStart, BanEnd, IsActive) 
+              VALUES (?, ?, ?, ?, NOW(), ?, 1)";
+              
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("iiiss", $userID, $adminID, $communityID, $reason, $banEnd);
+    
+    return $stmt->execute();
+}
+
+function uploadDocuments($files) {
+    $uploadedFiles = [];
+    $uploadDir = 'uploads/documents/';
+
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    foreach ($files['name'] as $key => $name) {
+        $tmpName = $files['tmp_name'][$key];
+        $filePath = $uploadDir . basename($name);
+
+        if (move_uploaded_file($tmpName, $filePath)) {
+            $uploadedFiles[] = $filePath;
+        }
+    }
+
+    return $uploadedFiles;
+}
+
 ?>

@@ -39,6 +39,7 @@ if ($result->num_rows > 0) {
     <link rel="stylesheet" href="./css/create_post.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/navbar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/right-sidebar.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="./css/modal.css?v=<?php echo time(); ?>">
 </head>
@@ -56,25 +57,10 @@ if ($result->num_rows > 0) {
                     <label for="title">Title:</label>
                     <input class="post-title-in" type="text" id="title" name="title" placeholder="Title..." required>
 
-                    <label for="content">Content:</label>
-                    <textarea class="post-content-in" id="content" name="content" placeholder="What am I thinking?..." required></textarea>
-
-                    <label for="photo">Photo:</label>
-                    <input class="post-image-in" type="file" id="photo" name="photo" accept="image/*">
-                    <div id="image-preview" class="image-preview-container"></div>
-
-                    <div id="additional-photos-section" style="display: none;">
-                        <label for="additional_photos">Add More Photos:</label>
-                        <input class="post-image-in" type="file" id="additional_photos" name="additional_photos[]" accept="image/*" multiple>
-                        <div id="additional-image-preview" class="image-preview-container"></div>
-                    </div>
-
-                    <button type="button" id="add-more-photos-btn" style="display: none;" onclick="showAdditionalPhotosSection()">Add More Photos</button>
-
+                    <!-- Move Tags section here -->
                     <label for="tag">Tags:</label>
-                    <!-- Tag Selection Dropdown -->
                     <div class="tag-dropdown-container">
-                        <input type="text" class="tag-dropdown" placeholder="Tags" readonly onclick="toggleDropdown()">
+                        <input type="text" class="tag-dropdown" placeholder="Select Tags..." readonly onclick="toggleDropdown()">
                         <div class="tag-dropdown-menu">
                             <input type="text" class="tag-search" placeholder="Search Tags..." onkeyup="filterTags()">
                             <div id="tag-list">
@@ -87,12 +73,47 @@ if ($result->num_rows > 0) {
                             </div>
                         </div>
                     </div>
-
-                    <!-- Hidden input to store selected tags -->
                     <input type="hidden" name="selected_tags" id="selected-tags">
-
-                    <!-- Display selected tags -->
                     <div class="selected-tags" id="selected-tags-display"></div>
+
+                    <label for="content">Content:</label>
+                    <textarea class="post-content-in" id="content" name="content" placeholder="What am I thinking?..." required></textarea>
+
+                    <label for="photo">Main Photo:</label>
+                    <input class="post-image-in" type="file" id="photo" name="photo" accept="image/*">
+                    <div id="image-preview" class="image-preview-container"></div>
+
+                    <!-- Attachment Toggle Buttons -->
+                    <div class="attachment-toggles">
+                        <button type="button" class="toggle-btn" onclick="toggleAttachment('videos')">
+                            <i class="fas fa-video"></i> Add Videos
+                        </button>
+                        <button type="button" class="toggle-btn" onclick="toggleAttachment('images')">
+                            <i class="fas fa-images"></i> Add More Images
+                        </button>
+                        <button type="button" class="toggle-btn" onclick="toggleAttachment('documents')">
+                            <i class="fas fa-file"></i> Add Documents
+                        </button>
+                    </div>
+
+                    <!-- Hidden attachment sections -->
+                    <div id="videos-section" class="attachment-section" style="display: none;">
+                        <label for="videos">Videos (Max 100MB each):</label>
+                        <input class="post-video-in" type="file" id="videos" name="videos[]" accept="video/*" multiple>
+                        <div id="video-preview" class="video-preview-container"></div>
+                    </div>
+
+                    <div id="images-section" class="attachment-section" style="display: none;">
+                        <label for="additional_photos">Additional Photos:</label>
+                        <input class="post-image-in" type="file" id="additional_photos" name="additional_photos[]" accept="image/*" multiple>
+                        <div id="additional-image-preview" class="image-preview-container"></div>
+                    </div>
+
+                    <div id="documents-section" class="attachment-section" style="display: none;">
+                        <label for="documents">Documents:</label>
+                        <input class="post-document-in" type="file" id="documents" name="documents[]" accept=".pdf,.doc,.docx,.txt" multiple>
+                        <div id="document-preview" class="document-preview-container"></div>
+                    </div>
 
                     <input type="submit" class="post-postbtn-in" value="Post">
 
@@ -239,6 +260,49 @@ if ($result->num_rows > 0) {
     right: 15px;
     color: white;
     font-size: 16px;
+}
+
+.video-preview-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.video-preview {
+    position: relative;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.video-preview video {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 4px;
+}
+
+.remove-video {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-size-error {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
 }
 </style>
 
@@ -519,6 +583,126 @@ if ($result->num_rows > 0) {
             }
         }
     });
+
+    document.getElementById('videos').addEventListener('change', function(e) {
+        const previewDiv = document.getElementById('video-preview');
+        const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+        const files = Array.from(e.target.files);
+        
+        files.forEach((file, index) => {
+            if (file.size > maxSize) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'video-size-error';
+                errorDiv.textContent = `${file.name} exceeds 100MB limit and will not be uploaded`;
+                previewDiv.appendChild(errorDiv);
+                return;
+            }
+
+            const preview = document.createElement('div');
+            preview.className = 'video-preview';
+            
+            // Create video URL
+            const videoURL = URL.createObjectURL(file);
+            
+            // Format file size
+            const fileSize = file.size < 1024 * 1024 
+                ? `${(file.size / 1024).toFixed(2)} KB`
+                : `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+
+            preview.innerHTML = `
+                <div class="video-wrapper">
+                    <video controls preload="metadata">
+                        <source src="${videoURL}" type="${file.type}">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="video-overlay">
+                        <div class="video-duration"></div>
+                    </div>
+                </div>
+                <div class="video-info">
+                    <div class="video-name">${file.name}</div>
+                    <div class="video-size">${fileSize}</div>
+                </div>
+                <button type="button" class="remove-video" onclick="removeVideo(this, '${videoURL}')">×</button>
+                <input type="hidden" name="video_order[]" value="${file.name}">
+            `;
+            previewDiv.appendChild(preview);
+
+            // Get video duration
+            const video = preview.querySelector('video');
+            video.addEventListener('loadedmetadata', function() {
+                const duration = Math.round(video.duration);
+                const minutes = Math.floor(duration / 60);
+                const seconds = duration % 60;
+                const durationText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                preview.querySelector('.video-duration').textContent = durationText;
+            });
+        });
+    });
+
+    function removeVideo(button, videoURL) {
+        const preview = button.closest('.video-preview');
+        // Revoke the video URL to free up memory
+        URL.revokeObjectURL(videoURL);
+        preview.remove();
+    }
+
+    document.getElementById('post-form').addEventListener('submit', function(e) {
+        // Prevent form from submitting
+        e.preventDefault();
+
+        // Check required fields
+        const title = document.getElementById('title').value.trim();
+        const content = document.getElementById('content').value.trim();
+        
+        if (!title || !content) {
+            alert('Please fill in both title and content fields');
+            return false;
+        }
+
+        // Calculate total file size
+        let totalSize = 0;
+        const fileInputs = ['photo', 'additional_photos', 'documents', 'videos'];
+        
+        fileInputs.forEach(inputId => {
+            const input = document.getElementById(inputId);
+            if (input && input.files) {
+                Array.from(input.files).forEach(file => {
+                    totalSize += file.size;
+                });
+            }
+        });
+
+        const maxSize = 150 * 1024 * 1024; // 150MB
+        if (totalSize > maxSize) {
+            alert('Total file size cannot exceed 150MB');
+            return false;
+        }
+
+        // Submit the form if all validations pass
+        this.submit();
+    });
+
+    function toggleAttachment(type) {
+        const section = document.getElementById(`${type}-section`);
+        const button = document.querySelector(`[onclick="toggleAttachment('${type}')"]`);
+        
+        if (section.style.display === 'none') {
+            // Hide all sections first
+            document.querySelectorAll('.attachment-section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            
+            // Show selected section
+            section.style.display = 'block';
+            button.classList.add('active');
+            
+            // Smooth scroll to section
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            section.style.display = 'none';
+            button.classList.remove('active');
+        }
+    }
 </script>
 
 <!-- Image Modal -->

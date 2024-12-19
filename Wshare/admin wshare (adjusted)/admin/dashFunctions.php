@@ -1,6 +1,6 @@
 <?php
 // Assuming you already have the database connection set up here
-$conn = mysqli_connect("localhost", "root", "", "wshare_db_new");
+require_once 'db_connection.php';
 
 if (!$conn) {
     error_log("Database connection failed: " . mysqli_connect_error());
@@ -186,10 +186,14 @@ function getUserGrowth() {
     global $conn;
     $query = "SELECT DATE(JoinedAt) AS join_date, COUNT(*) AS new_users
               FROM users
+              WHERE JoinedAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)
               GROUP BY DATE(JoinedAt)
-              ORDER BY join_date DESC
-              LIMIT 30"; // Last 30 days
+              ORDER BY join_date ASC";
     $result = mysqli_query($conn, $query);
+    if (!$result) {
+        error_log("Error in getUserGrowth: " . mysqli_error($conn));
+        return [];
+    }
     return mysqli_fetch_all($result, MYSQLI_ASSOC);
 }
 
@@ -198,10 +202,14 @@ function getPostGrowth() {
     global $conn;
     $query = "SELECT DATE(CreatedAt) AS post_date, COUNT(*) AS new_posts
               FROM posts
+              WHERE CreatedAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)
               GROUP BY DATE(CreatedAt)
-              ORDER BY post_date DESC
-              LIMIT 30"; // Last 30 days
+              ORDER BY post_date ASC";
     $result = mysqli_query($conn, $query);
+    if (!$result) {
+        error_log("Error in getPostGrowth: " . mysqli_error($conn));
+        return [];
+    }
     return mysqli_fetch_all($result, MYSQLI_ASSOC);
 }
 
@@ -240,7 +248,7 @@ function getTotalTimeSpentByUsers() {
 }
 
 // Fetch all users
-function getAllUsers() {
+function getAllUsersDash() {
     global $conn;
     $query = "SELECT * FROM users";
     $result = mysqli_query($conn, $query);
@@ -248,7 +256,7 @@ function getAllUsers() {
 }
 
 // Add a new user
-function addUser($username, $email, $password) {
+function addUserDash($username, $email, $password) {
     global $conn;
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     $query = "INSERT INTO users (Username, Email, Password) VALUES (?, ?, ?)";
@@ -269,7 +277,7 @@ function addUser($username, $email, $password) {
 }
 
 // Update an existing user
-function updateUser($userID, $username, $email) {
+function updateUserDash($userID, $username, $email) {
     global $conn;
     $query = "UPDATE users SET Username = ?, Email = ? WHERE UserID = ?";
     
@@ -289,7 +297,7 @@ function updateUser($userID, $username, $email) {
 }
 
 // Delete a user
-function deleteUser($userID) {
+function deleteUserDash($userID) {
     global $conn;
     $query = "DELETE FROM users WHERE UserID = ?";
     
@@ -409,13 +417,16 @@ function getAllPosts($limit = 10, $offset = 0) {
     return mysqli_stmt_get_result($stmt)->fetch_all(MYSQLI_ASSOC);
 }
 
-function deletePost($postID) {
+function deletePostDash($postID) {
     global $conn;
     $query = "DELETE FROM posts WHERE PostID = ?";
     $stmt = mysqli_prepare($conn, $query);
     mysqli_stmt_bind_param($stmt, "i", $postID);
     return mysqli_stmt_execute($stmt);
 }
+
+// Delete a post
+
 
 // Comment Management Functions
 function getAllComments($limit = 10, $offset = 0) {
@@ -441,37 +452,6 @@ function deleteComment($commentID) {
 }
 
 // Search Functions
-function searchPosts($searchTerm) {
-    global $conn;
-    $query = "SELECT posts.*, users.Username 
-              FROM posts 
-              JOIN users ON posts.UserID = users.UserID 
-              WHERE posts.Title LIKE ? OR posts.Content LIKE ?";
-    $stmt = mysqli_prepare($conn, $query);
-    if (!$stmt) {
-        error_log("Error preparing statement: " . mysqli_error($conn));
-        return false;
-    }
-    
-    $searchPattern = "%" . mysqli_real_escape_string($conn, $searchTerm) . "%";
-    mysqli_stmt_bind_param($stmt, "ss", $searchPattern, $searchPattern);
-    mysqli_stmt_execute($stmt);
-    return mysqli_stmt_get_result($stmt)->fetch_all(MYSQLI_ASSOC);
-}
-
-function searchComments($searchTerm) {
-    global $conn;
-    $query = "SELECT comments.*, users.Username, posts.Title as PostTitle 
-              FROM comments 
-              JOIN users ON comments.UserID = users.UserID 
-              JOIN posts ON comments.PostID = posts.PostID 
-              WHERE comments.Content LIKE ?";
-    $stmt = mysqli_prepare($conn, $query);
-    $searchTerm = "%$searchTerm%";
-    mysqli_stmt_bind_param($stmt, "s", $searchTerm);
-    mysqli_stmt_execute($stmt);
-    return mysqli_stmt_get_result($stmt)->fetch_all(MYSQLI_ASSOC);
-}
 
 // Filter comments by keyword
 function filterCommentsByKeyword($keyword) {
@@ -688,7 +668,7 @@ function getActivityStats() {
 }
 
 // Admin Settings Management
-function getAllSettings() {
+function getAllAdminSettings() {
     global $conn;
     $query = "SELECT * FROM admin_settings ORDER BY SettingName ASC";
     $result = mysqli_query($conn, $query);
@@ -800,7 +780,7 @@ function getReportsByStatus($status) {
 
 function updateReportStatus($reportId, $status) {
     global $conn;
-    $query = "UPDATE reports SET Status = ?, updatedAt = CURRENT_TIMESTAMP WHERE ReportID = ?";
+    $query = "UPDATE reports SET Status = ?, UpdatedAt = CURRENT_TIMESTAMP WHERE ReportID = ?";
     $stmt = mysqli_prepare($conn, $query);
     mysqli_stmt_bind_param($stmt, "si", $status, $reportId);
     return mysqli_stmt_execute($stmt);
@@ -941,7 +921,7 @@ function getUserDetails($userId) {
 }
 
 // Fetch user profile by user ID
-function getUserProfileById($userId) {
+function getUserProfileByIdDash($userId) {
     global $conn;
     $query = "SELECT * FROM userprofiles WHERE UserID = ?";
     $stmt = mysqli_prepare($conn, $query);
@@ -951,7 +931,7 @@ function getUserProfileById($userId) {
 }
 
 // Function to calculate time ago
-function timeAgo($datetime) {
+function calculateTimeAgo($datetime) {
     $time = strtotime($datetime);
     $timeDiff = time() - $time;
 
@@ -969,7 +949,7 @@ function timeAgo($datetime) {
 }
 
 // Function to count comments for a specific post
-function countComments($postId) {
+function countPostComments($postId) {
     global $conn;
     $query = "SELECT COUNT(*) AS comment_count FROM comments WHERE PostID = ?";
     $stmt = mysqli_prepare($conn, $query);
@@ -1172,12 +1152,17 @@ function filterCommunities($filter) {
 function banUser($userID, $adminID, $reason, $duration) {
     global $conn;
     
-    // Calculate ban end date based on duration (in days)
+    // Validate inputs
+    if (!$userID || !$adminID || !$reason || !$duration) {
+        return false;
+    }
+
+    $banStart = date('Y-m-d H:i:s');
     $banEnd = date('Y-m-d H:i:s', strtotime("+$duration days"));
+
+    $stmt = mysqli_prepare($conn, "INSERT INTO user_bans (UserID, BannedBy, BanStart, BanEnd, BanReason, IsActive) VALUES (?, ?, ?, ?, ?, 1)");
+    mysqli_stmt_bind_param($stmt, "iisss", $userID, $adminID, $banStart, $banEnd, $reason);
     
-    $query = "INSERT INTO user_bans (UserID, BannedBy, BanReason, BanEnd) VALUES (?, ?, ?, ?)";
-    $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, "iiss", $userID, $adminID, $reason, $banEnd);
     return mysqli_stmt_execute($stmt);
 }
 
@@ -1217,4 +1202,120 @@ function getUserBanHistory($userID) {
     mysqli_stmt_execute($stmt);
     return mysqli_stmt_get_result($stmt)->fetch_all(MYSQLI_ASSOC);
 }
+
+// Function to check if admin is logged in
+function checkAdminSession() {
+    if (!isset($_SESSION['admin_id'])) {
+        // Redirect to main user login page instead of admin login
+        header("Location: ../../wshare system (adjusted)/login.php");
+        exit();
+    }
+}
+
+function getReports($status = null, $postType = null) {
+    global $conn;
+    $query = "SELECT reports.*, users.Username, 
+              CASE 
+                WHEN reports.ReportType = 'post' THEN posts.Title
+                WHEN reports.ReportType = 'comment' THEN comments.Content
+                WHEN reports.ReportType = 'user' THEN reported_user.Username
+              END as TargetContent
+              FROM reports
+              JOIN users ON reports.UserID = users.UserID
+              LEFT JOIN posts ON reports.ReportType = 'post' AND reports.TargetID = posts.PostID
+              LEFT JOIN comments ON reports.ReportType = 'comment' AND reports.TargetID = comments.CommentID
+              LEFT JOIN users reported_user ON reports.ReportType = 'user' AND reports.TargetID = reported_user.UserID";
+    
+    $conditions = [];
+    $params = [];
+    $types = "";
+
+    if ($status) {
+        $conditions[] = "reports.Status = ?";
+        $params[] = $status;
+        $types .= "s";
+    }
+
+    if ($postType) {
+        $conditions[] = "reports.PostType = ?";
+        $params[] = $postType;
+        $types .= "s";
+    }
+
+    if (!empty($conditions)) {
+        $query .= " WHERE " . implode(" AND ", $conditions);
+    }
+
+    $query .= " ORDER BY reports.CreatedAt DESC";
+    
+    $stmt = mysqli_prepare($conn, $query);
+    if ($types) {
+        mysqli_stmt_bind_param($stmt, $types, ...$params);
+    }
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_get_result($stmt)->fetch_all(MYSQLI_ASSOC);
+}
+
+function getReportedPostDetails($reportId) {
+    global $conn;
+    $query = "SELECT reports.*, 
+                     CASE 
+                        WHEN reports.ReportType = 'post' THEN posts.Title
+                        WHEN reports.ReportType = 'community_post' THEN community_posts.Title
+                     END as Title,
+                     CASE 
+                        WHEN reports.ReportType = 'post' THEN posts.Content
+                        WHEN reports.ReportType = 'community_post' THEN community_posts.Content
+                     END as Content,
+                     reports.EvidencePhoto,
+                     users.Username as ReporterName, 
+                     reported_user.Username as ReportedUsername
+              FROM reports
+              JOIN users ON reports.UserID = users.UserID
+              LEFT JOIN posts ON reports.ReportType = 'post' AND reports.TargetID = posts.PostID
+              LEFT JOIN community_posts ON reports.ReportType = 'community_post' AND reports.TargetID = community_posts.PostID
+              LEFT JOIN users reported_user ON reports.ReportedUserID = reported_user.UserID
+              WHERE reports.ReportID = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "i", $reportId);
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_get_result($stmt)->fetch_assoc();
+}
+
+// Search Functions
+function searchPostsDash($searchTerm) {
+    global $conn;
+    $query = "SELECT posts.*, users.Username 
+              FROM posts 
+              JOIN users ON posts.UserID = users.UserID 
+              WHERE posts.Title LIKE ? OR posts.Content LIKE ?";
+    $stmt = mysqli_prepare($conn, $query);
+    if (!$stmt) {
+        error_log("Error preparing statement: " . mysqli_error($conn));
+        return false;
+    }
+    
+    $searchPattern = "%" . mysqli_real_escape_string($conn, $searchTerm) . "%";
+    mysqli_stmt_bind_param($stmt, "ss", $searchPattern, $searchPattern);
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_get_result($stmt)->fetch_all(MYSQLI_ASSOC);
+}
+
+// Search comments by content
+function searchCommentsDash($searchTerm) {
+    global $conn;
+    $query = "SELECT comments.*, users.Username, posts.Title as PostTitle 
+              FROM comments 
+              JOIN users ON comments.UserID = users.UserID 
+              JOIN posts ON comments.PostID = posts.PostID 
+              WHERE comments.Content LIKE ?";
+    $stmt = mysqli_prepare($conn, $query);
+    $searchPattern = "%" . mysqli_real_escape_string($conn, $searchTerm) . "%";
+    mysqli_stmt_bind_param($stmt, "s", $searchPattern);
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_get_result($stmt)->fetch_all(MYSQLI_ASSOC);
+}
+
+
+
 

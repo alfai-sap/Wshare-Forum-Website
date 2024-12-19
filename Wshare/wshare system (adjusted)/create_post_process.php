@@ -2,6 +2,11 @@
 require_once 'functions.php';
 session_start();
 
+// Check for file upload errors first
+if (empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > 0) {
+    die("Error: The uploaded files exceed the maximum allowed size. Please reduce file sizes or upload fewer files.");
+}
+
 // Ensure the user is logged in
 if (!isset($_SESSION['username'])) {
     header('Location: login.php');
@@ -9,6 +14,56 @@ if (!isset($_SESSION['username'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get and validate user ID first
+    $query = "SELECT UserID FROM users WHERE Username = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param('s', $_SESSION['username']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    $userID = $user['UserID'] ?? null;
+
+    if (!$userID) {
+        die("Error: Invalid or missing userID");
+    }
+
+    // Validate required fields
+    if (empty($_POST['title']) || empty($_POST['content'])) {
+        die("Error: Title and content are required fields");
+    }
+
+    $title = trim($_POST['title']);
+    $content = trim($_POST['content']);
+
+    // Validate file uploads before processing
+    $maxSingleFileSize = 100 * 1024 * 1024; // 100MB
+    $maxTotalSize = 150 * 1024 * 1024; // 150MB
+    $totalSize = 0;
+
+    // Function to check file size
+    function validateFileSize($files) {
+        global $maxSingleFileSize, $totalSize;
+        if (empty($files['name'][0])) return true;
+        
+        foreach ($files['size'] as $size) {
+            if ($size > $maxSingleFileSize) {
+                die("Error: Individual file size cannot exceed 100MB");
+            }
+            $totalSize += $size;
+        }
+        return true;
+    }
+
+    // Validate all file uploads
+    validateFileSize($_FILES['photo'] ?? ['name' => [], 'size' => []]);
+    validateFileSize($_FILES['additional_photos'] ?? ['name' => [], 'size' => []]);
+    validateFileSize($_FILES['documents'] ?? ['name' => [], 'size' => []]);
+    validateFileSize($_FILES['videos'] ?? ['name' => [], 'size' => []]);
+
+    if ($totalSize > $maxTotalSize) {
+        die("Error: Total upload size cannot exceed 150MB");
+    }
+
     // Get form data
     $title = $_POST['title'];
     $content = $_POST['content'];
@@ -49,6 +104,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($postCreated) {
         $postID = $conn->insert_id;
+
+        // Handle document uploads
+        if (!empty($_FILES['documents']['name'][0])) {
+            $uploadedDocuments = uploadDocuments($_FILES['documents']);
+            foreach ($uploadedDocuments as $documentPath) {
+                $sql = "INSERT INTO post_documents (PostID, DocumentPath) VALUES (?, ?)";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param('is', $postID, $documentPath);
+                $stmt->execute();
+            }
+        }
+
+        // Handle video uploads
+        if (isset($_FILES['videos']) && !empty($_FILES['videos']['name'][0])) {
+            $uploadDir = 'uploads/videos/';
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+
+            $maxSize = 100 * 1024 * 1024; // 100MB
+            
+            foreach($_FILES['videos']['tmp_name'] as $key => $tmp_name) {
+                if ($_FILES['videos']['error'][$key] === UPLOAD_ERR_OK) {
+                    if ($_FILES['videos']['size'][$key] <= $maxSize) {
+                        $videoName = uniqid() . '_' . basename($_FILES['videos']['name'][$key]);
+                        $videoPath = $uploadDir . $videoName;
+                        
+                        if (move_uploaded_file($tmp_name, $videoPath)) {
+                            $sql = "INSERT INTO post_videos (PostID, VideoPath) VALUES (?, ?)";
+                            $stmt = $conn->prepare($sql);
+                            $stmt->bind_param('is', $postID, $videoPath);
+                            $stmt->execute();
+                        }
+                    }
+                }
+            }
+        }
 
         // Handle additional photo uploads with order
         if (isset($_FILES['additional_photos']) && !empty($_FILES['additional_photos']['name'][0])) {

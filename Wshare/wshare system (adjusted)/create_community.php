@@ -8,6 +8,7 @@ if (!isset($_SESSION['username'])) {
     exit;
 }
 
+// Only check for general ban, since this is a global action
 if (checkUserBan()) {
     echo "<div style='text-align: center; margin-top: 50px; color: red;'>";
     echo checkUserBan(true);
@@ -140,26 +141,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
     <?php include 'navbar.php'; ?>
     <h1>Create a Community</h1>
-    <div class="form-container">
-        <form action="" method="POST" enctype="multipart/form-data">
-            <label for="title">Community Title:</label>
-            <input type="text" id="title" name="title" required>
-            
-            <label for="description">Description:</label>
-            <textarea id="description" name="description" required></textarea>
-            
-            <label for="thumbnail">Thumbnail:</label>
-            <input type="file" id="thumbnail" name="thumbnail" accept="image/*">
+    <?php if (checkUserBan(true)): ?>
+        <div class="ban-message" style="color: red; margin: 10px 0;">
+            <?php echo checkUserBan(true); ?>
+        </div>
+    <?php else: ?>
+        <div class="form-container">
+            <form action="" method="POST" enctype="multipart/form-data">
+                <label for="title">Community Title:</label>
+                <input type="text" id="title" name="title" required>
+                
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" required></textarea>
+                
+                <label for="thumbnail">Thumbnail:</label>
+                <input type="file" id="thumbnail" name="thumbnail" accept="image/*">
 
-            <label for="visibility">Community Visibility:</label>
-            <select id="visibility" name="visibility" required>
-                <option value="public">Public</option>
-                <option value="private">Private</option>
-            </select>
-            
-            <input type="hidden" name="id" value="<?php echo htmlspecialchars($creatorID); ?>">
-            <input type="submit" value="Create">
-        </form>
-    </div>
+                <label for="visibility">Community Visibility:</label>
+                <select id="visibility" name="visibility" required>
+                    <option value="public">Public</option>
+                    <option value="private">Private</option>
+                </select>
+                
+                <input type="hidden" name="id" value="<?php echo htmlspecialchars($creatorID); ?>">
+                <input type="submit" value="Create">
+            </form>
+        </div>
+    <?php endif; ?>
 </body>
 </html>

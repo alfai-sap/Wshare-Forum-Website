@@ -12,9 +12,10 @@ $reporterID = getUserByUsername($_SESSION['username'])['UserID'];
 // Determine the context of the report (post, comment, or user)
 $reportType = isset($_GET['type']) ? $_GET['type'] : null;
 $targetID = isset($_GET['id']) ? intval($_GET['id']) : null;
+$postType = isset($_GET['post_type']) ? $_GET['post_type'] : 'general';
 
 // Validate report type
-$validReportTypes = ['post', 'comment', 'user'];
+$validReportTypes = ['post', 'comment', 'user', 'community_post'];
 if (!in_array($reportType, $validReportTypes) || !$targetID) {
     die("Invalid report type or target ID");
 }
@@ -32,6 +33,10 @@ switch ($reportType) {
     case 'user':
         $targetInfo = getUserById($targetID);
         $pageTitle = "Report User";
+        break;
+    case 'community_post':
+        $targetInfo = getCommunityPostById($targetID);
+        $pageTitle = "Report Community Post";
         break;
 }
 
@@ -66,6 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'user':
             $reportedUserID = $targetID;
             break;
+        case 'community_post':
+            $userQuery = "SELECT UserID FROM community_posts WHERE PostID = ?";
+            break;
     }
 
     if (!$reportedUserID) {
@@ -81,10 +89,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Prepare report insertion
     $violation = $_POST['violation'];
     
-    $query = "INSERT INTO reports (UserID, ReportedUserID, ReportType, TargetID, Violation, EvidencePhoto) 
-              VALUES (?, ?, ?, ?, ?, ?)";
+    $query = "INSERT INTO reports (UserID, ReportedUserID, ReportType, TargetID, Violation, EvidencePhoto, PostType) 
+              VALUES (?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("iisiss", $reporterID, $reportedUserID, $reportType, $targetID, $violation, $evidencePhotoPath);
+    $stmt->bind_param("iisisss", $reporterID, $reportedUserID, $reportType, $targetID, $violation, $evidencePhotoPath, $postType);
     
     if ($stmt->execute()) {
         $_SESSION['message'] = "Report submitted successfully.";
@@ -107,137 +115,137 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <style>
     .container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: calc(100vh - 80px); /* Adjust based on your navbar height */
-    background-color: #f4f4f8;
-    padding: 20px;
-}
-
-.report-container {
-    width: 100%;
-    max-width: 600px;
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    box-sizing: border-box;
-}
-
-.report-container h1 {
-    color: #333;
-    text-align: center;
-    margin-bottom: 25px;
-    font-size: 24px;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 15px;
-}
-
-.confirm {
-    background-color: #f9f9f9;
-    border-left: 4px solid #007bff;
-    padding: 15px;
-    margin-bottom: 20px;
-    font-size: 16px;
-    color: #555;
-    border-radius: 4px;
-}
-
-.report-container form {
-    display: flex;
-    flex-direction: column;
-}
-
-.report-container label {
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: #444;
-}
-
-.report-container textarea, 
-.report-container input[type="file"] {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 16px;
-    transition: border-color 0.3s ease;
-}
-
-.report-container textarea:focus,
-.report-container input[type="file"]:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.report-container textarea {
-    resize: vertical;
-    min-height: 120px;
-}
-
-.report-container small {
-    color: #777;
-    margin-top: -15px;
-    margin-bottom: 15px;
-}
-
-.report-container button {
-    padding: 12px 20px;
-    margin-right: 10px;
-    border: none;
-    border-radius: 6px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease;
-}
-
-.report-container button[type="submit"] {
-    background-color: #dc3545;
-    color: white;
-    margin-bottom: 20px;
-}
-
-.report-container button[type="submit"]:hover {
-    background-color: #c82333;
-}
-
-.report-container button[type="button"] {
-    background-color: #6c757d;
-    color: white;
-}
-
-.report-container button[type="button"]:hover {
-    background-color: #545b62;
-}
-
-.report-container button:active {
-    transform: scale(0.98);
-}
-
-.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-    padding: 15px;
-    border-radius: 6px;
-    margin-bottom: 20px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .report-container {
-        width: 95%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 80px); /* Adjust based on your navbar height */
+        background-color: #f4f4f8;
         padding: 20px;
     }
 
-    .report-container button {
+    .report-container {
         width: 100%;
-        margin-bottom: 10px;
+        max-width: 600px;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        box-sizing: border-box;
     }
-}
+
+    .report-container h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 24px;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 15px;
+    }
+
+    .confirm {
+        background-color: #f9f9f9;
+        border-left: 4px solid #007bff;
+        padding: 15px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        color: #555;
+        border-radius: 4px;
+    }
+
+    .report-container form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .report-container label {
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #444;
+    }
+
+    .report-container textarea, 
+    .report-container input[type="file"] {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+    }
+
+    .report-container textarea:focus,
+    .report-container input[type="file"]:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    .report-container textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .report-container small {
+        color: #777;
+        margin-top: -15px;
+        margin-bottom: 15px;
+    }
+
+    .report-container button {
+        padding: 12px 20px;
+        margin-right: 10px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+
+    .report-container button[type="submit"] {
+        background-color: #dc3545;
+        color: white;
+        margin-bottom: 20px;
+    }
+
+    .report-container button[type="submit"]:hover {
+        background-color: #c82333;
+    }
+
+    .report-container button[type="button"] {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .report-container button[type="button"]:hover {
+        background-color: #545b62;
+    }
+
+    .report-container button:active {
+        transform: scale(0.98);
+    }
+
+    .error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .report-container {
+            width: 95%;
+            padding: 20px;
+        }
+
+        .report-container button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    }
 </style>
 <body>
     <?php include 'navbar.php'; ?>
@@ -250,7 +258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <div class="target-info">
-                <?php if ($reportType === 'post'): ?>
+                <?php if ($reportType === 'post' || $reportType === 'community_post'): ?>
                     <h3>Reported Post</h3>
                     <p><strong>Title:</strong> <?php echo htmlspecialchars($targetInfo['Title']); ?></p>
                     <p><strong>Author:</strong> <?php echo htmlspecialchars(getUserById($targetInfo['UserID'])['Username']); ?></p>

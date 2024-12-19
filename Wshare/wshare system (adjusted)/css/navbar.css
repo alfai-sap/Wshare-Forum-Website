@@ -1,14 +1,22 @@
-
 .navbar {
     position: fixed;
     z-index: 999;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    background-color: #ffffff;
+    background-color: #f9f9f9;
     height: 80px;
     list-style: none;
     width: 100%;
+}
+
+.navbar li {
+    list-style-type: none;
+}
+
+.navbar a {
+    text-decoration: none;
+    color: inherit;
 }
 
 hr{
@@ -23,6 +31,14 @@ hr{
     z-index: 999;
     width: 200px;
     background-color: transparent;
+}
+
+.logo-navbar li {
+    list-style-type: none;
+}
+
+.logo-navbar a {
+    text-decoration: none;
 }
 
 .logo-navbar-in-left {
@@ -102,6 +118,30 @@ hr{
     display: flex;
     align-items: center;
     margin-left: 10px;
+}
+
+/* Make navbar styles more specific */
+.navbar .nav {
+    display: flex;
+    margin: 20px 0;
+    padding: 0;
+}
+
+.navbar .search-input {
+    padding: 10px;
+    width: 900px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+    margin: 0;
+}
+
+.navbar .btn-search {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    padding: 0;
 }
 
 .search-button {

@@ -84,7 +84,17 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="./css/left-navbar.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/communities.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/right-sidebar.css ?v=<?php echo time(); ?>" >
-    <link rel="stylesheet" href="./css/notifications.css  ?v=<?php echo time(); ?>">
+    <!--<link rel="stylesheet" href="./css/notifications.css  ?v=<?php echo time(); ?>">-->
+    <style>
+        .ban-message {
+            color: #721c24;
+            background-color: #f8d7da;
+            padding: 10px;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
     <ul class="navbar">
@@ -97,7 +107,7 @@ $result = $stmt->get_result();
     </ul>
     
     <?php include 'navbar.php';?>
-    <?php include 'right-sidebar.php';?>
+    <?php include 'top-communities.php';?>
     <div class="container">
         <br><br><br><br>
         <div class="sort-options">
@@ -155,7 +165,7 @@ $result = $stmt->get_result();
                                 <?php } elseif ($hasRejectedRequest) { ?>
                                     <span class="member-text">Your join request was rejected</span>
                                 <?php } elseif (checkUserBan()) { ?>
-                                    <span class="ban-message" style="color: red;">
+                                    <span class="ban-message">
                                         <?php echo checkUserBan(true); ?>
                                     </span>
                                 <?php } else { ?>

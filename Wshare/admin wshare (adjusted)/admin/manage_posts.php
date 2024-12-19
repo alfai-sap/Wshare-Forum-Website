@@ -1,10 +1,9 @@
-
 <?php
 include 'dashFunctions.php';
 
 // Handle post deletion
 if (isset($_POST['delete_post'])) {
-    deletePost($_POST['post_id']);
+    deletePostDash($_POST['post_id']);
 }
 
 // Handle search
@@ -12,6 +11,9 @@ $posts = isset($_GET['search']) ? searchPosts($_GET['search']) : getAllPosts(20)
 
 // Get post statistics
 $postStats = getPostStats();
+
+// Get all admin settings
+$settings = getAllAdminSettings();
 ?>
 
 <!DOCTYPE html>
@@ -67,7 +69,8 @@ $postStats = getPostStats();
                     <td><?php echo $post['PostID']; ?></td>
                     <td><?php echo htmlspecialchars($post['Title']); ?></td>
                     <td><?php echo htmlspecialchars($post['Username']); ?></td>
-                    <td><?php echo $post['CreatedAt']; ?></td>
+                    <td><?php echo calculateTimeAgo($post['CreatedAt']); ?></td>
+                    <td><?php echo countPostComments($post['PostID']); ?></td>
                     <td>
                         <form method="POST" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this post?');">
                             <input type="hidden" name="post_id" value="<?php echo $post['PostID']; ?>">

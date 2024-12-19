@@ -1,0 +1,52 @@
+INTRO: 
+
+Good day, everyone, and thank you for joining us today. We’re excited to introduce LendWorks, a platform designed to revolutionize the way people borrow and lend tools. Whether you’re a DIY enthusiast, a small business owner, or an event organizer, we understand the challenges of owning expensive tools that are only used occasionally. LendWorks offers a solution to this problem, providing a secure, affordable, and convenient way to access tools without the need for long-term ownership. Today, we’ll walk you through our vision, progress, and plans for scaling LendWorks into a leading tool rental platform
+
+MEET THE TEAM: 
+
+We’re also proud to introduce the dedicated team behind LendWorks. First, we have Al-steven Tumimbang, our Quality Assurance specialist, who ensures that our platform remains reliable and user-friendly. Next, meet Alfaisal Sappari, our talented UI/UX Designer, responsible for crafting the seamless and intuitive experience you’ll enjoy while using LendWorks. We also have Marie Andre Abao, our Project Manager, who keeps everything on track, ensuring that our goals are met on time. Lastly, we have Allen Tan, our Developer, who brings our platform to life with his technical expertise. Together, we are a team of third-year Computer Science students from Western Mindanao State University, united by our passion for innovation and problem-solving.
+
+1.) Problem: 
+
+Many individuals and small businesses face challenges due to the high cost of owning tools they only use occasionally. This leads to underutilized tools and equipment, resulting in wasted resources. Additionally, there is a lack of trust in peer-to-peer lending, which hinders people from borrowing or lending items directly. Furthermore, limited local access to rental options makes it difficult for people to find and rent the tools they need conveniently.
+
+
+2.) Solution:
+
+LendWorks provides an affordable, secure, and convenient platform for borrowing and lending tools. Renters save money by accessing tools without buying, while lenders earn from underused items. With user verification, liability waivers, and a simple process, LendWorks creates a safe and seamless rental experience.
+
+
+3.) Features: 
+
+Our platform is designed with features that prioritize ease of use, secure transactions, and complete transparency. It offers an intuitive interface that makes browsing, listing, and renting tools effortless for users of all experience levels. With clear and upfront pricing, including automated discounts for longer rentals, users can confidently plan their budgets. Additionally, a built-in review system fosters trust within the community by allowing renters and lenders to share honest feedback, ensuring a safe and reliable rental experience for everyone.
+
+4.) Target Market /  Market Size:
+
+The equipment rental market is massive, with a Total Addressable Market (TAM) around $54.7 billion globally. LendWorks focuses on a specific segment, including DIY enthusiasts, small businesses, event organizers, and hobbyists. This segment represents our Serviceable Available Market (SAM), estimated at $5.47 billion. Initially, we aim to capture 1% of this target, giving us a Serviceable Obtainable Market (SOM) of $547 million. By addressing the needs of these key groups, we position LendWorks for sustainable growth in a high-demand market.
+
+
+5.) Business Model: 
+
+Our business model generates revenue through multiple income streams, primarily by charging a 25% transaction fee on all rentals, applied to both renters and lenders. This ensures that the platform remains sustainable while providing valuable services to both parties. Additionally, we implement late return fees, which are applied daily for overdue rentals, helping to maintain timely returns and compensating lenders for any delays. Together, these revenue sources help LendWorks grow while offering a secure and efficient rental experience for all users.
+
+
+6.) Proposed use of Funds:
+
+We are seeking ₱10 million in funding to scale LendWorks, allocated as follows:
+
+₱4M (40%) for platform development to enhance features and user experience.
+₱3M (30%) for marketing to expand our reach and grow the user base.
+₱2M (20%) for operations to build a strong team for support and logistics.
+₱1M (10%) for legal and compliance to ensure security and trust.
+
+This investment will drive growth, improve the platform, and establish LendWorks as the leading tool rental solution.
+
+
+7.) Traction:
+
+Our MVP testing has shown strong demand, with 12 out of 15 renters completing transactions and 80% of users identifying tool rentals as a key pain point. Positive feedback from 7 out of 12 renters led to a 67% retention rate, proving the platform’s affordability and convenience. As we prepare for a larger launch, we aim to capture 1% of the local tool rental market, targeting a Serviceable Obtainable Market (SOM) of ₱100 million and projecting annual revenue of ₱1.5 million. These results highlight our potential for scalability and profitability.
+
+
+OUTRO: 
+
+As we’ve shared today, LendWorks is poised for growth, addressing the real needs of tool renters and lenders alike. With our clear market strategy, strong business model, and an excellent team in place, we’re confident that we can make a significant impact in the tool rental industry. We’re grateful for your time today, and we look forward to the opportunity to work with you as we continue to scale LendWorks and bring our platform to a larger audience. Thank you again for your support, and we welcome any questions you may have.

@@ -49,6 +49,8 @@ if ($result->num_rows > 0) {
                     if ($post['Username'] == $_SESSION['username']) {
                         // Fetch current tags for the post
                         $currentTags = getTagsByPostId($postID);
+                        // Fetch existing documents
+                        $existingDocuments = getDocumentsByPostId($postID);
             ?>
             <form action="edit_post_process.php" method="post" enctype="multipart/form-data">
                 
@@ -57,27 +59,24 @@ if ($result->num_rows > 0) {
                 <input type="hidden" name="current_photo" value="<?php echo htmlspecialchars($post['PhotoPath'], ENT_QUOTES, 'UTF-8'); ?>">
 
                 <label for="title">Title:</label>
-                <input type="hidden" id="title" name="title" value="<?php echo htmlspecialchars($post['Title'], ENT_QUOTES, 'UTF-8'); ?>">
-                <input type="text" name="title" class="post-title-in" value="<?php echo htmlspecialchars($post['Title'], ENT_QUOTES, 'UTF-8'); ?>" disabled>
+                <input type="text" id="title" name="title" class="post-title-in" value="<?php echo htmlspecialchars($post['Title'], ENT_QUOTES, 'UTF-8'); ?>" required>
 
-                <label for="title">Content:</label>
+                <label for="content">Content:</label>
                 <textarea id="content" name="content" class="post-content-in" rows="4" cols="50" required><?php echo htmlspecialchars($post['Content'], ENT_QUOTES, 'UTF-8'); ?></textarea>
                 
-                <label for="title">Photo:</label>
+                <label for="photo">Main Photo:</label>
                 <?php if ($post['PhotoPath']): ?>
                     <div class="current-photo">
-                        <img src="<?php echo htmlspecialchars($post['PhotoPath'], ENT_QUOTES, 'UTF-8'); ?>" alt="Current Photo" style="max-width: 100%; height: auto;">
-                    </div>
-                <?php else:?>
-                    <div class="current-photo"><br>
-                        <p style="margin-left: 10px; color:#0056b3">No photo uploaded</p><br>
+                        <img src="<?php echo htmlspecialchars($post['PhotoPath'], ENT_QUOTES, 'UTF-8'); ?>" alt="Current Photo">
+                        <div class="remove-control">
+                            <input type="checkbox" name="remove_main_photo" id="remove_main_photo" value="1">
+                            <label for="remove_main_photo">Remove</label>
+                        </div>
                     </div>
                 <?php endif; ?>
-                
-                <label for="title">Replace Photo:</label>
                 <input type="file" id="photo" name="photo" class="post-image-in" accept="image/*">
-                
-                <!-- Display existing images -->
+
+                <label for="additional_photos">Additional Photos:</label>
                 <div class="current-images" id="current-images">
                     <?php
                     $imagesQuery = "SELECT * FROM post_images WHERE PostID = ? ORDER BY DisplayOrder";
@@ -95,55 +94,47 @@ if ($result->num_rows > 0) {
                         </div>
                     <?php endforeach; ?>
                 </div>
+                <input type="file" name="new_photos[]" multiple accept="image/*" class="post-image-in">
 
-                <style>
-                .current-images {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                    gap: 10px;
-                    margin: 10px 0;
-                }
+                <label for="documents">Documents:</label>
+                <div class="current-documents" id="current-documents">
+                    <?php foreach ($existingDocuments as $document): ?>
+                        <div class="document-preview">
+                            <a href="<?php echo htmlspecialchars($document, ENT_QUOTES, 'UTF-8'); ?>" target="_blank"><?php echo basename($document); ?></a>
+                            <button type="button" class="remove-document" onclick="removeDocument(this, '<?php echo htmlspecialchars($document, ENT_QUOTES, 'UTF-8'); ?>')">×</button>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <input type="file" id="documents" name="documents[]" class="post-document-in" accept=".pdf,.doc,.docx,.txt" multiple>
 
-                .image-container {
-                    position: relative;
-                    border: 1px solid #ddd;
-                    padding: 5px;
-                    cursor: move;
-                }
-
-                .image-container img {
-                    width: 100%;
-                    height: 150px;
-                    object-fit: cover;
-                }
-                </style>
-
-                <script>
-                // Initialize Sortable for existing images
-                new Sortable(document.getElementById('current-images'), {
-                    animation: 150,
-                    onEnd: function() {
-                        updateImageOrder();
-                    }
-                });
-
-                function updateImageOrder() {
-                    const containers = document.querySelectorAll('.image-container');
-                    const orderInput = document.createElement('input');
-                    orderInput.type = 'hidden';
-                    orderInput.name = 'image_order';
-                    orderInput.value = Array.from(containers).map(c => c.getAttribute('data-image-id')).join(',');
+                <label for="videos">Videos (Max 100MB each):</label>
+                <div class="current-videos" id="current-videos">
+                    <?php
+                    $videosQuery = "SELECT * FROM post_videos WHERE PostID = ?";
+                    $videosStmt = $conn->prepare($videosQuery);
+                    $videosStmt->bind_param('i', $postID);
+                    $videosStmt->execute();
+                    $videos = $videosStmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     
-                    // Remove existing order input if any
-                    const existingOrder = document.querySelector('input[name="image_order"]');
-                    if (existingOrder) existingOrder.remove();
-                    
-                    document.querySelector('form').appendChild(orderInput);
-                }
-                </script>
-
-                <label for="new_photos">Add More Photos:</label>
-                <input type="file" name="new_photos[]" multiple accept="image/*">
+                    foreach($videos as $video): ?>
+                        <div class="video-preview">
+                            <div class="video-wrapper">
+                                <video controls preload="metadata">
+                                    <source src="<?php echo htmlspecialchars($video['VideoPath']); ?>" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                            <div class="video-info">
+                                <div class="video-name"><?php echo basename($video['VideoPath']); ?></div>
+                            </div>
+                            <div class="remove-control">
+                                <input type="checkbox" name="remove_videos[]" id="video_<?php echo $video['VideoID']; ?>" value="<?php echo $video['VideoID']; ?>">
+                                <label for="video_<?php echo $video['VideoID']; ?>">Remove</label>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <input type="file" id="videos" name="new_videos[]" class="post-video-in" accept="video/*" multiple>
                 
                 <!-- Tag Selection Dropdown -->
                 
@@ -290,6 +281,37 @@ if ($result->num_rows > 0) {
                 document.querySelector('form').appendChild(newInput);
             }
         }
+
+        // JavaScript to handle document removal
+        function removeDocument(button, documentPath) {
+            const documentPreview = button.closest('.document-preview');
+            documentPreview.remove();
+
+            // Add hidden input to mark document for removal
+            const removeInput = document.createElement('input');
+            removeInput.type = 'hidden';
+            removeInput.name = 'remove_documents[]';
+            removeInput.value = documentPath;
+            document.getElementById('edit-post-form').appendChild(removeInput);
+        }
     </script>
+    <script>
+        // Add this code just before the closing </body> tag
+        document.getElementById('backButton').addEventListener('click', function() {
+            const previousPage = localStorage.getItem('previousPage');
+
+            if (previousPage) {
+                // Redirect to the manually stored previous page
+                window.location.href = previousPage;
+
+                // Optional: Clear the stored previous page after redirecting
+                localStorage.removeItem('previousPage');
+            } else {
+                // Fallback if no previous page is found
+                window.location.href = 'http://localhost/php-parctice/wshare%20admin%20latest/Wshare/wshare%20system%20(adjusted)/homepage.php';
+            }
+        });
+    </script>
+
 </body>
-</html> 
+</html>

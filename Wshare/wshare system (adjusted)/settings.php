@@ -95,14 +95,6 @@ $userSettings = getUserSettings($_SESSION['user_id']);
         <div class="settings-section">
             <h2>Content</h2>
             <div class="settings-option">
-                <label for="nsfw-content">Show NSFW Content</label>
-                <input type="checkbox" id="nsfw-content">
-            </div>
-            <div class="settings-option">
-                <label for="autoplay">Autoplay Videos</label>
-                <input type="checkbox" id="autoplay">
-            </div>
-            <div class="settings-option">
                 <label for="image-quality">Image Quality</label>
                 <select id="image-quality" class="settings-select">
                     <option value="high">High</option>

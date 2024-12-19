@@ -9,7 +9,7 @@ body {
 }
 
 form {
-    margin-top: 10px;
+    
     margin-bottom: 10px;
 }
 
@@ -163,6 +163,48 @@ h1 {
     height: 30px;
     width: auto;
     padding: 0 15px;
+}
+
+.search_results {
+    color: #007bff;
+    padding: 15px 20px;
+    margin: 10px 0;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1em;
+}
+
+.search_results::before {
+    content: '🔍';
+    font-size: 1.2em;
+}
+
+.search_results .query {
+    color: #0056b3;
+    font-weight: 600;
+}
+
+.search_results .count {
+    margin-left: auto;
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.search-results-info {
+    margin: 20px 0;
+}
+
+.no-results-message {
+    text-align: center;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    margin: 20px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Media Queries */

@@ -58,6 +58,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="./css/navbar.css ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/left-navbar.css  ?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/view_user.css  ?v=<?php echo time(); ?>">
+    <style>
+        .ban-message {
+            color: #721c24;
+            background-color: #f8d7da;
+            padding: 10px;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
 
@@ -72,11 +82,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php
         if ($userview['ProfilePic']) {
             echo '<div class="photo">';
-            echo '<img class="profile_pic" src="' . $userview['ProfilePic'] . '">';
+            echo '<img class="profile_pic" src="' . $userview['ProfilePic'] . '" style="cursor: pointer;" onclick="openModal(this.src)">';
             echo '</div>';
         } else {
             echo '<div class="photo">';
-            echo '<img class="profile_pic" src="default_pic.svg">';
+            echo '<img class="profile_pic" src="default_pic.svg" style="cursor: pointer;" onclick="openModal(this.src)">';
             echo '</div>';
         }
     ?>
@@ -86,7 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <p class = "Profile-joined" style = "font-size:small; margin-left:10px;"><b><?php echo "Joined ". timeAgo($userview['JoinedAt']); ?></p>
     
     <?php if($_SESSION['username'] != $userview['Username']){ 
-        if (!checkUserBan()){ ?>
+        if (!checkUserBan()){ // Check for general ban only
+    ?>
             <form action="" method="POST">
                 <input type="hidden" name="action" value="<?php echo $buttonAction; ?>">
                 <button type="submit" class="<?php echo $isFollowing ? 'follow-btn unfollow' : 'follow-btn'; ?>">
@@ -94,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </button>
             </form>
         <?php } else { ?>
-            <div class="ban-message" style="color: red; margin: 10px;">
+            <div class="ban-message">
                 <?php echo checkUserBan(true); ?>
             </div>
         <?php } 
@@ -152,13 +163,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </button>
                                 </form>
 
-                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
+                                <span class="like-count" style = "display:flex; align-self:center; color:#0056b3;"><?php echo getLikeCount($post['PostID']); ?> Brilliant Points</span>
 
                                 <button class="like-btn" style = "background-color:transparent; border:none; padding: 5px;"><img class="bulb" src="comment.svg" style = "height:25px; width:25px; background-color:transparent; outline:none; border:none;"></button>
 
-                                <span class="like-count" style = "display:flex; align-self:center; color:#007bff;"><?php echo countComments($post['PostID']); ?> Comments</span>
+                                <span class="like-count" style = "display:flex; align-self:center; color:#0056b3;"><?php echo countComments($post['PostID']); ?> Comments</span>
 
-                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 5px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:25px; width:25px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#007bff; margin-left:5px;"> See disscussion</p></a> </button>
+                                <button class="like-btn" style = "background-color:transparent; border:none; padding: 5px;"><a href="view_post.php?id=<?php echo $post['PostID']; ?>" style = "display:flex; align-self:center; text-decoration:none;"><img class="bulb" src="view.svg" style = "height:25px; width:25px; background-color:transparent; outline:none; border:none;"><p class="like-count" style = "display:flex; align-self:center; color:#0056b3; margin-left:5px;"> See disscussion</p></a> </button>
 
                             </div>
                             

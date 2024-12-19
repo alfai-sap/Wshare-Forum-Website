@@ -1,6 +1,7 @@
 <?php
 require_once "functions.php";
-require_once "changes.php"; // Add this line
+require_once "changes.php";
+require_once "bookmark_functions.php"; // Add this line to include bookmark functions
 session_start();
 ?>
 
@@ -13,8 +14,8 @@ session_start();
     <link rel="stylesheet" href="./css/view_post.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/navbar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="./css/left-navbar.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="./css/modal.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="./css/notifications.css?v=<?php echo time(); ?>">
+    <!--<link rel="stylesheet" href="./css/notifications.css?v=<?php echo time(); ?>">-->
+    
 
     <script>
     // Save the previous page's URL when the page is loaded
@@ -22,7 +23,16 @@ session_start();
         localStorage.setItem('previousPage', document.referrer);
     }
     </script>
-
+    <style>
+        .ban-message {
+            color: #721c24;
+            background-color: #f8d7da;
+            padding: 10px;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
     <?php include 'navbar.php'; ?>
@@ -39,32 +49,45 @@ session_start();
     if (isset($_GET['id'])) {
         $postId = $_GET['id'];
         $post = getPostById($postId);
+        
+        // Check if post exists
+        if (!$post) {
+            echo '<div class="error-message">Post not found or has been deleted.</div>';
+            exit;
+        }
+
         $comments = getCommentsByPostId($postId);
         $userProfile = getUserProfileById($post['UserID']);
-        $profilePic = $userProfile['ProfilePic'];
+        $profilePic = $userProfile['ProfilePic'] ?? 'default_pic.svg';
         $user = getUserByUsername($_SESSION['username']);
     ?>
         <div class="post-container">
         <div class="post">
         <?php if (hasUserLikedPost($post['PostID'], $_SESSION['user_id'])): ?>
-                <div class="liked-message" style="background-color: #e0f7fa; padding: 10px; border-radius: 5px; margin-bottom: 30px;">
-                    <p style="margin: 0; color: #00796b;">You liked this post on <?php echo date('F j, Y', strtotime(getLikeDate($post['PostID'], $_SESSION['user_id']))); ?></p>
+                <div class="liked-message">
+                    <p>You liked this post on <?php echo date('F j, Y', strtotime(getLikeDate($post['PostID'], $_SESSION['user_id']))); ?></p>
                 </div>
             <?php endif; ?>
             <div class="author-info">
-                <?php if (!empty($profilePic)): ?>
-                    <img class="author_pic" src="<?php echo $profilePic; ?>" alt="Profile Picture">
-                <?php else: ?>
-                    <img class="author_pic" src="default_pic.svg" alt="Profile Picture">
-                <?php endif; ?>
+                <img class="author_pic" src="<?php echo htmlspecialchars($profilePic); ?>" alt="Profile Picture">
                 
-                <div class="unametime" style="display:flex; flex-direction: column;">
-                    <div class="unam-time" style="display: flex;">
-                        <p class="authorname"><?php echo $post['Username']; ?></p>
+                <div class="unametime">
+                    <div class="unam-time">
+                        <?php if ($post['Username'] === '[deleted user]'): ?>
+                            <p class="authorname deleted-user">[deleted user]</p>
+                        <?php else: ?>
+                            <p class="authorname">
+                                <a href="view_user.php?username=<?php echo urlencode($post['Username']); ?>">
+                                    <?php echo htmlspecialchars($post['Username']); ?>
+                                </a>
+                            </p>
+                        <?php endif; ?>
                         <p class="timestamp"><?php echo timeAgo($post['CreatedAt']); ?></p>
                     </div>
                     
-                    <p class="timestamp-update">edited <?php echo timeAgo($post['updatedAt']); ?></p>
+                    <?php if (isset($post['updatedAt']) && $post['updatedAt'] !== $post['CreatedAt']): ?>
+                        <p class="timestamp-update">Edited <?php echo date('F j, Y, g:i a', strtotime($post['updatedAt'])); ?></p>
+                    <?php endif; ?>
                 </div>
             </div>
                     
@@ -101,41 +124,104 @@ session_start();
             <p class="post-content"><?php echo $post['Content']; ?></p>
     
                   
-            <?php if (!empty($post['PhotoPath'])): ?>
-                <?php
-                    $images = [];
-                    if (!empty($post['PhotoPath'])) {
-                        $images[] = $post['PhotoPath'];
-                    }
-                    
-                    // Get additional images from post_images table
-                    $stmt = $conn->prepare("SELECT ImagePath FROM post_images WHERE PostID = ? ORDER BY DisplayOrder");
-                    $stmt->bind_param('i', $post['PostID']);
-                    $stmt->execute();
-                    $imgResult = $stmt->get_result();
-                    
-                    while($img = $imgResult->fetch_assoc()) {
-                        $images[] = $img['ImagePath'];
-                    }
-                    $stmt->close();
+            <?php
+                // Create a combined media array with both images and videos
+                $media = [];
+                
+                // Add videos if they exist
+                $stmt = $conn->prepare("SELECT VideoPath FROM post_videos WHERE PostID = ?");
+                $stmt->bind_param('i', $post['PostID']);
+                $stmt->execute();
+                $vidResult = $stmt->get_result();
+                while($video = $vidResult->fetch_assoc()) {
+                    $media[] = [
+                        'type' => 'video',
+                        'path' => $video['VideoPath']
+                    ];
+                }
+                $stmt->close();
 
-                    if (!empty($images)): ?>
-                        <div class="post-images-container" data-images="<?php echo htmlspecialchars(implode(',', $images)); ?>">
-                            <?php foreach($images as $index => $image): ?>
-                                <div class="post-image-slide <?php echo $index === 0 ? 'active' : ''; ?>">
-                                    <img class="post-image-img" src="<?php echo htmlspecialchars(trim($image)); ?>" alt="Post Image">
+                // Add main photo if exists
+                if (!empty($post['PhotoPath'])) {
+                    $media[] = [
+                        'type' => 'image',
+                        'path' => $post['PhotoPath']
+                    ];
+                }
+
+                // Add additional images
+                $stmt = $conn->prepare("SELECT ImagePath FROM post_images WHERE PostID = ? ORDER BY DisplayOrder");
+                $stmt->bind_param('i', $post['PostID']);
+                $stmt->execute();
+                $imgResult = $stmt->get_result();
+                while($img = $imgResult->fetch_assoc()) {
+                    $media[] = [
+                        'type' => 'image',
+                        'path' => $img['ImagePath']
+                    ];
+                }
+                $stmt->close();
+
+                // Replace the existing image gallery section with this
+                if (!empty($media)): ?>
+                    <div class="post-images-container" data-images="<?php echo htmlspecialchars(json_encode($media)); ?>">
+                        <div class="images-wrapper">
+                            <?php foreach($media as $index => $item): ?>
+                                <div class="post-image-slide <?php echo $index === 0 ? 'active' : ''; ?>" data-index="<?php echo $index; ?>">
+                                    <?php if ($item['type'] === 'image'): ?>
+                                        <img class="post-image-img" src="<?php echo htmlspecialchars(trim($item['path'])); ?>" alt="Post Image">
+                                    <?php elseif ($item['type'] === 'video'): ?>
+                                        <video class="post-video" controls>
+                                            <source src="<?php echo htmlspecialchars(trim($item['path'])); ?>" type="video/mp4">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
-                            
-                            <?php if(count($images) > 1): ?>
-                                <button class="slide-nav prev" data-direction="prev">&lt;</button>
-                                <button class="slide-nav next" data-direction="next">&gt;</button>
-                                <div class="image-counter">1/<?php echo count($images); ?></div>
-                            <?php endif; ?>
-                            
-                            <div class="gallery-overlay"></div>
                         </div>
-                <?php endif; ?>
+                        <?php if(count($media) > 1): ?>
+                            <div class="image-nav-buttons">
+                                <button class="nav-arrow prev-image">←</button>
+                                <button class="nav-arrow next-image">→</button>
+                            </div>
+                            <div class="image-counter">1/<?php echo count($media); ?></div>
+                        <?php endif; ?>
+                        <button class="fullscreen-btn">⛶</button>
+                    </div>
+
+                    <!-- Update the fullscreen modal structure -->
+                    <div class="fullscreen-modal">
+                        <button class="fullscreen-close">×</button>
+                        <img class="fullscreen-image" src="" alt="Fullscreen Image">
+                        <video class="fullscreen-video" controls style="display: none;">
+                            <source src="" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <div class="image-nav-buttons">
+                            <button class="nav-arrow prev-image">←</button>
+                            <button class="nav-arrow next-image">→</button>
+                        </div>
+                        <div class="image-counter"></div>
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" onclick="zoom(1.2)">+</button>
+                            <button class="zoom-btn" onclick="zoom(0.8)">-</button>
+                            <button class="zoom-btn" onclick="resetZoom()">Reset</button>
+                        </div>
+                    </div>
+            <?php endif; ?>
+
+            <!-- Display documents -->
+            <?php
+            $documents = getDocumentsByPostId($postID);
+            if (!empty($documents)): ?>
+                <div class="post-documents">
+                    <button class="dropdown-btn" onclick="toggleDocuments()">See documents attached</button>
+                    <ul class="document-list" id="document-list" style="display: none;">
+                        <?php foreach ($documents as $document): ?>
+                            <li><a href="<?php echo htmlspecialchars($document, ENT_QUOTES, 'UTF-8'); ?>" target="_blank"><?php echo basename($document); ?></a></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
             <?php endif; ?>
 
             <div class="lik">
@@ -155,6 +241,20 @@ session_start();
                 <button class="like-btn"><img class="bulb" src="comment.svg"></button>
 
                 <span class="like-count"><?php echo countComments($post['PostID']); ?> Comments</span>
+
+                <form action="bookmark_handler.php" method="POST">
+                    <input type="hidden" name="post_id" value="<?php echo $post['PostID']; ?>">
+                    <input type="hidden" name="action" value="<?php echo isBookmarked($_SESSION['user_id'], $post['PostID']) ? 'remove' : 'add'; ?>">
+                    <button type="submit" class="bookmark-btn">
+                        <?php if (isBookmarked($_SESSION['user_id'], $post['PostID'])): ?>
+                            <img class="bookmark-icon" src="bookmark_filled.svg">
+                            <span class="like-count">Bookmarked</span>
+                        <?php else: ?>
+                            <img class="bookmark-icon" src="bookmark.svg">
+                            <span class="like-count">Add to bookmarks</span>
+                        <?php endif; ?>
+                    </button>
+                </form>
 
                 <button class="like-btn" style="background-color:transparent; border:none; padding: 10px;">
                     <a href="report_form.php?type=post&id=<?php echo $post['PostID']; ?>" style="display:flex; align-self:center; text-decoration:none;">
@@ -217,7 +317,7 @@ session_start();
                         
                         <?php if (isset($_SESSION['username'])): ?>
                             <?php if (checkUserBan()): ?>
-                                <div class="ban-message" style="color: red; margin: 10px 0;">
+                                <div class="ban-message">
                                     <?php echo checkUserBan(true); ?>
                                 </div>
                             <?php else: ?>
@@ -236,8 +336,8 @@ session_start();
         <?php endif; ?>
     
         <?php if (isset($_SESSION['username'])): ?>
-            <?php if (checkUserBan()): ?>
-                <div class="ban-message" style="color: red; margin: 10px 0;">
+            <?php if (checkUserBan()): // Check for general ban only ?>
+                <div class="ban-message">
                     <?php echo checkUserBan(true); ?>
                 </div>
             <?php else: ?>
@@ -265,46 +365,8 @@ session_start();
 
 </div>
 
-<!-- Add Image Modal -->
-<div id="imageModal" class="image-modal">
-    <span class="close-modal">&times;</span>
-    <button class="nav-btn prev-btn" title="Previous">&lt;</button>
-    <div class="modal-content">
-        <img id="modalImage" src="" alt="Modal Image" draggable="false">
-    </div>
-    <button class="nav-btn next-btn" title="Next">&gt;</button>
-    <div class="modal-counter"></div>
-    <div class="zoom-controls">
-        <button class="zoom-btn" onclick="zoom(1.2)">+</button>
-        <button class="zoom-btn" onclick="zoom(0.8)">-</button>
-        <button class="zoom-btn" onclick="resetZoom()">Reset</button>
-    </div>
-</div>
-
-<!-- Remove all the duplicate JavaScript code and replace with this -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const container = document.querySelector('.post-images-container');
-    if (container) {
-        // Initialize the slideshow
-        initializeImageSlideshow();
-        
-        // Add click handler for container
-        container.addEventListener('click', function(e) {
-            if (!e.target.classList.contains('slide-nav')) {
-                const images = this.dataset.images.split(',');
-                const activeSlide = this.querySelector('.post-image-slide.active');
-                const currentIndex = Array.from(this.querySelectorAll('.post-image-slide')).indexOf(activeSlide);
-                openModal(images, currentIndex);
-            }
-        });
-    }
-});
-</script>
-
-<!-- Scripts - Maintain this order -->
+<!-- Scripts -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="./javascripts/modal.js"></script>
 <script src="./javascripts/index.js"></script>
 
 <script>
@@ -364,16 +426,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-
     document.getElementById('logo-nav').addEventListener('click', function() {
-            var element = document.getElementById('left-navbar');
-            element.style.display = (element.style.display === 'none') ? 'block' : 'none';
-        });
+        var element = document.getElementById('left-navbar');
+        element.style.display = (element.style.display === 'none') ? 'block' : 'none';
+    });
 
-        document.getElementById('logo-left-nav').addEventListener('click', function() {
-            var element = document.getElementById('left-navbar');
-            element.style.display = (element.style.display === 'none') ? 'block' : 'none';
-        });
+    document.getElementById('logo-left-nav').addEventListener('click', function() {
+        var element = document.getElementById('left-navbar');
+        element.style.display = (element.style.display === 'none') ? 'block' : 'none';
+    });
 </script>
 
 <script>
@@ -383,192 +444,234 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 </script>
 
-<style>
-.post-images-container {
-    position: relative;
-    max-width: 100%;
-    margin: 20px 0;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('.post-images-container');
+    const slides = document.querySelectorAll('.post-image-slide');
+    const counter = document.querySelector('.image-counter');
+    const modal = document.querySelector('.fullscreen-modal');
+    const fullscreenImage = modal.querySelector('.fullscreen-image');
+    const fullscreenVideo = modal.querySelector('.fullscreen-video');
+    let currentIndex = 0;
+
+    function updateSlide(index) {
+        slides.forEach(slide => slide.classList.remove('active'));
+        slides[index].classList.add('active');
+        counter.textContent = `${index + 1}/${slides.length}`;
+    }
+
+    function navigateSlides(direction) {
+        currentIndex = (currentIndex + direction + slides.length) % slides.length;
+        updateSlide(currentIndex);
+        if (modal.style.display === 'block') {
+            const currentSlide = slides[currentIndex];
+            const isVideo = currentSlide.querySelector('video') !== null;
+            if (isVideo) {
+                fullscreenImage.style.display = 'none';
+                fullscreenVideo.style.display = 'block';
+                fullscreenVideo.src = currentSlide.querySelector('video').src;
+            } else {
+                fullscreenVideo.style.display = 'none';
+                fullscreenImage.style.display = 'block';
+                fullscreenImage.src = currentSlide.querySelector('img').src;
+            }
+        }
+    }
+
+    // Navigation buttons
+    container.querySelectorAll('.nav-arrow').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigateSlides(button.classList.contains('next-image') ? 1 : -1);
+        });
+    });
+
+    // Fullscreen functionality
+    container.querySelector('.fullscreen-btn').addEventListener('click', () => {
+        modal.style.display = 'block';
+        const currentSlide = slides[currentIndex];
+        const isVideo = currentSlide.querySelector('video') !== null;
+        if (isVideo) {
+            fullscreenImage.style.display = 'none';
+            fullscreenVideo.style.display = 'block';
+            fullscreenVideo.src = currentSlide.querySelector('video').src;
+        } else {
+            fullscreenVideo.style.display = 'none';
+            fullscreenImage.style.display = 'block';
+            fullscreenImage.src = currentSlide.querySelector('img').src;
+        }
+    });
+
+    modal.querySelector('.fullscreen-close').addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    // Modal navigation
+    modal.querySelectorAll('.nav-arrow').forEach(button => {
+        button.addEventListener('click', () => {
+            navigateSlides(button.classList.contains('next-image') ? 1 : -1);
+        });
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (modal.style.display === 'block') {
+            if (e.key === 'ArrowLeft') navigateSlides(-1);
+            if (e.key === 'ArrowRight') navigateSlides(1);
+            if (e.key === 'Escape') modal.style.display = 'none';
+        }
+    });
+});
+
+let currentZoom = 1;
+
+function zoom(factor) {
+    currentZoom *= factor;
+    currentZoom = Math.min(Math.max(0.5, currentZoom), 3); // Limit zoom between 0.5x and 3x
+    updateTransform();
 }
 
-.post-image-slide {
-    display: none;
-    aspect-ratio: 16/9;
-    background: #f5f5f5;
+function resetZoom() {
+    currentZoom = 1;
+    updateTransform();
 }
 
-.post-image-slide.active {
-    display: block;
+function updateTransform() {
+    document.querySelector('.fullscreen-image').style.transform = 
+        `translate(-50%, -50%) scale(${currentZoom})`;
 }
 
-.post-image-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    background: #f5f5f5;
-}
+// Reset transform when opening modal
+document.querySelector('.fullscreen-btn').addEventListener('click', resetZoom);
+</script>
 
-.slide-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    padding: 15px;
-    border: none;
-    cursor: pointer;
-    z-index: 2;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    opacity: 0;
-    transition: opacity 0.3s, background 0.3s;
-}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentZoom = 1;
+    let isDragging = false;
+    let startX, startY;
+    let translateX = 0;
+    let translateY = 0;
+    
+    const modal = document.querySelector('.fullscreen-modal');
+    const image = modal.querySelector('.fullscreen-image');
+    
+    // Add mouse wheel zoom handling
+    function handleWheel(e) {
+        if (modal.style.display === 'block') {
+            e.preventDefault();
+            const delta = e.deltaY || e.detail || e.wheelDelta;
+            
+            // Calculate zoom factor based on scroll direction
+            const factor = delta > 0 ? 0.9 : 1.1;
+            
+            // Get mouse position relative to image
+            const rect = image.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // Apply zoom
+            currentZoom *= factor;
+            currentZoom = Math.min(Math.max(0.5, currentZoom), 3); // Limit zoom between 0.5x and 3x
+            
+            // Update transform with mouse position as zoom origin
+            image.style.transform = `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px)) scale(${currentZoom})`;
+        }
+    }
+    
+    // Add wheel event listener
+    modal.addEventListener('wheel', handleWheel, { passive: false });
+    
+    function startDrag(e) {
+        if (e.target.closest('.nav-arrow') || 
+            e.target.closest('.zoom-btn') || 
+            e.target.closest('.fullscreen-close')) {
+            return;
+        }
+        
+        isDragging = true;
+        modal.classList.add('dragging');
+        
+        if (e.type === 'mousedown') {
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+        } else if (e.type === 'touchstart') {
+            startX = e.touches[0].clientX - translateX;
+            startY = e.touches[0].clientY - translateY;
+        }
+    }
+    
+    function doDrag(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        
+        let clientX, clientY;
+        if (e.type === 'mousemove') {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        } else if (e.type === 'touchmove') {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        }
+        
+        translateX = clientX - startX;
+        translateY = clientY - startY;
+        
+        image.style.transform = `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px)) scale(${currentZoom})`;
+    }
+    
+    function stopDrag() {
+        isDragging = false;
+        modal.classList.remove('dragging');
+    }
+    
+    function resetPosition() {
+        translateX = 0;
+        translateY = 0;
+        currentZoom = 1;
+        image.style.transform = 'translate(-50%, -50%) scale(1)';
+    }
+    
+    // Mouse events
+    image.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', doDrag);
+    document.addEventListener('mouseup', stopDrag);
+    
+    // Touch events
+    image.addEventListener('touchstart', startDrag);
+    document.addEventListener('touchmove', doDrag, { passive: false });
+    document.addEventListener('touchend', stopDrag);
+    
+    // Reset position when closing modal
+    modal.querySelector('.fullscreen-close').addEventListener('click', () => {
+        resetPosition();
+        modal.style.display = 'none';
+    });
+    
+    // Reset position when opening modal
+    document.querySelector('.fullscreen-btn').addEventListener('click', resetPosition);
+    
+    // Zoom functions
+    window.zoom = function(factor) {
+        currentZoom *= factor;
+        currentZoom = Math.min(Math.max(0.5, currentZoom), 3);
+        image.style.transform = `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px)) scale(${currentZoom})`;
+    };
+    
+    window.resetZoom = resetPosition;
+});
+</script>
 
-.post-images-container:hover .slide-nav {
-    opacity: 1;
+<script>
+function toggleDocuments() {
+    var docList = document.getElementById('document-list');
+    if (docList.style.display === 'none') {
+        docList.style.display = 'block';
+    } else {
+        docList.style.display = 'none';
+    }
 }
-
-.slide-nav:hover {
-    background: rgba(0, 0, 0, 0.8);
-}
-
-.prev {
-    left: 10px;
-}
-
-.next {
-    right: 10px;
-}
-
-.image-counter {
-    position: absolute;
-    bottom: 15px;
-    right: 15px;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    padding: 5px 15px;
-    border-radius: 15px;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-/* Modal styles */
-.image-modal {
-    background: rgba(0, 0, 0, 0.9);
-}
-
-.modal-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-}
-
-.modal-content img {
-    max-width: 90vw;
-    max-height: 85vh;
-    object-fit: contain;
-}
-
-.nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    padding: 20px;
-    border: none;
-    cursor: pointer;
-    font-size: 24px;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s, background 0.3s;
-}
-
-.image-modal:hover .nav-btn {
-    opacity: 1;
-}
-
-.nav-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.prev-btn {
-    left: 20px;
-}
-
-.next-btn {
-    right: 20px;
-}
-
-.modal-counter {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-size: 14px;
-}
-
-.zoom-controls {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    gap: 10px;
-}
-
-.zoom-btn {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.zoom-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.close-modal {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    color: white;
-    font-size: 32px;
-    cursor: pointer;
-    z-index: 1001;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    transition: background 0.3s;
-}
-
-.close-modal:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-</style>
+</script>
 
 </body>
 </html>

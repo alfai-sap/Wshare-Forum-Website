@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $success = true;
 }
 
-$settings = getAllSettings();
+$settings = getAllAdminSettings();
 $systemStatus = getSystemStatus();
 $dbStats = getDatabaseStats();
 ?>

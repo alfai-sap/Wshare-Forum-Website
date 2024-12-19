@@ -1,61 +1,35 @@
-
 <!-- Right Sidebar -->
 <div class="right-sidebar">
     
 <?php
 $topDailyPosts = getTopDailyPosts();
 ?>
-<!--
-<div class="top-daily-posts">
-    <h3 onclick="toggleVisibility('daily-posts-list')" class="dd-toggle">Top Daily Posts</h3>
-    <ul id="daily-posts-list" class="dd-content expanded">
-        <?php foreach ($topDailyPosts as $post): ?>
-            <li style="display: flex;">
-                <div style="margin-left: 10px;">
-                    <img src="<?php echo $post['ProfilePic']; ?>">
-                    <p><?php echo htmlspecialchars($post['Title']); ?></p>
-                    <small>By <?php echo htmlspecialchars($post['Username']); ?> - <?php echo $post['Engagement']; ?> Engagements</small>
-                </div>
-            </li>
-        <?php endforeach; ?>
-    </ul>
-</div>
-
-
-
-<div class="people-you-may-know">
-    <h3 onclick="toggleVisibility('people-you-may-know-list')" class="dd-toggle">People You May Know</h3>
-    <ul id="people-you-may-know-list" class="dd-content expanded">
-        <?php foreach ($peopleYouMayKnow as $person): ?>
-            <li style="display: flex;">
-                <img src="<?php echo $person['ProfilePic'] ?: 'default-profile-pic.jpg'; ?>" style="height: 30px; width: 30px; border-radius: 50%;">
-                <p style="margin-left: 10px;"><?php echo htmlspecialchars($person['Username']); ?></p>
-            </li>
-        <?php endforeach; ?>
-    </ul>
-</div>-->
-
     <div class="leaderboard">
-        <h3 onclick="toggleVisibility('top-users')" class="dd-toggle">Top Users</h3>
-        <ul id="top-users" class="dd-content expanded"> <!-- Add "expanded" -->
-            <?php foreach ($topUsers as $user): ?>
-                <li style="display: flex;">
-                    <img src="<?php echo $user['ProfilePic']; ?>" style="height: 30px; width: 30px; border-radius: 50%;">
-                    <p style="margin: 5px; padding-left: 5px;"><?php echo htmlspecialchars($user['Username']); ?> -</p>
-                    <p style="color: #007bff; margin: 5px;"><?php echo htmlspecialchars($user['total_likes']); ?> Points</p>
+        <h3 class="dd-toggle">Popular Posts</h3>
+        <ul class="popular-posts">
+            <?php 
+            $popularPosts = getPopularPosts(); // We'll add this function
+            foreach ($popularPosts as $post): ?>
+                <li class="post-item">
+                    <a href="view_post.php?id=<?php echo $post['PostID']; ?>" class="post-link">
+                        <div class="post-title"><?php echo htmlspecialchars(substr($post['Title'], 0, 50)) . (strlen($post['Title']) > 50 ? '...' : ''); ?></div>
+                        <div class="post-stats">
+                            <span class="stat">
+                                <img src="bulb_active.svg" class="stat-icon">
+                                <?php echo $post['like_count']; ?>
+                            </span>
+                            <span class="stat">
+                                <img src="bookmark_filled.svg" class="stat-icon">
+                                <?php echo $post['bookmark_count']; ?>
+                            </span>
+                        </div>
+                    </a>
                 </li>
             <?php endforeach; ?>
         </ul>
     </div>
+
     
-    <div class="leaderboard">
-        <h3 onclick="toggleVisibility('top-communities')" class="dd-toggle">Top Communities</h3>
-        <ul id="top-communities" class="dd-content expanded"> <!-- Add "expanded" -->
-            <?php foreach ($topCommunities as $community): ?>
-                <li><?php echo htmlspecialchars($community['Title']); ?> - <?php echo htmlspecialchars($community['member_count']); ?> members</li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
 
 </div>
 
@@ -80,6 +54,75 @@ $topDailyPosts = getTopDailyPosts();
 
     .dd-content li {
         padding: 5px 0;
+    }
+
+    .right-sidebar {
+        background: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .leaderboard h3 {
+        color: #333;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #eee;
+    }
+
+    .popular-posts {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .post-item {
+        margin-bottom: 12px;
+        transition: transform 0.2s;
+    }
+
+    .post-item:hover {
+        transform: translateX(5px);
+    }
+
+    .post-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        padding: 8px;
+        border-radius: 6px;
+        background: #f8f9fa;
+        transition: background-color 0.2s;
+    }
+
+    .post-link:hover {
+        background: #f1f3f5;
+    }
+
+    .post-title {
+        font-size: 0.9rem;
+        color: #2c3e50;
+        margin-bottom: 5px;
+        line-height: 1.4;
+    }
+
+    .post-stats {
+        display: flex;
+        gap: 12px;
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .stat {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .stat-icon {
+        width: 14px;
+        height: 14px;
+        opacity: 0.7;
     }
 </style>
 

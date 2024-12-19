@@ -2,8 +2,8 @@
 require_once 'chat_functions.php';
 session_start();
 
-// Define maximum file size (5MB)
-define('MAX_FILE_SIZE', 5 * 1024 * 1024);
+// Define maximum file size (25MB)
+define('MAX_FILE_SIZE', 25 * 1024 * 1024);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $communityID = intval($_POST['community_id']);
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Check total size
         if ($totalSize > MAX_FILE_SIZE * count($_FILES['attachments']['name'])) {
-            $_SESSION['chat_error'] = "Total file size exceeds the limit. Each file must be under 5MB.";
+            $_SESSION['chat_error'] = "Total file size exceeds the limit. Each file must be under 25MB.";
             header("Location: community_page.php?community_id=$communityID");
             exit();
         }
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($_FILES['attachments']['name'] as $key => $name) {
             if ($_FILES['attachments']['error'][$key] === UPLOAD_ERR_INI_SIZE || 
                 $_FILES['attachments']['error'][$key] === UPLOAD_ERR_FORM_SIZE) {
-                $_SESSION['chat_error'] = "File '$name' exceeds the size limit of 5MB.";
+                $_SESSION['chat_error'] = "File '$name' exceeds the size limit of 25MB.";
                 header("Location: community_page.php?community_id=$communityID");
                 exit();
             }
@@ -46,13 +46,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Validate file size
                 if ($fileSize > MAX_FILE_SIZE) {
-                    $_SESSION['chat_error'] = "File '$name' exceeds the size limit of 5MB.";
+                    $_SESSION['chat_error'] = "File '$name' exceeds the size limit of 25MB.";
                     header("Location: community_page.php?community_id=$communityID");
                     exit();
                 }
 
-                // Validate file type (optional)
-                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword'];
+                // Validate file type
+                $allowedTypes = [
+                    'image/jpeg', 'image/png', 'image/gif', 
+                    'application/pdf', 'application/msword', 
+                    'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+                    'video/mp4', 'video/x-msvideo', 'application/x-sh', 'application/x-python-code'
+                ];
                 if (!in_array($fileType, $allowedTypes)) {
                     $_SESSION['chat_error'] = "File '$name' type is not allowed.";
                     header("Location: community_page.php?community_id=$communityID");

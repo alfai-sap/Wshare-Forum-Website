@@ -11,7 +11,9 @@ if (isset($_POST['resolve_report'])) {
 }
 
 // Get reports
-$reports = isset($_GET['status']) ? getReportsByStatus($_GET['status']) : getAllReports();
+$status = isset($_GET['status']) ? $_GET['status'] : null;
+$postType = isset($_GET['post_type']) ? $_GET['post_type'] : null;
+$reports = getReports($status, $postType);
 ?>
 
 <!DOCTYPE html>
@@ -34,7 +36,8 @@ $reports = isset($_GET['status']) ? getReportsByStatus($_GET['status']) : getAll
             <a href="?status=pending" class="filter-btn" style="margin: 10px;">Pending</a>
             <a href="?status=reviewed" class="filter-btn" style="margin: 10px;">Reviewed</a>
             <a href="?status=resolved" class="filter-btn" style="margin: 10px;">Resolved</a>
-            
+            <a href="?post_type=general" class="filter-btn" style="margin: 10px;">General</a>
+            <a href="?post_type=community" class="filter-btn" style="margin: 10px;">Community</a>
         </div>
 
         <!-- Reports Table -->
@@ -46,6 +49,7 @@ $reports = isset($_GET['status']) ? getReportsByStatus($_GET['status']) : getAll
                     <th>Reporter</th>
                     <th>Violation</th>
                     <th>Status</th>
+                    <th>Post Type</th>
                     <th>Created At</th>
                     <th>Actions</th>
                 </tr>
@@ -56,6 +60,7 @@ $reports = isset($_GET['status']) ? getReportsByStatus($_GET['status']) : getAll
                     <td><?php echo htmlspecialchars($report['Username']); ?></td>
                     <td><?php echo htmlspecialchars($report['Violation']); ?></td>
                     <td><?php echo ucfirst($report['Status']); ?></td>
+                    <td><?php echo ucfirst($report['PostType']); ?></td>
                     <td><?php echo $report['CreatedAt']; ?></td>
                     <td>
                         <form method="POST" class="inline-form">

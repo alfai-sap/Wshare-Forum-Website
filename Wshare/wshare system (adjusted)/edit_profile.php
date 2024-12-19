@@ -57,6 +57,26 @@
     $id = getUserIdByUsername($username);
     $uid = $id;
 
+    // Ensure canChangeUsername function is available
+    if (!function_exists('canChangeUsername')) {
+        function canChangeUsername($userID) {
+            global $conn;
+            $sql = "SELECT LastUsernameChange FROM Users WHERE UserID = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $userID);
+            $stmt->execute();
+            $stmt->bind_result($lastChange);
+            $stmt->fetch();
+            $stmt->close();
+
+            if ($lastChange) {
+                $lastChangeTime = strtotime($lastChange);
+                $sixMonthsAgo = strtotime('-6 months');
+                return $lastChangeTime < $sixMonthsAgo;
+            }
+            return true;
+        }
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -117,21 +137,37 @@
             </div>
         </div>
 
-        
-        
-        
-        <div class="forms">
-            <form action="new_uname_email.php" method="post" class="profile-form" id="username">
+        <?php if (isset($_SESSION['message'])): ?>
+            <div class="alert alert-success">
+                <?php 
+                    echo $_SESSION['message'];
+                    unset($_SESSION['message']);
+                ?>
+            </div>
+        <?php endif; ?>
 
-                <label for="new_username">New Username:</label>
-                <input type="text" id="new_username" name="new_username" class="profile-input" required>
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-error">
+                <?php 
+                    echo $_SESSION['error'];
+                    unset($_SESSION['error']);
+                ?>
+            </div>
+        <?php endif; ?>
 
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" class="profile-input" required>
-
-                <button type="submit" name="submit" class="profile-btn">Update Username</button>
-            </form>
-        </div>
+        <?php if (canChangeUsername($user['UserID'])): ?>
+            <div class="forms">
+                <form action="new_uname_email.php" method="post" class="profile-form" id="username">
+                    <label for="new_username">New Username:</label>
+                    <input type="text" id="new_username" name="new_username" class="profile-input" required>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" class="profile-input" required>
+                    <button type="submit" name="submit" class="profile-btn">Update Username</button>
+                </form>
+            </div>
+        <?php else: ?>
+            <p class="username-change-restriction" style="text-align: center;">You can change your username once every 6 months.</p>
+        <?php endif; ?>
 
         <br>
         <br>

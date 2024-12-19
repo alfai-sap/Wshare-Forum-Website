@@ -1,5 +1,7 @@
 <?php
 require_once "functions.php";
+require_once "bookmark_functions.php"; // Add this line to include bookmark functions
+require_once "changes.php"; // Add this line to include ban checking functions
 session_start();
 
 // Check if post ID is provided in the URL
@@ -24,6 +26,16 @@ if (isset($_GET['id'])) {
     <link rel="stylesheet" href="./css/navbar.css?v=<?= time(); ?>">
     <link rel="stylesheet" href="./css/left-navbar.css?v=<?= time(); ?>">
     <link rel="stylesheet" href="./css/view_post.css?v=<?= time(); ?>">
+    <style>
+        .ban-message {
+            color: red;
+            background-color: #ffe6e6;
+            padding: 10px;
+            border: 1px solid red;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 
 <body>
@@ -65,10 +77,26 @@ if (isset($_GET['id'])) {
                 <h3><?= $post['Title'] ?></h3>
                 <p class="post-content"><?= $post['Content'] ?></p>
 
-                <!-- Add this photo section -->
+                <!-- Replace the existing photo section with this -->
                 <?php if (!empty($post['PhotoPath'])): ?>
-                    <div class="post-image">
-                        <img class="post-image-img" src="<?php echo $post['PhotoPath']; ?>" alt="Post Image">
+                    <div class="post-images-container" data-images="<?php echo htmlspecialchars($post['PhotoPath']); ?>">
+                        <div class="images-wrapper">
+                            <div class="post-image-slide active" data-index="0">
+                                <img class="post-image-img" src="<?php echo htmlspecialchars(trim($post['PhotoPath'])); ?>" alt="Post Image">
+                            </div>
+                        </div>
+                        <button class="fullscreen-btn">⛶</button>
+                    </div>
+
+                    <!-- Add the fullscreen modal structure -->
+                    <div class="fullscreen-modal">
+                        <button class="fullscreen-close">×</button>
+                        <img class="fullscreen-image" src="" alt="Fullscreen Image">
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" onclick="zoom(1.2)">+</button>
+                            <button class="zoom-btn" onclick="zoom(0.8)">-</button>
+                            <button class="zoom-btn" onclick="resetZoom()">Reset</button>
+                        </div>
                     </div>
                 <?php endif; ?>
 
@@ -91,6 +119,28 @@ if (isset($_GET['id'])) {
                         <img class="bulb" src="comment.svg">
                     </button>
                     <span class="like-count"><?= getCommunityCountComment($post['PostID']) ?></span>
+                    <form action="bookmark_handler.php" method="POST">
+                        <input type="hidden" name="post_id" value="<?= $post['PostID'] ?>">
+                        <input type="hidden" name="action" value="<?= isCommunityBookmarked($_SESSION['user_id'], $post['PostID']) ? 'remove_community' : 'add_community' ?>">
+                        <button type="submit" class="bookmark-btn">
+                            <?php if (isCommunityBookmarked($_SESSION['user_id'], $post['PostID'])): ?>
+                                <img class="bookmark-icon" src="bookmark_filled.svg">
+                                <span class="like-count">Bookmarked</span>
+                            <?php else: ?>
+                                <img class="bookmark-icon" src="bookmark.svg">
+                                <span class="like-count">Add to bookmarks</span>
+                            <?php endif; ?>
+                        </button>
+                    </form>
+                    <form action="report_form.php" method="GET">
+                        <input type="hidden" name="type" value="community_post">
+                        <input type="hidden" name="id" value="<?= $post['PostID'] ?>">
+                        <input type="hidden" name="post_type" value="community">
+                        <button type="submit" class="report-btn">
+                            <img class="report-icon" src="report.svg">
+                            <span class="report-label">Report</span>
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -161,7 +211,7 @@ if (isset($_GET['id'])) {
                             <?php endif; ?>
 
                             <!-- Reply Form -->
-                            <?php if (isset($_SESSION['username'])): ?>
+                            <?php if (isset($_SESSION['username']) && !checkUserBan(true, $communityId)): ?>
                                 <button class="reply-btn" data-comment-id="<?= $comment['CommentID'] ?>">
                                     <p class="icon-label"><img class="reply-icon" src="reply.svg"> reply</p>
                                 </button>
@@ -179,7 +229,7 @@ if (isset($_GET['id'])) {
             <?php endif; ?>
 
             <!-- Comment Form -->
-            <?php if (isset($_SESSION['username'])): ?>
+            <?php if (isset($_SESSION['username']) && !checkUserBan(true, $communityId)): ?>
                 <div class="comment-form-container">
                     <img class="user_pic" src="<?= $user['ProfilePic'] ?? 'default_pic.svg' ?>" alt="Profile Picture">
                     <form class="comment-form" action="comment_for_view_post.php" method="POST">
@@ -190,8 +240,12 @@ if (isset($_GET['id'])) {
                         </button>
                     </form>
                 </div>
-            <?php else: ?>
+            <?php elseif (!isset($_SESSION['username'])): ?>
                 <p>Please <a href="login.php">login</a> to comment.</p>
+            <?php else: ?>
+                <div class="ban-message">
+                    You are restricted from commenting in this community.
+                </div>
             <?php endif; ?>
         <?php else: ?>
             <p>Post not found or comment uploaded.</p>
@@ -200,77 +254,85 @@ if (isset($_GET['id'])) {
     </div>
 
     <!-- Add Image Modal -->
-    <div id="imageModal" class="image-modal">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
-        <img id="modalImage" class="modal-content">
-        <div class="zoom-controls">
-            <button class="zoom-btn" onclick="zoom(1.2)">+</button>
-            <button class="zoom-btn" onclick="zoom(0.8)">-</button>
-            <button class="zoom-btn" onclick="resetZoom()">Reset</button>
-        </div>
-    </div>
+    
 
+    <!-- Replace the existing image modal JavaScript with this -->
     <script>
     let currentZoom = 1;
     let isDragging = false;
     let startX, startY, translateX = 0, translateY = 0;
 
-    // Make post images clickable
-    document.querySelectorAll('.post-image-img').forEach(img => {
-        img.style.cursor = 'pointer';
-        img.onclick = function() {
-            openModal(this.src);
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.querySelector('.post-images-container');
+        const modal = document.querySelector('.fullscreen-modal');
+        const fullscreenImage = modal.querySelector('.fullscreen-image');
+        
+        // Open modal
+        container.querySelector('.fullscreen-btn').addEventListener('click', () => {
+            modal.style.display = 'block';
+            fullscreenImage.src = container.querySelector('.post-image-img').src;
+            resetPosition();
+        });
+
+        // Close modal
+        modal.querySelector('.fullscreen-close').addEventListener('click', () => {
+            modal.style.display = 'none';
+            resetPosition();
+        });
+
+        function startDrag(e) {
+            isDragging = true;
+            if (e.type === "mousedown") {
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+            } else if (e.type === "touchstart") {
+                startX = e.touches[0].clientX - translateX;
+                startY = e.touches[0].clientY - translateY;
+            }
+            fullscreenImage.style.cursor = 'grabbing';
         }
+
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const clientX = e.type === "mousemove" ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type === "mousemove" ? e.clientY : e.touches[0].clientY;
+            
+            translateX = clientX - startX;
+            translateY = clientY - startY;
+            
+            updateTransform();
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            fullscreenImage.style.cursor = 'grab';
+        }
+
+        // Event listeners for dragging
+        fullscreenImage.addEventListener('mousedown', startDrag);
+        fullscreenImage.addEventListener('touchstart', startDrag);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('touchmove', drag, { passive: false });
+        document.addEventListener('mouseup', stopDrag);
+        document.addEventListener('touchend', stopDrag);
+
+        // Keyboard controls
+        document.addEventListener('keydown', function(e) {
+            if (modal.style.display === 'block') {
+                if (e.key === 'Escape') modal.style.display = 'none';
+                if (e.key === '+' || e.key === '=') zoom(1.2);
+                if (e.key === '-') zoom(0.8);
+                if (e.key === '0') resetPosition();
+            }
+        });
     });
-
-    function openModal(imgSrc) {
-        const modal = document.getElementById('imageModal');
-        const modalImg = document.getElementById('modalImage');
-        modal.style.display = "block";
-        modalImg.src = imgSrc;
-        resetPosition();
-    }
-
-    // Same functions as above...
-    function closeModal() {
-        document.getElementById('imageModal').style.display = "none";
-        resetPosition();
-    }
 
     function zoom(factor) {
         currentZoom *= factor;
         currentZoom = Math.min(Math.max(0.5, currentZoom), 3);
         updateTransform();
-    }
-
-    function startDrag(e) {
-        isDragging = true;
-        if (e.type === "mousedown") {
-            startX = e.clientX - translateX;
-            startY = e.clientY - translateY;
-        } else if (e.type === "touchstart") {
-            startX = e.touches[0].clientX - translateX;
-            startY = e.touches[0].clientY - translateY;
-        }
-        document.getElementById('modalImage').style.cursor = 'grabbing';
-    }
-
-    function drag(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        
-        const clientX = e.type === "mousemove" ? e.clientX : e.touches[0].clientX;
-        const clientY = e.type === "mousemove" ? e.clientY : e.touches[0].clientY;
-        
-        translateX = clientX - startX;
-        translateY = clientY - startY;
-        
-        updateTransform();
-    }
-
-    function stopDrag() {
-        isDragging = false;
-        document.getElementById('modalImage').style.cursor = 'grab';
     }
 
     function resetPosition() {
@@ -281,26 +343,9 @@ if (isset($_GET['id'])) {
     }
 
     function updateTransform() {
-        document.getElementById('modalImage').style.transform = 
-            `scale(${currentZoom}) translate(${translateX}px, ${translateY}px)`;
+        document.querySelector('.fullscreen-image').style.transform = 
+            `translate(-50%, -50%) scale(${currentZoom}) translate(${translateX}px, ${translateY}px)`;
     }
-
-    // Event listeners
-    const modalImage = document.getElementById('modalImage');
-    modalImage.addEventListener('mousedown', startDrag);
-    modalImage.addEventListener('touchstart', startDrag);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('touchmove', drag, { passive: false });
-    document.addEventListener('mouseup', stopDrag);
-    document.addEventListener('touchend', stopDrag);
-
-    // Keyboard controls
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeModal();
-        if (e.key === '+' || e.key === '=') zoom(1.2);
-        if (e.key === '-') zoom(0.8);
-        if (e.key === '0') resetPosition();
-    });
     </script>
 
     <script>

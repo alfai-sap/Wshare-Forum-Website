@@ -1,29 +1,30 @@
 <?php
-require_once 'functions.php';
 session_start();
+require_once 'functions.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
+if (!isset($_SESSION['username'])) {
+    header('Location: login.php');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $oldUsername = $_SESSION['username'];
+    $newUsername = $_POST['new_username'];
     $password = $_POST['password'];
-    $username = $_SESSION['username'];
-
-    // Verify password
-    if (verifyPassword($username, $password)) {
-        if (isset($_POST['new_username'])) {
-            // Update username
-            $newUsername = $_POST['new_username'];
-            updateUsername($username, $newUsername);
-            $_SESSION['username'] = $newUsername; // Update session variable
-            header('Location: edit_profile.php');
-            exit;
-        } elseif (isset($_POST['new_email'])) {
-            // Update email
-            $newEmail = $_POST['new_email'];
-            updateEmail($username, $newEmail);
-            header('Location: edit_profile.php');
-            exit;
-        }
+    
+    $result = updateUsernameWithValidation($oldUsername, $newUsername, $password);
+    
+    if ($result['success']) {
+        $_SESSION['username'] = $newUsername;
+        $_SESSION['message'] = $result['message'];
+        header('Location: edit_profile.php');
+        exit;
     } else {
-        echo "Incorrect password. Username not updated.";
+        $_SESSION['error'] = $result['message'];
+        header('Location: edit_profile.php');
+        exit;
     }
 }
-?>
+
+header('Location: edit_profile.php');
+exit;

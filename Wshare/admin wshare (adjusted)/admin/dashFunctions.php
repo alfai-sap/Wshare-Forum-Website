@@ -443,12 +443,27 @@ function getAllComments($limit = 10, $offset = 0) {
     return mysqli_stmt_get_result($stmt)->fetch_all(MYSQLI_ASSOC);
 }
 
-function deleteComment($commentID) {
+function deleteComment($commentId) {
     global $conn;
-    $query = "DELETE FROM comments WHERE CommentID = ?";
-    $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, "i", $commentID);
-    return mysqli_stmt_execute($stmt);
+    
+    // First delete all replies to this comment
+    $stmt = $conn->prepare("DELETE FROM replies WHERE CommentID = ?");
+    $stmt->bind_param("i", $commentId);
+    $stmt->execute();
+    
+    // Then delete the comment itself
+    $stmt = $conn->prepare("DELETE FROM comments WHERE CommentID = ?");
+    $stmt->bind_param("i", $commentId);
+    return $stmt->execute();
+}
+
+// Add this new function
+function deleteReply($replyId) {
+    global $conn;
+    $query = "DELETE FROM replies WHERE ReplyID = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $replyId);
+    return $stmt->execute();
 }
 
 // Search Functions
@@ -702,7 +717,8 @@ function getDatabaseStats() {
     
     $query = "SELECT 
                 table_name,
-                round(((data_length + index_length) / 1024 / 1024), 2) 'size_mb'
+                round(((data_length + index_length) / 1024 / 1024), 2) 'size_mb',
+                table_rows as 'rows'
               FROM information_schema.TABLES 
               WHERE table_schema = DATABASE()
               ORDER BY (data_length + index_length) DESC";
@@ -1258,28 +1274,23 @@ function getReports($status = null, $postType = null) {
 
 function getReportedPostDetails($reportId) {
     global $conn;
-    $query = "SELECT reports.*, 
-                     CASE 
-                        WHEN reports.ReportType = 'post' THEN posts.Title
-                        WHEN reports.ReportType = 'community_post' THEN community_posts.Title
-                     END as Title,
-                     CASE 
-                        WHEN reports.ReportType = 'post' THEN posts.Content
-                        WHEN reports.ReportType = 'community_post' THEN community_posts.Content
-                     END as Content,
-                     reports.EvidencePhoto,
-                     users.Username as ReporterName, 
-                     reported_user.Username as ReportedUsername
-              FROM reports
-              JOIN users ON reports.UserID = users.UserID
-              LEFT JOIN posts ON reports.ReportType = 'post' AND reports.TargetID = posts.PostID
-              LEFT JOIN community_posts ON reports.ReportType = 'community_post' AND reports.TargetID = community_posts.PostID
-              LEFT JOIN users reported_user ON reports.ReportedUserID = reported_user.UserID
-              WHERE reports.ReportID = ?";
-    $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, "i", $reportId);
-    mysqli_stmt_execute($stmt);
-    return mysqli_stmt_get_result($stmt)->fetch_assoc();
+    
+    $sql = "SELECT r.*, p.Title, p.Content, p.PostID, 
+            reporter.Username as ReporterName, 
+            reported.Username as ReportedUsername, 
+            reported.UserID as ReportedUserID 
+            FROM reports r 
+            LEFT JOIN posts p ON r.TargetID = p.PostID 
+            LEFT JOIN users reporter ON r.UserID = reporter.UserID 
+            LEFT JOIN users reported ON r.ReportedUserID = reported.UserID 
+            WHERE r.ReportID = ?";
+            
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $reportId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    return $result->fetch_assoc();
 }
 
 // Search Functions

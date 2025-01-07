@@ -45,7 +45,7 @@ function checkUserBan($returnMessage = false, $communityID = null) {
     if ($banInfo) {
         if ($returnMessage) {
             $message = "You are restricted from accessing ";
-            $message .= $banInfo['CommunityID'] ? "this community" : "the website";
+            $message .= $banInfo['CommunityID'] ? "some community features" : "some platform features";
             $message .= " until " . date('Y-m-d', strtotime($banInfo['BanEnd']));
             $message .= ". Reason: " . $banInfo['BanReason'];
             return $message;

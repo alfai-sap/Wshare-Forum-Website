@@ -21,7 +21,7 @@ if (!$reportDetails) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Report</title>
-    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="dashboard.css?v=<?php echo time(); ?>">
     <style>
         .container {
             max-width: 800px;
@@ -181,10 +181,31 @@ if (!$reportDetails) {
             <p><strong>Post Title:</strong> <?php echo htmlspecialchars($reportDetails['Title']); ?></p>
             <p><strong>Post Content:</strong> <?php echo nl2br(htmlspecialchars($reportDetails['Content'])); ?></p>
         </div>
+        <?php if ($reportDetails['ReportType'] == 'post' && isset($reportDetails['PostID']) && $reportDetails['PostID']): ?>
+            <h2>Post Details</h2>
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <a href="admin_view_post.php?id=<?php echo htmlspecialchars($reportDetails['PostID']); ?>&type=post" class="view-post-btn">
+                    <i class="fas fa-eye"></i> View Full Post
+                </a>
+            </div>
+            <div class="post-container">
+        <?php endif; ?>
         <div class="evidence-section">
             <h2>Evidence</h2>
             <?php if (!empty($reportDetails['EvidencePhoto'])): ?>
-                <img src="<?php echo htmlspecialchars($reportDetails['EvidencePhoto']); ?>" alt="Evidence Photo" style="max-width: 100%; height: auto;">
+                <?php
+                    // Clean and encode the file path
+                    $evidencePath = str_replace('\\', '/', $reportDetails['EvidencePhoto']);
+                    // If the path starts with ../, adjust it relative to the current directory
+                    if (strpos($evidencePath, '../') === 0) {
+                        $evidencePath = dirname($_SERVER['PHP_SELF']) . '/' . $evidencePath;
+                    }
+                    $encodedPath = rawurlencode($evidencePath);
+                ?>
+                <img src="<?php echo htmlspecialchars($encodedPath); ?>" 
+                     alt="Evidence Photo" 
+                     style="max-width: 100%; height: auto;"
+                     onerror="this.onerror=null; this.src='images/no-image.png'; this.alt='Evidence photo not available';">
             <?php else: ?>
                 <p>No evidence provided.</p>
             <?php endif; ?>

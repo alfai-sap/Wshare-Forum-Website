@@ -108,7 +108,7 @@ $topFollowers = getTopFollowers();
 
 <section class="user-stats-section">
     <div class="container">
-        <h2>Top Users</h2>
+        <h2>User Metrics</h2>
         <div class="user-stats">
             <div class="stat-list">
                 <h3>Most Active Users (Posts)</h3>

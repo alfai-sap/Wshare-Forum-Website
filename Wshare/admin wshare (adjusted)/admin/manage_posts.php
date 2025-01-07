@@ -6,8 +6,8 @@ if (isset($_POST['delete_post'])) {
     deletePostDash($_POST['post_id']);
 }
 
-// Handle search
-$posts = isset($_GET['search']) ? searchPosts($_GET['search']) : getAllPosts(20);
+// Handle search - use searchPostsDash instead of searchPosts
+$posts = isset($_GET['search']) ? searchPostsDash($_GET['search']) : getAllPosts(20);
 
 // Get post statistics
 $postStats = getPostStats();
@@ -22,7 +22,7 @@ $settings = getAllAdminSettings();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Posts</title>
-    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="dashboard.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -62,6 +62,7 @@ $settings = getAllAdminSettings();
                     <th>Title</th>
                     <th>Author</th>
                     <th>Created At</th>
+                    <th>Comments</th>
                     <th>Actions</th>
                 </tr>
                 <?php foreach ($posts as $post): ?>
@@ -72,11 +73,13 @@ $settings = getAllAdminSettings();
                     <td><?php echo calculateTimeAgo($post['CreatedAt']); ?></td>
                     <td><?php echo countPostComments($post['PostID']); ?></td>
                     <td>
-                        <form method="POST" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this post?');">
-                            <input type="hidden" name="post_id" value="<?php echo $post['PostID']; ?>">
-                            <button type="submit" name="delete_post">Delete</button>
-                        </form>
-                        <button onclick="viewPost(<?php echo $post['PostID']; ?>)">View</button>
+                        <div class="table-actions">
+                            <form method="POST" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this post?');">
+                                <input type="hidden" name="post_id" value="<?php echo $post['PostID']; ?>">
+                                <button type="submit" name="delete_post" class="action-button delete-button">Delete</button>
+                            </form>
+                            <button onclick="viewPost(<?php echo $post['PostID']; ?>)" class="action-button view-button">View</button>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -86,8 +89,7 @@ $settings = getAllAdminSettings();
 
     <script>
     function viewPost(postId) {
-        // Add your view post logic here
-        alert('View post ' + postId);
+        window.location.href = 'admin_view_post.php?id=' + postId;
     }
     </script>
 </body>

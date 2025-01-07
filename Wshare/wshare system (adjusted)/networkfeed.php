@@ -50,6 +50,9 @@ $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
     </div>
 </ul>
 
+
+<?php include 'navbar.php';?>
+
 <div class="filter-row">
     <form method="GET" action="" id="filterForm" class="timeframe-filter">
         <select name="sort" id="sort" class="filter-select" onchange="updateSearch()">
@@ -58,8 +61,6 @@ $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
         </select>
     </form>
 </div>
-
-    <?php include 'navbar.php';?><br>
 
     <div class = "container">
     <!--<h1>Posts from Your Network</h1>-->

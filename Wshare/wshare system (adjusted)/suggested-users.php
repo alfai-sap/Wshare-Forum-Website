@@ -7,7 +7,7 @@ $suggestedUsers = getSuggestedUsers($userID);
 <div class="right-sidebar">
 
 <div class="leaderboard">
-    <h3 class="dd-toggle" onclick="toggleVisibility('suggested-users-content')">People You May Know</h3>
+    <h3 class="dd-toggle" onclick="toggleVisibility('suggested-users-content')">People You May Follow</h3>
     <ul class="dd-content expanded" id="suggested-users-content">
         <?php foreach ($suggestedUsers as $user): ?>
             <li class="post-item">

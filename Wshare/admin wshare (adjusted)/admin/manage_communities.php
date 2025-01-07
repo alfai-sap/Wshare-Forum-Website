@@ -60,19 +60,16 @@ $settings = getAllAdminSettings();
             </div>
         </div>
 
-        <!-- Search and Filter Controls -->
+        <!-- Controls Container -->
         <div class="controls-container">
-            <div class="search-box">
-                <form method="GET" class="search-form">
+            <form method="GET" class="controls-form">
+                <div class="search-form">
                     <input type="text" name="search" placeholder="Search communities..." 
                            value="<?php echo htmlspecialchars($searchTerm); ?>">
-                    <button type="submit">Search</button>
-                </form>
-            </div>
+                </div>
 
-            <div class="filter-box">
-                <form method="GET" class="filter-form">
-                    <select name="filter" onchange="this.form.submit()">
+                <div class="filter-form">
+                    <select name="filter" id="filter">
                         <option value="all" <?php echo $filter === 'all' ? 'selected' : ''; ?>>All Communities</option>
                         <option value="active" <?php echo $filter === 'active' ? 'selected' : ''; ?>>Active</option>
                         <option value="inactive" <?php echo $filter === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
@@ -80,20 +77,47 @@ $settings = getAllAdminSettings();
                         <option value="private" <?php echo $filter === 'private' ? 'selected' : ''; ?>>Private</option>
                         <option value="most_members" <?php echo $filter === 'most_members' ? 'selected' : ''; ?>>Most Members</option>
                     </select>
-                </form>
-            </div>
+                </div>
 
-            <div class="sort-box">
-                <form method="GET" class="sort-form">
-                    <select name="sort" onchange="this.form.submit()">
+                <div class="sort-form">
+                    <select name="sort" id="sort">
                         <option value="" <?php echo $sort === '' ? 'selected' : ''; ?>>Sort By</option>
                         <option value="Title" <?php echo $sort === 'Title' ? 'selected' : ''; ?>>Title</option>
                         <option value="member_count" <?php echo $sort === 'member_count' ? 'selected' : ''; ?>>Members</option>
                         <option value="Visibility" <?php echo $sort === 'Visibility' ? 'selected' : ''; ?>>Visibility</option>
                     </select>
-                </form>
-            </div>
+                </div>
+
+                <button type="submit" class="search-button">Apply Filters</button>
+                <a href="manage_communities.php" class="reset-button">Reset</a>
+            </form>
         </div>
+
+        <script>
+            // Add event listeners for automatic form submission
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.querySelector('.controls-form');
+                const filterSelect = document.getElementById('filter');
+                const sortSelect = document.getElementById('sort');
+
+                // Store initial values
+                const initialFilter = filterSelect.value;
+                const initialSort = sortSelect.value;
+
+                // Add change event listeners
+                filterSelect.addEventListener('change', function() {
+                    if (this.value !== initialFilter) {
+                        form.submit();
+                    }
+                });
+
+                sortSelect.addEventListener('change', function() {
+                    if (this.value !== initialSort) {
+                        form.submit();
+                    }
+                });
+            });
+        </script>
 
         <!-- Communities Table -->
         <div class="table-container">
@@ -119,8 +143,12 @@ $settings = getAllAdminSettings();
                     <td><?php echo implode(', ', $community['admins']); ?></td>
                     <td><?php echo $community['is_active'] ? 'Active' : 'Inactive'; ?></td>
                     <td>
-                        <button onclick="viewCommunity(<?php echo $community['CommunityID']; ?>)">View</button>
-                        <button onclick="deleteCommunity(<?php echo $community['CommunityID']; ?>)">Delete</button>
+                        <div class="action-buttons">
+                            <button onclick="viewCommunity(<?php echo $community['CommunityID']; ?>)" 
+                                    class="table-button update-button">View</button>
+                            <button onclick="deleteCommunity(<?php echo $community['CommunityID']; ?>)" 
+                                    class="table-button delete-button">Delete</button>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>

@@ -12,7 +12,7 @@ $activityStats = getActivityStats();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Activity Logs</title>
-    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="dashboard.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

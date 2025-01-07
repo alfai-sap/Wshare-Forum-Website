@@ -22,7 +22,7 @@ $reports = getReports($status, $postType);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Reports</title>
-    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="dashboard.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -76,7 +76,7 @@ $reports = getReports($status, $postType);
                             <input type="hidden" name="report_id" value="<?php echo $report['ReportID']; ?>">
                             <button type="submit" name="resolve_report">Resolve</button>
                         </form>
-                        <button onclick="viewReport(<?php echo $report['ReportID']; ?>)">View</button>
+                        <button class="view-report-btn" onclick="viewReport(<?php echo $report['ReportID']; ?>)">View</button>
                     </td>
                 </tr>
                 <?php endforeach; ?>

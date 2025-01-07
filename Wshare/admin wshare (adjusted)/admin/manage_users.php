@@ -167,10 +167,11 @@ $settings = getAllAdminSettings();
         .btn-info, .btn-success, .btn-warning, .btn-danger, .btn-secondary {
             color: white;
             border: none;
-            margin: 10;
-            padding: 5px 10px;
+            margin: 5px; /* reduced from 10 */
+            padding: 4px 8px; /* reduced from 5px 10px */
             border-radius: 4px;
             cursor: pointer;
+            font-size: 0.9rem; /* added to reduce text size */
         }
 
         .btn-info {
@@ -214,8 +215,54 @@ $settings = getAllAdminSettings();
             background-color: #5a6268;
         }
 
+        .user-button {
+            padding: 4px 8px; /* reduced padding */
+            min-width: 60px; /* reduced from default */
+            font-size: 0.9rem;
+            height: 28px; /* reduced height */
+        }
+
+        .action-button-group {
+            gap: 4px; /* reduced gap between buttons */
+        }
+
+        .inline-form input[type="text"],
+        .inline-form input[type="email"] {
+            width: 140px; /* reduced from 180px */
+            padding: 4px 8px;
+            font-size: 0.85rem;
+        }
+
         .inline-form button {
             margin-right: 5px;
+        }
+
+        .user-actions form {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .user-actions input[type="text"],
+        .user-actions input[type="email"] {
+            width: 100%;
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            border: 2px solid #e1e5ee;
+            border-radius: 6px;
+        }
+
+        .action-button-group {
+            margin-top: 4px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .col-actions {
+            min-width: 200px; /* Ensure enough space for the column layout */
         }
     </style>
 </head>
@@ -250,16 +297,16 @@ $settings = getAllAdminSettings();
     <!-- Users Table -->
     <div class="table-container">
         <h2>All Users</h2>
-        <table>
+        <table class="user-table">
             <tr>
-                <th>UserID</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Date Joined</th>
-                <th>Status</th>
-                <th>Actions</th>
-                <th>Ban History</th> <!-- New column -->
-                <th>Manage</th> <!-- New column for buttons -->
+                <th class="col-id">UserID</th>
+                <th class="col-username">Username</th>
+                <th class="col-email">Email</th>
+                <th class="col-date">Date Joined</th>
+                <th class="col-status">Status</th>
+                <th class="col-actions">Actions</th>
+                <th class="col-history">History</th>
+                <th class="col-manage">Manage</th>
             </tr>
             <?php foreach ($users as $user) { 
                 $banInfo = isUserBanned($user['UserID']);
@@ -277,39 +324,38 @@ $settings = getAllAdminSettings();
                         <span class="badge badge-success">Active</span>
                     <?php endif; ?>
                 </td>
-                
                 <td>
-                    <!-- Update Form -->
-                    <form method="POST" class="inline-form">
-                        <input type="hidden" name="user_id" value="<?php echo $user['UserID']; ?>">
-                        <input type="text" name="username" value="<?php echo $user['Username']; ?>" required>
-                        <input type="email" name="email" value="<?php echo $user['Email']; ?>" required>
-                        <button type="submit" name="update_user">Update</button>
-                    </form>
-                </td>
-                <td>
-                    
-
-                    <!-- Delete Form -->
-                    <form method="POST" class="inline-form">
-                        <input type="hidden" name="user_id" value="<?php echo $user['UserID']; ?>">
-                        <button type="submit" name="delete_user" onclick="return confirm('Are you sure?')">Delete</button>
-                    </form>
-
-                    <?php if ($banInfo): ?>
-                        <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to unban this user?');">
+                    <div class="user-actions">
+                        <form method="POST" class="inline-form">
+                            <input type="text" name="username" value="<?php echo $user['Username']; ?>" required>
+                            <input type="email" name="email" value="<?php echo $user['Email']; ?>" required>
                             <input type="hidden" name="user_id" value="<?php echo $user['UserID']; ?>">
-                            <button type="submit" name="unban_user" class="btn btn-success">Unban</button>
+                            <div class="action-button-group">
+                                <button type="submit" name="update_user" class="user-button btn-update">Update</button>
+                            </div>
                         </form>
-                    <?php else: ?>
-                        <button onclick="showBanModal(<?php echo $user['UserID']; ?>)" class="btn btn-warning">Ban</button>
-                    <?php endif; ?>
+                    </div>
                 </td>
-
                 <td>
-                    <button onclick="showBanHistory(<?php echo htmlspecialchars(json_encode($banHistory)); ?>)" class="btn btn-info">
-                        View History (<?php echo count($banHistory); ?>)
-                    </button>
+                    <button onclick="showBanHistory(<?php echo htmlspecialchars(json_encode($banHistory)); ?>)" 
+                            class="user-button btn-history">View (<?php echo count($banHistory); ?>)</button>
+                </td>
+                <td>
+                    <div class="action-button-group">
+                        <?php if ($banInfo): ?>
+                            <form method="POST" onsubmit="return confirm('Are you sure you want to unban this user?');">
+                                <input type="hidden" name="user_id" value="<?php echo $user['UserID']; ?>">
+                                <button type="submit" name="unban_user" class="user-button btn-update">Unban</button>
+                            </form>
+                        <?php else: ?>
+                            <button onclick="showBanModal(<?php echo $user['UserID']; ?>)" 
+                                    class="user-button btn-ban">Ban</button>
+                        <?php endif; ?>
+                        <form method="POST" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                            <input type="hidden" name="user_id" value="<?php echo $user['UserID']; ?>">
+                            <button type="submit" name="delete_user" class="user-button btn-delete">Delete</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             <?php } ?>

@@ -20,7 +20,7 @@ $systemHealth = getSystemHealth();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Logs</title>
-    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="dashboard.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -29,32 +29,41 @@ $systemHealth = getSystemHealth();
         <h1>System Logs</h1>
 
         <!-- System Health Status -->
-        <div class="system-health-status">
+        <div class="system-health-card">
             <h2>System Status: <span class="status-<?php echo strtolower($systemHealth); ?>"><?php echo $systemHealth; ?></span></h2>
         </div>
 
         <!-- Filter Controls -->
-        <div class="filter-controls">
-            <form method="GET">
-                <label for="days">Days:</label>
-                <select name="days" id="days" onchange="this.form.submit()">
-                    <option value="1" <?php echo $days == 1 ? 'selected' : ''; ?>>Last 24 Hours</option>
-                    <option value="7" <?php echo $days == 7 ? 'selected' : ''; ?>>Last 7 Days</option>
-                    <option value="30" <?php echo $days == 30 ? 'selected' : ''; ?>>Last 30 Days</option>
-                </select>
+        <div class="filter-section">
+            <form method="GET" class="filter-form">
+                <div class="filter-group">
+                    <label for="days">Time Range:</label>
+                    <select name="days" id="days" class="filter-select">
+                        <option value="1" <?php echo $days == 1 ? 'selected' : ''; ?>>Last 24 Hours</option>
+                        <option value="7" <?php echo $days == 7 ? 'selected' : ''; ?>>Last 7 Days</option>
+                        <option value="30" <?php echo $days == 30 ? 'selected' : ''; ?>>Last 30 Days</option>
+                    </select>
+                </div>
 
-                <label for="user_id">User:</label>
-                <input type="number" name="user_id" id="user_id" value="<?php echo htmlspecialchars($userID); ?>" placeholder="User ID">
+                <div class="filter-group">
+                    <label for="user_id">User ID:</label>
+                    <input type="number" name="user_id" id="user_id" 
+                           value="<?php echo htmlspecialchars($userID); ?>" 
+                           placeholder="Enter User ID"
+                           class="filter-input">
+                </div>
 
-                <label for="action_type">Action:</label>
-                <select name="action_type" id="action_type">
-                    <option value="">All</option>
-                    <option value="login" <?php echo $actionType == 'login' ? 'selected' : ''; ?>>Login</option>
-                    <option value="post" <?php echo $actionType == 'post' ? 'selected' : ''; ?>>Post</option>
-                    <!-- Add more action types as needed -->
-                </select>
+                <div class="filter-group">
+                    <label for="action_type">Action Type:</label>
+                    <select name="action_type" id="action_type" class="filter-select">
+                        <option value="">All Actions</option>
+                        <option value="login" <?php echo $actionType == 'login' ? 'selected' : ''; ?>>Login</option>
+                        <option value="post" <?php echo $actionType == 'post' ? 'selected' : ''; ?>>Post</option>
+                    </select>
+                </div>
 
-                <button type="submit">Filter</button>
+                <button type="submit" class="filter-button">Apply Filters</button>
+                <a href="system_logs.php" class="reset-button">Reset</a>
             </form>
         </div>
 
@@ -115,6 +124,126 @@ $systemHealth = getSystemHealth();
     }
     .pagination a.active {
         background-color: #0056b3;
+    }
+
+    .system-health-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+    .filter-section {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+    }
+
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: flex-end;
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #4e73df;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .filter-select,
+    .filter-input {
+        width: 100%;
+        padding: 10px 15px;
+        border: 2px solid #e1e5ee;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        color: #495057;
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+    }
+
+    .filter-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        background-size: 15px;
+        padding-right: 45px;
+    }
+
+    .filter-select:focus,
+    .filter-input:focus {
+        border-color: #4e73df;
+        background-color: #fff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.1);
+    }
+
+    .filter-button,
+    .reset-button {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .filter-button {
+        background-color: #4e73df;
+        color: white;
+        border: none;
+        min-width: 120px;
+    }
+
+    .filter-button:hover {
+        background-color: #2e59d9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .reset-button {
+        background-color: #f8f9fa;
+        color: #4e73df;
+        border: 2px solid #4e73df;
+        text-decoration: none;
+        text-align: center;
+        min-width: 120px;
+    }
+
+    .reset-button:hover {
+        background-color: #4e73df;
+        color: white;
+        text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+        .filter-form {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .filter-group {
+            width: 100%;
+        }
+
+        .filter-button,
+        .reset-button {
+            width: 100%;
+        }
     }
     </style>
 </body>

@@ -174,11 +174,21 @@ hr{
     .btn-search {
         margin-left: 5px;
     }
+
+    .search-input {
+        width: 50%;
+        margin-bottom: 10px;
+    }
+
+    .search-button {
+        width: 100%;
+        padding: 10px;
+    }
 }
 
 @media (max-width: 480px) {
     .search-input {
-        width: 100%;
+        width: 50%;
         margin-bottom: 10px;
     }
 

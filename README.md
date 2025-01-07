@@ -42,7 +42,8 @@ git clone https://github.com/yourusername/Wshare-Forum-Website.git
 # Navigate to project directory
 cd Wshare
 
-# Install dependencies
+
+# Install dependencies (Optional)
 composer install
 
 # Configure environment

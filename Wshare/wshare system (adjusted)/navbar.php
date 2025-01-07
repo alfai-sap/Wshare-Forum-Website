@@ -84,7 +84,7 @@
             <li><a href="search_users.php">
                 <div class="left-nav">
                     <img class="icons" src="searchpeople.svg">
-                    <p class="label_nav">Find People</p>
+                    <p class="label_nav">Find Learners</p>
                 </div>
             </a></li>
         </div>
@@ -92,7 +92,7 @@
         <!-- Resources Section -->
         <div class="nav-section">
             <div class="section-title">Resources</div>
-            <li><a href="#">
+            <li><a href="course_library.php">
                 <div class="left-nav">
                     <img class="icons" src="library.svg">
                     <p class="label_nav">Course Library</p>

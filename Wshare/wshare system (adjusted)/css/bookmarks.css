@@ -27,17 +27,22 @@ body {
 }
 
 .bookmarks-header button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+    background-color: #f8f9fa;
+    color: #212529;
+    border: 1px solid #dee2e6;
+    padding: 8px 16px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .bookmarks-header button:hover {
-    background-color: #0056b3;
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    transform: translateY(-1px);
 }
 
 .search-container {
@@ -64,16 +69,14 @@ body {
 }
 
 .search-form button {
-    background-color: #007bff;
+    padding: 8px 16px;
+    background-color: #0d6efd;
     color: white;
     border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
 }
 
 .search-form button:hover {
-    background-color: #0056b3;
+    background-color: #0b5ed7;
 }
 
 .labels-container {
@@ -104,61 +107,53 @@ body {
 }
 
 .bookmarks-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 100%;
 }
 
 .bookmark-card {
     background-color: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s, transform 0.2s;
     cursor: pointer;
+    border: 1px solid #eee;
+    width: 95%;
 }
 
 .bookmark-card:hover {
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
 .bookmark-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
+    align-items: flex-start;
+    margin-bottom: 12px;
 }
 
 .bookmark-header h3 {
     font-size: 18px;
     color: #007bff;
     margin: 0;
+    flex: 1;
+    margin-right: 20px;
 }
 
 .labels {
     display: flex;
-    gap: 10px;
-}
-
-.post-type {
-    background-color: #ffffff;
-    color: black;
-    padding: 8px 10px;
-    border-radius: 5px;
-    font-size: 12px;
-}
-
-.bookmark-label {
-    background-color: #00796b;
-    color: white;
-    padding: 8px 10px;
-    border-radius: 5px;
-    font-size: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .bookmark-content {
     color: #333;
-    margin-bottom: 10px;
+    margin: 12px 0;
+    line-height: 1.5;
 }
 
 .bookmark-meta {
@@ -166,26 +161,68 @@ body {
     justify-content: space-between;
     color: #777;
     font-size: 12px;
-    margin-bottom: 10px;
+    margin: 12px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
 }
 
 .bookmark-actions {
+    margin-top: 12px;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
+    gap: 8px;
 }
 
 .bookmark-actions button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
+    background-color: #f8f9fa;
+    color: #212529;
+    border: 1px solid #dee2e6;
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .bookmark-actions button:hover {
-    background-color: #0056b3;
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    transform: translateY(-1px);
+}
+
+/* Style variations for different button types */
+.bookmark-actions .remove-bookmark {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.bookmark-actions .remove-bookmark:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+.bookmark-actions .edit-label {
+    color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.bookmark-actions .edit-label:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.bookmark-actions .edit-notes,
+.bookmark-actions .view-notes {
+    color: #198754;
+    border-color: #198754;
+}
+
+.bookmark-actions .edit-notes:hover,
+.bookmark-actions .view-notes:hover {
+    background-color: #198754;
+    color: white;
 }
 
 .alert {
@@ -271,26 +308,31 @@ body {
 
 .modal button[type="submit"],
 .modal button[type="button"] {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+    background-color: #f8f9fa;
+    color: #212529;
+    border: 1px solid #dee2e6;
+    padding: 8px 16px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     margin-right: 10px;
     margin-top: 10px; /* Add margin-top to create space between buttons */
 }
 
 .modal button[type="submit"]:hover,
 .modal button[type="button"]:hover {
-    background-color: #0056b3;
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    transform: translateY(-1px);
 }
 
 .modal-buttons {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 8px;
     margin-top: 20px;
 }
 
@@ -302,19 +344,23 @@ body {
 }
 
 .modal-buttons button[type="submit"] {
+    color: #dc3545;
+    border-color: #dc3545;
+    background-color: transparent;
+}
+
+.modal-buttons button[type="submit"]:hover {
     background-color: #dc3545;
     color: white;
 }
 
-.modal-buttons button[type="submit"]:hover {
-    background-color: #c82333;
-}
-
 .modal-buttons button[type="button"] {
-    background-color: #6c757d;
-    color: white;
+    color: #6c757d;
+    border-color: #6c757d;
+    background-color: transparent;
 }
 
 .modal-buttons button[type="button"]:hover {
-    background-color: #5a6268;
+    background-color: #6c757d;
+    color: white;
 }

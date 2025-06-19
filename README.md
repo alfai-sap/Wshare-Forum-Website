@@ -39,28 +39,6 @@ Academic Community Platform is a dynamic web application that bridges the gap be
 # Clone the repository
 git clone https://github.com/yourusername/Wshare-Forum-Website.git
 
-# Navigate to project directory
-cd Wshare
-
-
-# Install dependencies (Optional)
-composer install
-
-# Configure environment
-cp .env.example .env
-
-# Generate application key
-php artisan key:generate
-
-# Run migrations
-php artisan migrate
-
-# Start local development server
-php artisan serve
-
-📝 License
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 👥 Contributors
 Alfaisal M. Sappari - Project Lead, Frontend & Backend Developer
 Ronald B. Panganiban - Frontend & Backend Developer

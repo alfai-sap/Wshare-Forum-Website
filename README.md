@@ -40,5 +40,4 @@ Academic Community Platform is a dynamic web application that bridges the gap be
 git clone https://github.com/yourusername/Wshare-Forum-Website.git
 
 👥 Contributors
-Alfaisal M. Sappari - Project Lead, Frontend & Backend Developer
-Ronald B. Panganiban - Frontend & Backend Developer
+Alfaisal M. Sappari - Frontend & Backend Developer
